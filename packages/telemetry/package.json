@@ -15,7 +15,7 @@
   "exports": {
     "./logger": {
       "types": "./src/logger.ts",
-      "default": "./src/logger.js"
+      "default": "./dist/logger.js"
     },
     "./metrics": {
       "types": "./src/metrics.ts",

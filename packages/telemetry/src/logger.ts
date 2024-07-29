@@ -26,15 +26,15 @@ type LogLevel =
 type Extra = Record<string, any>;
 
 class Logger {
-  private winston: winston.Logger;
+  private winston!: winston.Logger;
   private metrics: Metrics;
   private tracer: Tracer;
 
   constructor() {
     this.initWinston();
     // this.initSentry();
-    // this.metrics = new Metrics();
-    // this.tracer = new Tracer();
+    this.metrics = new Metrics();
+    this.tracer = new Tracer();
   }
 
   private initWinston() {

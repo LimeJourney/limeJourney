@@ -12,7 +12,7 @@
   "exports": {
     ".": {
       "types": "./src/config.ts",
-      "default": "./src/config.js"
+      "default": "./dist/config.js"
     }
   },
   "dependencies": {
