@@ -1,0 +1,36 @@
+{
+  "name": "@lime/telemetry",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.7",
+    "@types/node": "^20.5.2",
+    "eslint": "^8.48.0",
+    "typescript": "^5.2.2"
+  },
+  "exports": {
+    "./logger": {
+      "types": "./src/logger.ts",
+      "default": "./src/logger.js"
+    },
+    "./metrics": {
+      "types": "./src/metrics.ts",
+      "default": "./dist/metrics.js"
+    },
+    "./tracer": {
+      "types": "./src/tracer.ts",
+      "default": "./dist/tracer.js"
+    }
+  },
+  "dependencies": {
+    "@sentry/node": "^8.20.0",
+    "@sentry/tracing": "^7.114.0",
+    "lodash": "^4.17.21",
+    "winston": "^3.13.1",
+    "@lime/config": "*"
+  }
+}
