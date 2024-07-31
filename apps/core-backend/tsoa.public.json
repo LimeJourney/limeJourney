@@ -1,0 +1,12 @@
+{
+  "entryFile": "src/app.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/controllers/public/**/*.ts"],
+  "spec": {
+    "outputDirectory": "src/generated/public",
+    "specVersion": 3
+  },
+  "routes": {
+    "routesDir": "src/generated/public"
+  }
+}

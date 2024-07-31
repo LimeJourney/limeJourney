@@ -1,0 +1,23 @@
+{
+  "entryFile": "src/app.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/controllers/private/**/*.ts"],
+  "spec": {
+    "outputDirectory": "src/generated/private",
+    "specVersion": 3,
+    "basePath": "/api/internal/v1"
+  },
+  "routes": {
+    "routesDir": "src/generated/private",
+    "basePath": "/api/internal/v1",
+    "authenticationModule": "./src/services/AuthService#AuthService.prototype.jwtAuthentication"
+  },
+  "authentication": {
+    "jwt": {
+      "name": "jwt",
+      "securitySchemeType": "http",
+      "scheme": "bearer",
+      "bearerFormat": "JWT"
+    }
+  }
+}

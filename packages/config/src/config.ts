@@ -20,6 +20,12 @@ const configSchema = z.object({
     user: z.string(),
     password: z.string(),
   }),
+  jwtSecret: z.string().default("your-default-secret-key"),
+  google: z.object({
+    clientId: z.string(),
+    clientSecret: z.string(),
+  }),
+  appUrl: z.string(),
 });
 
 // Helper function to parse environment variables
@@ -40,6 +46,12 @@ const config = {
     user: env("DB_USER"),
     password: env("DB_PASSWORD"),
   },
+  google: {
+    clientId: env("GOOGLE_CLIENT_ID"),
+    clientSecret: env("GOOGLE_CLIENT_SECRET"),
+  },
+  jwtSecret: env("JWT_SECRET"),
+  appUrl: env("APP_URL"),
 };
 
 // Parse and validate the configuration

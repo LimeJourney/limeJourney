@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String?
+  name              String?
+  googleId          String?   @unique
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  role              UserRole  @default(MEMBER)
+  isEmailVerified   Boolean   @default(false)
+  lastLoginAt       DateTime?
+  profilePictureUrl String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  invitationsSent   Invitation[] @relation("InvitationSent")
+  refreshTokens     RefreshToken[]
+}
+
+model Organization {
+  id               String    @id @default(uuid())
+  name             String
+  users            User[]
+  invitations      Invitation[]
+  subscriptionTier String    @default("FREE")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Invitation {
+  id              String    @id @default(uuid())
+  email           String
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  invitedBy       String
+  inviter         User      @relation("InvitationSent", fields: [invitedBy], references: [id])
+  status          InvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
