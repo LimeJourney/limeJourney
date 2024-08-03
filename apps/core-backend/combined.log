@@ -1,0 +1,55 @@
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/internal/api/v1/docs"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/docs"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/favicon.ico"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/docs"}
+[31merror[39m: Unhandled error {"category":"http","error":"Cannot read properties of undefined (reading 'send')","method":"GET","path":"/api/internal/v1/docs","stack":"TypeError: Cannot read properties of undefined (reading 'send')\n    at SwaggerController.getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/swaggerController.ts:27:13)\n    at ExpressTemplateService.buildPromise (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/templateService.ts:29:30)\n    at ExpressTemplateService.apiHandler (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/express/expressTemplateService.ts:36:31)\n    at SwaggerController_getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:101:37)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at /Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:284:15\n    at Function.process_params (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:346:12)"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/docs"}
+[31merror[39m: Unhandled error {"category":"http","error":"Cannot read properties of undefined (reading 'send')","method":"GET","path":"/api/internal/v1/docs","stack":"TypeError: Cannot read properties of undefined (reading 'send')\n    at SwaggerController.getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/swaggerController.ts:27:13)\n    at ExpressTemplateService.buildPromise (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/templateService.ts:29:30)\n    at ExpressTemplateService.apiHandler (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/express/expressTemplateService.ts:36:31)\n    at SwaggerController_getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:101:37)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at /Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:284:15\n    at Function.process_params (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:346:12)"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/docs"}
+[31merror[39m: Unhandled error {"category":"http","error":"Cannot read properties of undefined (reading 'send')","method":"GET","path":"/api/internal/v1/docs","stack":"TypeError: Cannot read properties of undefined (reading 'send')\n    at SwaggerController.getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/swaggerController.ts:27:13)\n    at ExpressTemplateService.buildPromise (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/templateService.ts:29:30)\n    at ExpressTemplateService.apiHandler (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/express/expressTemplateService.ts:36:31)\n    at SwaggerController_getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:101:37)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at /Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:284:15\n    at Function.process_params (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:346:12)"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/docs"}
+[31merror[39m: Unhandled error {"category":"http","error":"Cannot read properties of undefined (reading 'send')","method":"GET","path":"/api/internal/v1/docs","stack":"TypeError: Cannot read properties of undefined (reading 'send')\n    at SwaggerController.getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/swaggerController.ts:27:13)\n    at ExpressTemplateService.buildPromise (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/templateService.ts:29:30)\n    at ExpressTemplateService.apiHandler (/Users/tobi/Documents/Code/lime/node_modules/@tsoa/runtime/src/routeGeneration/templates/express/expressTemplateService.ts:36:31)\n    at SwaggerController_getSwaggerUI (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:101:37)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at /Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:284:15\n    at Function.process_params (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/index.js:346:12)"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server started on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/docs"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server shut down gracefully {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3001 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui.css"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-bundle.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-standalone-preset.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-init.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/favicon-32x32.png"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}

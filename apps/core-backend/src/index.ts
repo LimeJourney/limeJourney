@@ -1,11 +1,9 @@
 import { App } from "./app";
 import { logger } from "@lime/telemetry/logger";
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const app = new App();
-
 app.start(port);
-
 const gracefulShutdown = async (signal: string) => {
   logger.info("lifecycle", `${signal} received. Starting graceful shutdown`);
   await app.stop();

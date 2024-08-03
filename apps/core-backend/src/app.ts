@@ -10,6 +10,8 @@ import { RegisterRoutes as RegisterPrivateRoutes } from "./generated/private/rou
 import swaggerUi from "swagger-ui-express";
 import passport from "passport";
 import { expressErrorMiddleware } from "@lime/errors";
+import { SwaggerController } from "./controllers/private/swaggerController";
+import * as SwaggerJson from "./generated/private/swagger.json";
 export class App {
   private app: Express;
   private server: Server | null = null;
@@ -40,15 +42,7 @@ export class App {
 
   private configureRoutes(): void {
     // Serve OpenAPI UI
-    this.app.use(
-      "/docs",
-      swaggerUi.serve,
-      swaggerUi.setup(undefined, {
-        swaggerOptions: {
-          url: "/swagger.json",
-        },
-      })
-    );
+    this.app.use("/docs", swaggerUi.serve, swaggerUi.setup(SwaggerJson));
 
     // Serve OpenAPI spec
     this.app.get("/swagger.json", (req: Request, res: Response) => {
@@ -61,6 +55,7 @@ export class App {
 
     // Error handling middleware
     this.app.use(expressErrorMiddleware);
+    // SwaggerController.setupSwaggerRoute(this.app);
   }
 
   public start(port: number): void {

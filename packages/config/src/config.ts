@@ -11,7 +11,7 @@ const configSchema = z.object({
   logLevel: z
     .enum(["error", "warn", "info", "http", "verbose", "debug", "silly"])
     .default("info"),
-  sentryDsn: z.string().url().optional(),
+  sentryDsn: z.string().optional(),
   port: z.number().int().positive().default(3000),
   database: z.object({
     host: z.string().default("localhost"),

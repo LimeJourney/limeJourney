@@ -145,6 +145,28 @@
 		"contact": {}
 	},
 	"paths": {
+		"/docs": {
+			"get": {
+				"operationId": "GetSwaggerUI",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Documentation"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
 		"/auth/signup": {
 			"post": {
 				"operationId": "Signup",
