@@ -9,14 +9,6 @@ import passport from "passport";
 
 const prisma = new PrismaClient();
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-    organizationId: string;
-  };
-}
-
 interface GoogleAuthData {
   user: {
     id: string;
@@ -119,15 +111,19 @@ export class AuthService {
     return passport.authenticate("google", { scope: ["profile", "email"] });
   }
 
-  handleGoogleCallback(req: any, res: any) {
+  handleGoogleCallback(req: any, res: any): Promise<GoogleAuthData> {
     return new Promise((resolve, reject) => {
-      passport.authenticate("google", { session: false }, (err, data) => {
-        if (err || !data) {
-          reject(new Error("Google authentication failed"));
-        } else {
-          resolve(data);
+      passport.authenticate(
+        "google",
+        { session: false },
+        (err: Error | null, data: GoogleAuthData | false) => {
+          if (err || !data) {
+            //reject(new AuthError('Google authentication failed', 401, 'GOOGLE_AUTH_FAILED'));
+          } else {
+            resolve(data);
+          }
         }
-      })(req, res);
+      )(req, res);
     });
   }
 
@@ -159,47 +155,10 @@ export class AuthService {
         });
       }
 
-      const token = generateToken(user.id);
+      const token = this.generateToken(user.id);
       done(null, { user, token });
     } catch (error) {
       done(error);
     }
-  }
-
-  async jwtAuthentication(
-    request: AuthenticatedRequest,
-    securityName: string,
-    scopes?: string[]
-  ): Promise<any> {
-    if (securityName === "jwt") {
-      const token = request.headers["authorization"]?.split(" ")[1];
-
-      if (!token) {
-        throw new Error("No token provided");
-      }
-
-      try {
-        const decoded = jwt.verify(token, AppConfig.jwtSecret) as {
-          userId: string;
-        };
-        const user = await prisma.user.findUnique({
-          where: { id: decoded.userId },
-          select: { id: true, role: true, organizationId: true },
-        });
-
-        if (!user) {
-          throw new Error("User not found");
-        }
-
-        if (scopes && scopes.length > 0 && !scopes.includes(user.role)) {
-          throw new Error("Insufficient scope");
-        }
-
-        return user;
-      } catch (error) {
-        throw new Error("Invalid token");
-      }
-    }
-    throw new Error("Invalid security name");
   }
 }

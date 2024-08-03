@@ -10,7 +10,7 @@
   "routes": {
     "routesDir": "src/generated/private",
     "basePath": "/api/internal/v1",
-    "authenticationModule": "./src/services/AuthService#AuthService.prototype.jwtAuthentication"
+    "authenticationModule": "src/services/jwtAuthentication.ts"
   },
   "authentication": {
     "jwt": {

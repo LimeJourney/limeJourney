@@ -1,12 +1,16 @@
-import { Body, Post, Route, Tags, Response, Get } from "tsoa";
-import passport from "passport";
+import {
+  Body,
+  Post,
+  Route,
+  Tags,
+  Response,
+  Get,
+  Request,
+  SuccessResponse,
+} from "tsoa";
 import { AuthService } from "../../services/authService";
 import { SignupRequest, LoginRequest, AuthData } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
-import {
-  Request as ExpressRequest,
-  Response as ExpressResponse,
-} from "express";
 
 @Route("auth")
 @Tags("Authentication")
@@ -68,23 +72,39 @@ export class AuthController {
   }
 
   @Get("/google")
-  public async googleAuth(
-    @Request() req: ExpressRequest,
-    @Response() res: ExpressResponse
-  ): Promise<void> {
-    return this.authService.getGoogleAuthMiddleware()(req, res);
+  @SuccessResponse("302", "Redirect to Google")
+  @Response("400", "Bad Request")
+  public googleAuth(@Request() req: any): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const res = {
+        redirect: (url: string) => {
+          resolve();
+        },
+      };
+      this.authService.getGoogleAuthMiddleware()(req, res, (err: any) => {
+        if (err) {
+          reject(err);
+        }
+      });
+    });
   }
 
   @Get("/google/callback")
-  public async googleAuthCallback(
-    @Request() req: ExpressRequest,
-    @Response() res: ExpressResponse
-  ): Promise<void> {
-    try {
-      const data = await this.authService.handleGoogleCallback(req, res);
-      res.redirect(`/login/success?token=${data.token}`);
-    } catch (error) {
-      res.redirect("/login?error=Google authentication failed");
-    }
+  @SuccessResponse("302", "Redirect after Google authentication")
+  @Response("400", "Bad Request")
+  public async googleAuthCallback(@Request() req: any): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      const res = {
+        redirect: (url: string) => {
+          resolve();
+        },
+      };
+      try {
+        const data = await this.authService.handleGoogleCallback(req, res);
+        res.redirect(`/login/success?token=${data.token}`);
+      } catch (error) {
+        res.redirect("/login?error=Google authentication failed");
+      }
+    });
   }
 }

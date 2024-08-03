@@ -1,3 +1,4 @@
+import { Request as ExpressRequest } from "express";
 export interface SignupRequest {
   email: string;
   password: string;
@@ -17,5 +18,13 @@ export interface AuthData {
     name: string | null;
     organizationId: string;
     role: string;
+  };
+}
+
+export interface AuthenticatedRequest extends ExpressRequest {
+  user?: {
+    id: string;
+    role: string;
+    organizationId: string;
   };
 }
