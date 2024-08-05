@@ -5,7 +5,11 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "docker:up": "docker-compose -f deploy/docker-compose.yml up",
+    "docker:up:dev": "docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.override.yml up",
+    "docker:down": "docker-compose -f deploy/docker-compose.yml down",
+    "docker:build": "docker-compose -f deploy/docker-compose.yml build"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
@@ -13,7 +17,8 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@lime/telemetry": "0.0.0"
+    "@lime/telemetry": "0.0.0",
+    "@types/node": "^22.1.0"
   },
   "engines": {
     "node": ">=18"

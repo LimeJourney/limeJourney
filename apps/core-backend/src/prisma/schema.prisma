@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://tobi:tobi@localhost:5432/limeJourney"
 }
 
 model User {

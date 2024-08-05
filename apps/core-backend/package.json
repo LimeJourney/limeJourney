@@ -6,7 +6,11 @@
     "build": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json && tsc",
     "dev": "concurrently \"tsoa spec-and-routes --watch --configuration tsoa.public.json\" \"tsoa spec-and-routes --watch --configuration tsoa.private.json\" \"ts-node-dev --respawn --transpile-only src/index.ts\"",
     "start": "node dist/index.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "migrate:dev": "npx prisma migrate dev --schema=./src/prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
+    "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema=./src/prisma/schema.prisma"
   },
   "dependencies": {
     "@lime/config": "*",
