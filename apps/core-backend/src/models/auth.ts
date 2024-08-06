@@ -1,13 +1,8 @@
 import { Request as ExpressRequest } from "express";
-export interface SignupRequest {
+export interface AuthRequest {
   email: string;
-  password: string;
-  name: string;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
+  password?: string;
+  name?: string;
 }
 
 export interface AuthData {

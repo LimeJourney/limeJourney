@@ -50,12 +50,13 @@ const config = {
     clientId: env("GOOGLE_CLIENT_ID"),
     clientSecret: env("GOOGLE_CLIENT_SECRET"),
   },
-  jwtSecret: env("JWT_SECRET"),
+  jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
   appUrl: env("APP_URL"),
 };
 
 // Parse and validate the configuration
 export const AppConfig = configSchema.parse(config);
 
+console.log("AppConfig", AppConfig);
 // Type for the configuration
 export type AppConfigType = z.infer<typeof configSchema>;

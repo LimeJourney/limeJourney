@@ -9,9 +9,6 @@
 		"schemas": {
 			"AuthData": {
 				"properties": {
-					"token": {
-						"type": "string"
-					},
 					"user": {
 						"properties": {
 							"role": {
@@ -21,8 +18,7 @@
 								"type": "string"
 							},
 							"name": {
-								"type": "string",
-								"nullable": true
+								"type": "string"
 							},
 							"email": {
 								"type": "string"
@@ -39,11 +35,14 @@
 							"id"
 						],
 						"type": "object"
+					},
+					"token": {
+						"type": "string"
 					}
 				},
 				"required": [
-					"token",
-					"user"
+					"user",
+					"token"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -100,7 +99,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"SignupRequest": {
+			"AuthRequest": {
 				"properties": {
 					"email": {
 						"type": "string"
@@ -113,25 +112,7 @@
 					}
 				},
 				"required": [
-					"email",
-					"password",
-					"name"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"LoginRequest": {
-				"properties": {
-					"email": {
-						"type": "string"
-					},
-					"password": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"email",
-					"password"
+					"email"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -167,87 +148,41 @@
 				"parameters": []
 			}
 		},
-		"/auth/signup": {
+		"/auth/authenticate": {
 			"post": {
-				"operationId": "Signup",
+				"operationId": "Authenticate",
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthData_"
-								}
-							}
-						}
-					},
-					"201": {
-						"description": "User created",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthData_"
-								},
-								"examples": {
-									"Example 1": {}
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_AuthData_"
+										},
+										{}
+									]
 								}
 							}
 						}
 					},
 					"400": {
-						"description": "Bad request",
+						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_null_"
-								},
-								"examples": {
-									"Example 1": {}
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Authentication"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/SignupRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/login": {
-			"post": {
-				"operationId": "Login",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthData_"
 								}
 							}
 						}
 					},
-					"401": {
-						"description": "Unauthorized",
+					"500": {
+						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_null_"
-								},
-								"examples": {
-									"Example 1": {}
 								}
 							}
 						}
@@ -263,7 +198,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/LoginRequest"
+								"$ref": "#/components/schemas/AuthRequest"
 							}
 						}
 					}

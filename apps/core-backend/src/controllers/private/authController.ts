@@ -7,10 +7,12 @@ import {
   Get,
   Request,
   SuccessResponse,
+  Res,
+  TsoaResponse,
 } from "tsoa";
-import { AuthService } from "../../services/authService";
-import { SignupRequest, LoginRequest, AuthData } from "../../models/auth";
+import { AuthService, AuthRequest, AuthData } from "../../services/authService";
 import { ApiResponse } from "../../models/apiResponse";
+import { Response as expressResponse } from "express";
 
 @Route("auth")
 @Tags("Authentication")
@@ -21,53 +23,44 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
-  @Post("/signup")
-  @Response<ApiResponse<AuthData>>(201, "User created")
+  @Post("/authenticate")
+  @Response<ApiResponse<AuthData>>(200, "Authentication successful")
   @Response<ApiResponse<null>>(400, "Bad request")
-  public async signup(
-    @Body() body: SignupRequest
-  ): Promise<ApiResponse<AuthData>> {
+  @Response<ApiResponse<null>>(500, "Internal server error")
+  public async authenticate(
+    @Body() body: AuthRequest,
+    @Res() notFoundResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<AuthData> | void> {
     try {
-      const authData = await this.authService.signup(body);
+      const authData = await this.authService.authenticate(body);
       return {
         status: "success",
         data: authData,
-        message: "User created successfully",
+        message: "Authentication successful",
       };
     } catch (error) {
-      return {
+      console.log(error);
+      if (error instanceof Error) {
+        if (error.name === "BadRequestException") {
+          return notFoundResponse(400, {
+            status: "error",
+            data: null,
+            message: error.message,
+          });
+        } else {
+          return serverErrorResponse(500, {
+            status: "error",
+            data: null,
+            message: error.message || "An unexpected error occurred",
+          });
+        }
+      }
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-      };
-    }
-  }
-
-  @Post("/login")
-  @Response<ApiResponse<AuthData>>(200, "Login successful")
-  @Response<ApiResponse<null>>(401, "Unauthorized")
-  public async login(
-    @Body() body: LoginRequest
-  ): Promise<ApiResponse<AuthData>> {
-    try {
-      const authData = await this.authService.login(body);
-      return {
-        status: "success",
-        data: authData,
-        message: "Login successful",
-      };
-    } catch (error) {
-      return {
-        status: "error",
-        data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-      };
+        message: "An unexpected error occurred",
+      });
     }
   }
 

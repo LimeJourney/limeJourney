@@ -1,15 +1,19 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { SignupRequest, LoginRequest, AuthData } from "../models/auth";
-import { logger } from "@lime/telemetry/logger";
 import { AppConfig } from "@lime/config";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import passport from "passport";
 
 const prisma = new PrismaClient();
 
-interface GoogleAuthData {
+export interface AuthRequest {
+  email: string;
+  password?: string;
+  name?: string;
+}
+
+export interface AuthData {
   user: {
     id: string;
     email: string;
@@ -22,7 +26,7 @@ interface GoogleAuthData {
 
 export class AuthService {
   constructor() {
-    this.initializeGoogleStrategy();
+    // this.initializeGoogleStrategy();
   }
 
   private initializeGoogleStrategy() {
@@ -38,55 +42,40 @@ export class AuthService {
     );
   }
 
-  async signup(data: SignupRequest): Promise<AuthData> {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    if (existingUser) {
-      throw new Error("User already exists");
-    }
+  async authenticate(data: AuthRequest): Promise<AuthData> {
+    let user = await prisma.user.findUnique({ where: { email: data.email } });
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    if (!user) {
+      // User doesn't exist, create a new account
+      const organization = await prisma.organization.create({
+        data: { name: `${data.name || "New"}'s Organization` },
+      });
 
-    const organization = await prisma.organization.create({
-      data: {
-        name: `${data.name}'s Organization`,
-      },
-    });
+      const hashedPassword = data.password
+        ? await bcrypt.hash(data.password, 10)
+        : null;
 
-    const user = await prisma.user.create({
-      data: {
-        email: data.email,
-        password: hashedPassword,
-        name: data.name,
-        organizationId: organization.id,
-        role: "ADMIN",
-      },
-    });
-
-    const token = this.generateToken(user.id);
-
-    return {
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        organizationId: user.organizationId,
-        role: user.role,
-      },
-    };
-  }
-
-  async login(data: LoginRequest): Promise<AuthData> {
-    const user = await prisma.user.findUnique({ where: { email: data.email } });
-    if (!user || !user.password) {
-      throw new Error("Invalid credentials");
-    }
-
-    const isPasswordValid = await bcrypt.compare(data.password, user.password);
-    if (!isPasswordValid) {
-      throw new Error("Invalid credentials");
+      user = await prisma.user.create({
+        data: {
+          email: data.email,
+          password: hashedPassword,
+          name: data.name || data.email.split("@")[0],
+          organizationId: organization.id,
+          role: "ADMIN",
+        },
+      });
+    } else if (data.password) {
+      // User exists, verify password
+      const isPasswordValid = await bcrypt.compare(
+        data.password,
+        user.password || ""
+      );
+      if (!isPasswordValid) {
+        throw new Error("Invalid credentials");
+      }
+    } else {
+      // Password-less login attempt for existing user
+      throw new Error("Password required for existing account");
     }
 
     const token = this.generateToken(user.id);
@@ -96,7 +85,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name || "",
         organizationId: user.organizationId,
         role: user.role,
       },
@@ -104,6 +93,7 @@ export class AuthService {
   }
 
   private generateToken(userId: string): string {
+    console.log("AppConfig.jwtSecret", AppConfig.jwtSecret);
     return jwt.sign({ userId }, AppConfig.jwtSecret, { expiresIn: "1d" });
   }
 
@@ -111,16 +101,24 @@ export class AuthService {
     return passport.authenticate("google", { scope: ["profile", "email"] });
   }
 
-  handleGoogleCallback(req: any, res: any): Promise<GoogleAuthData> {
+  handleGoogleCallback(req: any, res: any): Promise<AuthData> {
     return new Promise((resolve, reject) => {
       passport.authenticate(
         "google",
         { session: false },
-        (err: Error | null, data: GoogleAuthData | false) => {
-          if (err || !data) {
-            //reject(new AuthError('Google authentication failed', 401, 'GOOGLE_AUTH_FAILED'));
+        async (err: Error | null, googleProfile: any) => {
+          if (err || !googleProfile) {
+            reject(new Error("Google authentication failed"));
           } else {
-            resolve(data);
+            try {
+              const authData = await this.authenticate({
+                email: googleProfile.emails[0].value,
+                name: googleProfile.displayName,
+              });
+              resolve(authData);
+            } catch (error) {
+              reject(error);
+            }
           }
         }
       )(req, res);
@@ -134,29 +132,11 @@ export class AuthService {
     done: any
   ) {
     try {
-      let user = await prisma.user.findUnique({
-        where: { googleId: profile.id },
+      const authData = await this.authenticate({
+        email: profile.emails[0].value,
+        name: profile.displayName,
       });
-
-      if (!user) {
-        const organization = await prisma.organization.create({
-          data: { name: `${profile.displayName}'s Organization` },
-        });
-
-        user = await prisma.user.create({
-          data: {
-            googleId: profile.id,
-            email: profile.emails[0].value,
-            name: profile.displayName,
-            isEmailVerified: true,
-            organizationId: organization.id,
-            role: "ADMIN",
-          },
-        });
-      }
-
-      const token = this.generateToken(user.id);
-      done(null, { user, token });
+      done(null, authData);
     } catch (error) {
       done(error);
     }

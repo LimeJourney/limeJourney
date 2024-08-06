@@ -21,3 +21,63 @@
 [32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
 [32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
 [32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui.css"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-bundle.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-standalone-preset.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-init.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/favicon-32x32.png"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/api/internal/v1/auth/google"}
+[31merror[39m: Unhandled error {"category":"http","error":"OAuth2Strategy requires a clientID option","method":"GET","path":"/api/internal/v1/auth/google","stack":"TypeError: OAuth2Strategy requires a clientID option\n    at Strategy.OAuth2Strategy (/Users/tobi/Documents/Code/lime/node_modules/passport-oauth2/lib/strategy.js:87:34)\n    at new Strategy (/Users/tobi/Documents/Code/lime/node_modules/passport-google-oauth20/lib/strategy.js:52:18)\n    at AuthService.initializeGoogleStrategy (/Users/tobi/Documents/Code/lime/apps/core-backend/src/services/authService.ts:34:7)\n    at new AuthService (/Users/tobi/Documents/Code/lime/apps/core-backend/src/services/authService.ts:29:10)\n    at new AuthController (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/authController.ts:20:24)\n    at AuthController_googleAuth (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:149:36)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/favicon.ico"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[31merror[39m: Unhandled error {"category":"http","error":"OAuth2Strategy requires a clientID option","method":"POST","path":"/api/internal/v1/auth/authenticate","stack":"TypeError: OAuth2Strategy requires a clientID option\n    at Strategy.OAuth2Strategy (/Users/tobi/Documents/Code/lime/node_modules/passport-oauth2/lib/strategy.js:87:34)\n    at new Strategy (/Users/tobi/Documents/Code/lime/node_modules/passport-google-oauth20/lib/strategy.js:52:18)\n    at AuthService.initializeGoogleStrategy (/Users/tobi/Documents/Code/lime/apps/core-backend/src/services/authService.ts:34:7)\n    at new AuthService (/Users/tobi/Documents/Code/lime/apps/core-backend/src/services/authService.ts:29:10)\n    at new AuthController (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/authController.ts:20:24)\n    at AuthController_authenticate (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:119:36)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[31merror[39m: Unhandled error {"category":"http","error":"OAuth2Strategy requires a clientID option","method":"POST","path":"/api/internal/v1/auth/authenticate","stack":"TypeError: OAuth2Strategy requires a clientID option\n    at Strategy.OAuth2Strategy (/Users/tobi/Documents/Code/lime/node_modules/passport-oauth2/lib/strategy.js:87:34)\n    at new Strategy (/Users/tobi/Documents/Code/lime/node_modules/passport-google-oauth20/lib/strategy.js:52:18)\n    at AuthService.initializeGoogleStrategy (/Users/tobi/Documents/Code/lime/apps/core-backend/src/services/authService.ts:34:7)\n    at new AuthService (/Users/tobi/Documents/Code/lime/apps/core-backend/src/services/authService.ts:29:10)\n    at new AuthController (/Users/tobi/Documents/Code/lime/apps/core-backend/src/controllers/private/authController.ts:20:24)\n    at AuthController_authenticate (/Users/tobi/Documents/Code/lime/apps/core-backend/src/generated/private/routes.ts:119:36)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)\n    at next (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:149:13)\n    at Route.dispatch (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/route.js:119:3)\n    at Layer.handle [as handle_request] (/Users/tobi/Documents/Code/lime/node_modules/express/lib/router/layer.js:95:5)"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
