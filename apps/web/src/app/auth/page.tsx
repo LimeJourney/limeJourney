@@ -1,24 +1,11 @@
-"use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { UserAuthForm } from "@/components/user-auth-form";
-import { authService } from "@/services/authService";
+export const metadata = {
+  title: "Authentication",
+  description: "Sign in to your Lime Journey account",
+};
 
 export default function AuthenticationPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkAuthToken = async () => {
-      const token = authService.getToken();
-      if (token) {
-        router.push("/dashboard");
-      }
-    };
-
-    checkAuthToken();
-  }, [router]);
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black px-4 py-8">
       <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white mb-6 text-center">
