@@ -1,4 +1,6 @@
+///Users/tobi/Documents/Code/lime/apps/web/src/app/dashboard/page.tsx
 import React from "react";
+import { DashboardLayout } from "@/components/dashboard-layout";
 import { cookies } from "next/headers";
 
 export default function DashboardPage() {
@@ -43,7 +45,7 @@ export default function DashboardPage() {
   return (
     <div>
       <h1>Welcome to the Dashboard</h1>
-      <p>Select an item from the sidebar to get started.</p>
+      <p>This is the audience Page</p>
     </div>
   );
 }
