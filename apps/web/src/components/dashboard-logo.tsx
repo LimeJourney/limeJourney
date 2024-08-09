@@ -1,22 +1,22 @@
-// import React from "react";
+"use client";
 
-// export default function DashboardLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   return <div className="">{children}</div>;
-// }
+import * as React from "react";
 
-import React from "react";
-import { DashboardLayout } from "@/components/dashboard-layout";
+import { cn } from "@/lib/utils";
 
-// You might want to fetch this data server-side
-const accounts = [
-  {
-    label: "Alicia Koch",
-    email: "alicia@example.com",
-    icon: (
+interface DashboardLogoProps {
+  isCollapsed: boolean;
+}
+
+export function DashboardLogo({ isCollapsed }: DashboardLogoProps) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-15 [&_svg]:w-15 [&_svg]:shrink-0 p-2",
+        isCollapsed &&
+          "flex h-15 w-15 shrink-0 items-center justify-center p-1 [&>span]:w-auto bg-white rounded-lg"
+      )}
+    >
       <svg
         width="43"
         height="43"
@@ -33,26 +33,6 @@ const accounts = [
           stroke-linejoin="round"
         />
       </svg>
-    ),
-  },
-  // ... other accounts
-];
-
-export default function DashboardLayoutWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-neutral-900 text-gray-300">
-      <DashboardLayout
-        accounts={accounts}
-        defaultLayout={[265, 655]}
-        defaultCollapsed={false}
-        navCollapsedSize={4}
-      >
-        {children}
-      </DashboardLayout>
     </div>
   );
 }

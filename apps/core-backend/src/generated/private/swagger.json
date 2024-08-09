@@ -7,6 +7,295 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"DefaultSelection_Prisma._36_OrganizationPayload_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"subscriptionTier": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"subscriptionTier",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"Organization": {
+				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_OrganizationPayload_",
+				"description": "Model Organization"
+			},
+			"ApiResponse_Organization-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/Organization"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_void_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_Organization_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Organization"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"_36_Enums.InvitationStatus": {
+				"type": "string",
+				"enum": [
+					"PENDING",
+					"ACCEPTED",
+					"REJECTED"
+				]
+			},
+			"DefaultSelection_Prisma._36_InvitationPayload_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"status": {
+						"$ref": "#/components/schemas/_36_Enums.InvitationStatus"
+					},
+					"invitedBy": {
+						"type": "string"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"expiresAt",
+					"status",
+					"invitedBy",
+					"organizationId",
+					"email",
+					"id"
+				],
+				"type": "object"
+			},
+			"Invitation": {
+				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_InvitationPayload_",
+				"description": "Model Invitation"
+			},
+			"ApiResponse_Invitation_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Invitation"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"_36_Enums.UserRole": {
+				"type": "string",
+				"enum": [
+					"ADMIN",
+					"MEMBER"
+				]
+			},
+			"DefaultSelection_Prisma._36_OrganizationMemberPayload_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"role": {
+						"$ref": "#/components/schemas/_36_Enums.UserRole"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"role",
+					"organizationId",
+					"userId",
+					"id"
+				],
+				"type": "object"
+			},
+			"OrganizationMember": {
+				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_OrganizationMemberPayload_",
+				"description": "Model OrganizationMember"
+			},
+			"ApiResponse_OrganizationMember_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrganizationMember"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AcceptInvitationDto": {
+				"properties": {
+					"invitationId": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"invitationId",
+					"email",
+					"name",
+					"password"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AuthData": {
 				"properties": {
 					"user": {
@@ -146,6 +435,273 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/organizations": {
+			"get": {
+				"operationId": "ListOrganizations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Organization-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Organizations"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "CreateOrganization",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Organization_"
+								}
+							}
+						}
+					},
+					"201": {
+						"description": "Organization created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Organization_"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Organizations"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"name": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/organizations/switch/{organizationId}": {
+			"put": {
+				"operationId": "SwitchOrganization",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_void_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Organizations"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "organizationId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/organizations/{organizationId}": {
+			"put": {
+				"operationId": "UpdateOrganization",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Organization_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Organizations"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "organizationId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"name": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/organizations/{organizationId}/invite": {
+			"post": {
+				"operationId": "InviteUser",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Invitation_"
+								}
+							}
+						}
+					},
+					"201": {
+						"description": "Invitation sent successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Invitation_"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Organizations"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "organizationId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"email": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"email"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/organizations/accept-invitation": {
+			"post": {
+				"operationId": "AcceptInvitation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_OrganizationMember_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Organizations"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AcceptInvitationDto"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/auth/authenticate": {

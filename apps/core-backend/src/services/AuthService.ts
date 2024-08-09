@@ -60,7 +60,7 @@ export class AuthService {
           email: data.email,
           password: hashedPassword,
           name: data.name || data.email.split("@")[0],
-          organizationId: organization.id,
+          currentOrganizationId: organization.id,
           role: "ADMIN",
         },
       });
@@ -86,7 +86,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name || "",
-        organizationId: user.organizationId,
+        organizationId: user.currentOrganizationId || "",
         role: user.role,
       },
     };

@@ -26,6 +26,7 @@ const configSchema = z.object({
     clientSecret: z.string(),
   }),
   appUrl: z.string(),
+  enforceSubscriptions: z.boolean().default(true),
 });
 
 // Helper function to parse environment variables
@@ -52,6 +53,7 @@ const config = {
   },
   jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
   appUrl: env("APP_URL"),
+  enforceSubscriptions: env("ENFORCE_SUBSCRIPTIONS", "true"),
 };
 
 // Parse and validate the configuration

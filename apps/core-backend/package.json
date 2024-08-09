@@ -10,7 +10,7 @@
     "migrate:dev": "npx prisma migrate dev --schema=./src/prisma/schema.prisma",
     "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
-    "prisma:generate": "prisma generate --schema=./src/prisma/schema.prisma"
+    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma"
   },
   "dependencies": {
     "@lime/config": "*",
@@ -28,6 +28,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "reflect-metadata": "^0.2.2",
+    "stripe": "^16.7.0",
     "swagger-ui-express": "^5.0.1",
     "tsoa": "^6.4.0"
   },

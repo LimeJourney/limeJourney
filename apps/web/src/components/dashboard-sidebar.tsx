@@ -25,10 +25,12 @@ import {
   ShoppingCart,
   ChevronDown,
   ChevronRight,
+  CreditCard,
 } from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
 import { AccountSwitcher } from "./account-switcher";
 import { FaceIcon, PersonIcon } from "@radix-ui/react-icons";
+import { DashboardLogo } from "./dashboard-logo";
 
 interface NavItem {
   id: string;
@@ -105,6 +107,44 @@ const navItems: NavItem[] = [
         title: "Updates",
         icon: AlertCircle,
         href: "/dashboard/categories/updates",
+      },
+      {
+        id: "forums",
+        title: "Forums",
+        icon: MessagesSquare,
+        href: "/dashboard/categories/forums",
+      },
+      {
+        id: "shopping",
+        title: "Shopping",
+        icon: ShoppingCart,
+        href: "/dashboard/categories/shopping",
+      },
+      {
+        id: "promotions",
+        title: "Promotions",
+        icon: Archive,
+        href: "/dashboard/categories/promotions",
+      },
+    ],
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    icon: FaceIcon,
+    href: "/dashboard/settings",
+    children: [
+      {
+        id: "billing",
+        title: "Billing",
+        icon: CreditCard,
+        href: "/dashboard/settings/billing",
+      },
+      {
+        id: "segments",
+        title: "Segments",
+        icon: AlertCircle,
+        href: "/dashboard/audience/segments",
       },
       {
         id: "forums",
@@ -243,7 +283,7 @@ export function DashboardSidebar({
           isCollapsed ? "h-[52px]" : "px-2"
         )}
       >
-        <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+        <DashboardLogo isCollapsed={isCollapsed} />
       </div>
       <Separator />
       <ScrollArea className="flex-1">
