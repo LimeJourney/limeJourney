@@ -10,9 +10,11 @@
     "migrate:dev": "npx prisma migrate dev --schema=./src/prisma/schema.prisma",
     "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
-    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma"
+    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
+    "clickhouse": "ts-node src/cli/clickhouse.ts"
   },
   "dependencies": {
+    "@clickhouse/client": "^1.4.1",
     "@lime/config": "*",
     "@lime/errors": "*",
     "@lime/telemetry": "*",
@@ -20,6 +22,7 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/swagger-ui-express": "^4.1.6",
     "bcrypt": "^5.1.1",
+    "commander": "^12.1.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
@@ -30,6 +33,7 @@
     "reflect-metadata": "^0.2.2",
     "stripe": "^16.7.0",
     "swagger-ui-express": "^5.0.1",
+    "ts-node": "^10.9.2",
     "tsoa": "^6.4.0"
   },
   "devDependencies": {

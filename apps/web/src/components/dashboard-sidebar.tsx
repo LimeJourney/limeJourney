@@ -26,6 +26,8 @@ import {
   ChevronDown,
   ChevronRight,
   CreditCard,
+  KeyIcon,
+  UsersIcon,
 } from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
 import { AccountSwitcher } from "./account-switcher";
@@ -139,6 +141,18 @@ const navItems: NavItem[] = [
         title: "Billing",
         icon: CreditCard,
         href: "/dashboard/settings/billing",
+      },
+      {
+        id: "api-keys",
+        title: "API Keys",
+        icon: KeyIcon,
+        href: "/dashboard/settings/api-keys",
+      },
+      {
+        id: "team",
+        title: "Team",
+        icon: UsersIcon,
+        href: "/dashboard/settings/team",
       },
       {
         id: "segments",

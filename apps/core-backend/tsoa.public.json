@@ -7,6 +7,15 @@
     "specVersion": 3
   },
   "routes": {
-    "routesDir": "src/generated/public"
+    "routesDir": "src/generated/public",
+    "basePath": "/api/v1",
+    "authenticationModule": "src/services/jwtAuthentication.ts"
+  },
+  "authentication": {
+    "apiKey": {
+      "name": "x-api-key",
+      "type": "apiKey",
+      "in": "header"
+    }
   }
 }

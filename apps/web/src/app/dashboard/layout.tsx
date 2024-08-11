@@ -44,7 +44,7 @@ export default function DashboardLayoutWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-neutral-900 text-gray-300">
+    <div className="bg-black text-white">
       <DashboardLayout
         accounts={accounts}
         defaultLayout={[265, 655]}

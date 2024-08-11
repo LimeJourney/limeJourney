@@ -1,6 +1,9 @@
 import { AppError } from "./appError";
 import { expressErrorMiddleware } from "./expressErrorMiddleware";
 export { expressErrorMiddleware };
+
+export { AppError };
+
 export class AuthError extends AppError {
   constructor(message: string, statusCode = 401, errorCode = "AUTH_ERROR") {
     super(message, statusCode, errorCode);

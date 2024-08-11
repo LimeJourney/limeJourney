@@ -7,6 +7,15 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"_36_Enums.SubscriptionStatus": {
+				"type": "string",
+				"enum": [
+					"ACTIVE",
+					"INACTIVE",
+					"PAST_DUE",
+					"CANCELLED"
+				]
+			},
 			"DefaultSelection_Prisma._36_OrganizationPayload_": {
 				"properties": {
 					"updatedAt": {
@@ -17,7 +26,21 @@
 						"type": "string",
 						"format": "date-time"
 					},
-					"subscriptionTier": {
+					"subscriptionPeriodEnd": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"subscriptionPeriodStart": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"planId": {
+						"type": "string"
+					},
+					"subscriptionStatus": {
+						"$ref": "#/components/schemas/_36_Enums.SubscriptionStatus"
+					},
+					"subscriptionId": {
 						"type": "string"
 					},
 					"name": {
@@ -30,7 +53,11 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
-					"subscriptionTier",
+					"subscriptionPeriodEnd",
+					"subscriptionPeriodStart",
+					"planId",
+					"subscriptionStatus",
+					"subscriptionId",
 					"name",
 					"id"
 				],
@@ -296,6 +323,265 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"Record_string.any_": {
+				"properties": {},
+				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"EntityData": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"external_id": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"updated_at": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"org_id",
+					"properties",
+					"created_at",
+					"updated_at"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityData_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EntityData"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateOrUpdateEntityRequest": {
+				"properties": {
+					"external_id": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					}
+				},
+				"required": [
+					"properties"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityData-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/EntityData"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"EventData": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					}
+				},
+				"required": [
+					"name",
+					"properties"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EventData-and-_entity_id-string--timestamp-string__": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EventData"
+							},
+							{
+								"properties": {
+									"timestamp": {
+										"type": "string"
+									},
+									"entity_id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"timestamp",
+									"entity_id"
+								],
+								"type": "object"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RecordEventRequest": {
+				"properties": {
+					"entityId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					}
+				},
+				"required": [
+					"entityId",
+					"name",
+					"properties"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EventData-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/EventData"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse__totalEntities-number--oldestEntity-string--newestEntity-string--uniqueExternalIds-number__": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"properties": {
+							"uniqueExternalIds": {
+								"type": "number",
+								"format": "double"
+							},
+							"newestEntity": {
+								"type": "string"
+							},
+							"oldestEntity": {
+								"type": "string"
+							},
+							"totalEntities": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"uniqueExternalIds",
+							"newestEntity",
+							"oldestEntity",
+							"totalEntities"
+						],
+						"type": "object",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AuthData": {
 				"properties": {
 					"user": {
@@ -402,6 +688,118 @@
 				},
 				"required": [
 					"email"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiKey": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"key": {
+						"type": "string"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"lastUsedAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time",
+						"nullable": true
+					},
+					"isActive": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"key",
+					"organizationId",
+					"createdAt",
+					"lastUsedAt",
+					"expiresAt",
+					"isActive"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_ApiKey_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ApiKey"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"GenerateApiKeyRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_ApiKey-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/ApiKey"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -704,6 +1102,233 @@
 				}
 			}
 		},
+		"/entities": {
+			"post": {
+				"operationId": "CreateOrUpdateEntity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EntityData_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateOrUpdateEntityRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "ListEntities",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EntityData-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/entities/{entityId}": {
+			"get": {
+				"operationId": "GetEntity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EntityData_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "entityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/entities/event": {
+			"post": {
+				"operationId": "RecordEvent",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EventData-and-_entity_id-string--timestamp-string__"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RecordEventRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/entities/{entityId}/events": {
+			"get": {
+				"operationId": "GetEntityEvents",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "entityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/entities/search": {
+			"get": {
+				"operationId": "SearchEntities",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EntityData-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "searchQuery",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/entities/stats": {
+			"get": {
+				"operationId": "GetEntityStats",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__totalEntities-number--oldestEntity-string--newestEntity-string--uniqueExternalIds-number__"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/auth/authenticate": {
 			"post": {
 				"operationId": "Authenticate",
@@ -795,6 +1420,101 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/api-keys": {
+			"post": {
+				"operationId": "GenerateApiKey",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ApiKey_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"API Keys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/GenerateApiKeyRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetApiKeys",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ApiKey-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"API Keys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/api-keys/{id}": {
+			"delete": {
+				"operationId": "DeleteApiKey",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"API Keys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		}
 	},

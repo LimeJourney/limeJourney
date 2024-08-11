@@ -26,7 +26,14 @@ const configSchema = z.object({
     clientSecret: z.string(),
   }),
   appUrl: z.string(),
-  enforceSubscriptions: z.boolean().default(true),
+  enforceSubscriptions: z.string().default("true"),
+  clickhouse: z.object({
+    host: z.string(),
+    port: z.number().int().positive(),
+    name: z.string(),
+    user: z.string(),
+    password: z.string(),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -53,7 +60,14 @@ const config = {
   },
   jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
   appUrl: env("APP_URL"),
-  enforceSubscriptions: env("ENFORCE_SUBSCRIPTIONS", "true"),
+  enforceSubscriptions: env("ENFORCE_SUBSCRIPTIONS"),
+  clickhouse: {
+    host: env("CLICKHOUSE_HOST", "http://localhost:8123"),
+    port: parseInt(env("CLICKHOUSE_PORT", "9000"), 10),
+    name: env("CLICKHOUSE_DATBASE_NAME", "default"),
+    user: env("CLICKHOUSE_USER", "default"),
+    password: env("CLICKHOUSE_PASSWORD", ""),
+  },
 };
 
 // Parse and validate the configuration
