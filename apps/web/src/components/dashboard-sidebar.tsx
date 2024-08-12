@@ -31,7 +31,12 @@ import {
 } from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
 import { AccountSwitcher } from "./account-switcher";
-import { FaceIcon, PersonIcon } from "@radix-ui/react-icons";
+import {
+  FaceIcon,
+  GearIcon,
+  MagicWandIcon,
+  PersonIcon,
+} from "@radix-ui/react-icons";
 import { DashboardLogo } from "./dashboard-logo";
 
 interface NavItem {
@@ -60,6 +65,12 @@ const navItems: NavItem[] = [
         title: "Segments",
         icon: AlertCircle,
         href: "/dashboard/audience/segments",
+      },
+      {
+        id: "insights",
+        title: "AI Insights",
+        icon: MagicWandIcon,
+        href: "/dashboard/audience/insights",
       },
       {
         id: "forums",
@@ -133,7 +144,7 @@ const navItems: NavItem[] = [
   {
     id: "settings",
     title: "Settings",
-    icon: FaceIcon,
+    icon: GearIcon,
     href: "/dashboard/settings",
     children: [
       {
@@ -153,30 +164,6 @@ const navItems: NavItem[] = [
         title: "Team",
         icon: UsersIcon,
         href: "/dashboard/settings/team",
-      },
-      {
-        id: "segments",
-        title: "Segments",
-        icon: AlertCircle,
-        href: "/dashboard/audience/segments",
-      },
-      {
-        id: "forums",
-        title: "Forums",
-        icon: MessagesSquare,
-        href: "/dashboard/categories/forums",
-      },
-      {
-        id: "shopping",
-        title: "Shopping",
-        icon: ShoppingCart,
-        href: "/dashboard/categories/shopping",
-      },
-      {
-        id: "promotions",
-        title: "Promotions",
-        icon: Archive,
-        href: "/dashboard/categories/promotions",
       },
     ],
   },
@@ -241,7 +228,7 @@ export function DashboardSidebar({
                     isCollapsed && "px-2",
                     item.id === selectedItemId
                       ? "bg-brightYellow text-black"
-                      : "hover:bg-yellow-100 hover:text-black",
+                      : "hover:bg-green-100 hover:text-black",
                     "transition-colors duration-200"
                   )}
                   onClick={(e) => {

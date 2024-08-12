@@ -30,7 +30,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Search, Plus, Settings, Code, Database, X } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Settings,
+  Code,
+  Database,
+  X,
+  ChevronDown,
+  ClipboardX,
+} from "lucide-react";
 
 interface EntityData {
   id: string;
@@ -190,7 +199,6 @@ export default function EntityManagement() {
         : [...prev, property]
     );
   };
-
   return (
     <div className="px-8 py-6">
       <div className="flex justify-between items-center mb-8">
@@ -203,7 +211,7 @@ export default function EntityManagement() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-800"
+                className="border-brightYellow text-black hover:text-white hover:bg-neutral-800"
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Customize View
@@ -396,46 +404,38 @@ sdk.addEntity({
           </Sheet>
         </div>
       </div>
-
-      <Card className="bg-neutral-800 border-neutral-700 mb-8">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
-              <Input
-                type="text"
-                placeholder="Search entities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-neutral-700 border-neutral-600 text-white w-full"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-neutral-800 border-neutral-700">
+      <div className="mb-6">
+        <div className="relative w-64">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search entities..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 pr-4 py-2 bg-white text-black border border-brightYellow rounded-md focus:outline-none focus:ring-2 focus:ring-brightYellow focus:border-transparent w-full"
+          />
+        </div>
+      </div>
+      <Card className="bg-[#040b12] border-brightYellow">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-neutral-800 border-neutral-700">
+            <TableRow className="hover:bg-neutral-800 border-brightYellow">
               {visibleProperties.map((prop) => (
-                <TableHead key={prop} className="text-neutral-300 font-medium">
+                <TableHead key={prop} className="text-white font-medium">
                   {prop.charAt(0).toUpperCase() + prop.slice(1)}
                 </TableHead>
               ))}
-              <TableHead className="text-neutral-300 font-medium">
-                Actions
-              </TableHead>
+              <TableHead className="text-white font-medium">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredEntities.map((entity) => (
               <TableRow
                 key={entity.id}
-                className="hover:bg-neutral-700 border-neutral-700"
+                className="hover:bg-neutral-900 hover:text-black border-white"
               >
                 {visibleProperties.map((prop) => (
-                  <TableCell key={prop} className="text-neutral-200">
+                  <TableCell key={prop} className="text-white">
                     {prop === "plan" ? (
                       <Badge
                         variant={
@@ -459,7 +459,7 @@ sdk.addEntity({
                 <TableCell>
                   <Button
                     variant="ghost"
-                    className="text-brightYellow hover:text-brightYellow/80 hover:bg-neutral-700"
+                    className="text-brightYellow hover:text-brightYellow/80 hover:bg-black"
                     onClick={() => setSelectedEntity(entity)}
                   >
                     View Details
@@ -476,76 +476,110 @@ sdk.addEntity({
           open={!!selectedEntity}
           onOpenChange={() => setSelectedEntity(null)}
         >
-          <SheetContent className="bg-neutral-900 text-white border-l border-neutral-700 w-[400px] sm:max-w-[400px]">
+          <SheetContent className="bg-[#040b12] text-black border-l border-neutral-700 w-[400px] sm:max-w-[400px]">
             <SheetHeader className="flex justify-between items-center">
               <SheetTitle className="text-white text-2xl">
                 Entity Details
               </SheetTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedEntity(null)}
-                className="text-neutral-400 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </SheetHeader>
-            <ScrollArea className="h-[calc(100vh-100px)] mt-6">
+            <ScrollArea className="h-[calc(100vh-100px)] mt-6 pr-4">
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2 text-brightYellow">
+                  <h3 className="text-lg font-semibold mb-3 text-brightYellow">
                     Properties
                   </h3>
-                  <div className="space-y-2">
-                    {Object.entries(selectedEntity.properties).map(
-                      ([key, value]) => (
-                        <div
-                          key={key}
-                          className="bg-neutral-800 p-3 rounded-md"
-                        >
-                          <p className="text-neutral-400 text-sm">{key}</p>
-                          <p className="text-white font-medium">
-                            {value.toString()}
-                          </p>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 text-brightYellow">
-                    Recent Events
-                  </h3>
-                  <div className="space-y-2">
-                    {mockEvents
-                      .filter((event) => event.entityId === selectedEntity.id)
-                      .map((event) => (
-                        <div
-                          key={event.id}
-                          className="bg-neutral-800 p-3 rounded-md"
-                        >
-                          <div className="flex justify-between items-center mb-1">
-                            <p className="text-brightYellow font-medium">
-                              {event.name}
-                            </p>
-                            <p className="text-neutral-400 text-xs">
-                              {new Date(event.timestamp).toLocaleString()}
+                  {Object.keys(selectedEntity.properties).length > 0 ? (
+                    <div className="space-y-2">
+                      {Object.entries(selectedEntity.properties).map(
+                        ([key, value]) => (
+                          <div
+                            key={key}
+                            className="bg-neutral-800 p-3 rounded-md"
+                          >
+                            <p className="text-neutral-400 text-sm">{key}</p>
+                            <p className="text-white font-medium truncate">
+                              {value.toString()}
                             </p>
                           </div>
-                          {Object.entries(event.properties).length > 0 && (
-                            <div className="text-sm text-neutral-300">
-                              {Object.entries(event.properties).map(
-                                ([key, value]) => (
-                                  <p key={key}>
-                                    {key}: {value.toString()}
-                                  </p>
-                                )
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <Card className="bg-neutral-800 border-neutral-700">
+                      <CardContent className="flex flex-col items-center justify-center py-6">
+                        <ClipboardX className="h-12 w-12 text-neutral-500 mb-2" />
+                        <p className="text-neutral-400 text-center">
+                          No properties found for this entity.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-brightYellow">
+                    Recent Events
+                  </h3>
+                  {mockEvents.filter(
+                    (event) => event.entityId === selectedEntity.id
+                  ).length > 0 ? (
+                    <div className="space-y-3">
+                      {mockEvents
+                        .filter((event) => event.entityId === selectedEntity.id)
+                        .map((event) => (
+                          <details key={event.id} className="group">
+                            <summary className="flex justify-between items-center cursor-pointer list-none bg-neutral-800 p-3 rounded-md">
+                              <div className="flex flex-col">
+                                <Badge
+                                  variant="outline"
+                                  className="w-fit bg-brightYellow text-black mb-1"
+                                >
+                                  {event.name}
+                                </Badge>
+                                <span className="text-neutral-400 text-xs">
+                                  {new Date(event.timestamp).toLocaleString()}
+                                </span>
+                              </div>
+                              <ChevronDown className="h-4 w-4 text-neutral-400 group-open:rotate-180 transition-transform" />
+                            </summary>
+                            <div className="bg-neutral-700 p-3 mt-2 rounded-md text-sm">
+                              {Object.entries(event.properties).length > 0 ? (
+                                <div className="space-y-2">
+                                  {Object.entries(event.properties).map(
+                                    ([key, value]) => (
+                                      <div
+                                        key={key}
+                                        className="flex justify-between"
+                                      >
+                                        <span className="text-neutral-400">
+                                          {key}:
+                                        </span>
+                                        <span className="text-white">
+                                          {value.toString()}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-neutral-400">
+                                  No additional properties
+                                </p>
                               )}
                             </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
+                          </details>
+                        ))}
+                    </div>
+                  ) : (
+                    <Card className="bg-neutral-800 border-neutral-700">
+                      <CardContent className="flex flex-col items-center justify-center py-6">
+                        <ClipboardX className="h-12 w-12 text-neutral-500 mb-2" />
+                        <p className="text-neutral-400 text-center">
+                          No recent events found for this entity.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </ScrollArea>
