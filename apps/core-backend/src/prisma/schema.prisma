@@ -26,6 +26,19 @@ model User {
   currentOrganization Organization? @relation("CurrentOrganization", fields: [currentOrganizationId], references: [id])
 }
 
+model Segment {
+  id             String   @id @default(uuid())
+  name           String
+  description    String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  conditions     Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
 model Organization {
   id               String    @id @default(uuid())
   name             String
@@ -40,6 +53,7 @@ model Organization {
   updatedAt        DateTime  @updatedAt
   currentUsers     User[]    @relation("CurrentOrganization")
   apiKeys          ApiKey[] 
+  segments Segment[]
 }
 
 model ApiKey {

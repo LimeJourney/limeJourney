@@ -7,6 +7,340 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"SegmentCriterionType": {
+				"enum": [
+					"property",
+					"event"
+				],
+				"type": "string"
+			},
+			"SegmentOperator": {
+				"enum": [
+					"equals",
+					"not_equals",
+					"greater_than",
+					"less_than",
+					"contains",
+					"not_contains",
+					"in",
+					"not_in",
+					"between",
+					"not_between"
+				],
+				"type": "string"
+			},
+			"SegmentCriterion": {
+				"properties": {
+					"type": {
+						"$ref": "#/components/schemas/SegmentCriterionType"
+					},
+					"field": {
+						"type": "string"
+					},
+					"operator": {
+						"$ref": "#/components/schemas/SegmentOperator"
+					},
+					"value": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "number",
+								"format": "double"
+							},
+							{
+								"type": "boolean"
+							}
+						]
+					}
+				},
+				"required": [
+					"type",
+					"field",
+					"operator",
+					"value"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"LogicalOperator": {
+				"enum": [
+					"and",
+					"or"
+				],
+				"type": "string"
+			},
+			"SegmentCondition": {
+				"properties": {
+					"criteria": {
+						"items": {
+							"$ref": "#/components/schemas/SegmentCriterion"
+						},
+						"type": "array"
+					},
+					"logicalOperator": {
+						"$ref": "#/components/schemas/LogicalOperator"
+					}
+				},
+				"required": [
+					"criteria",
+					"logicalOperator"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Segment": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"conditions": {
+						"items": {
+							"$ref": "#/components/schemas/SegmentCondition"
+						},
+						"type": "array"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"description",
+					"organizationId",
+					"conditions",
+					"createdAt",
+					"updatedAt"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_Segment_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Segment"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateSegmentDTO": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"conditions": {
+						"items": {
+							"$ref": "#/components/schemas/SegmentCondition"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"name",
+					"description",
+					"conditions"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"UpdateSegmentDTO": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"conditions": {
+						"items": {
+							"$ref": "#/components/schemas/SegmentCondition"
+						},
+						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_boolean_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_Segment-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/Segment"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_string-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SegmentAnalytics": {
+				"properties": {
+					"segmentId": {
+						"type": "string"
+					},
+					"size": {
+						"type": "number",
+						"format": "double"
+					},
+					"growthRate": {
+						"type": "number",
+						"format": "double"
+					},
+					"commonCharacteristics": {
+						"items": {
+							"properties": {},
+							"additionalProperties": {},
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"conversionRate": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"segmentId",
+					"size",
+					"growthRate",
+					"commonCharacteristics"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_SegmentAnalytics_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/SegmentAnalytics"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"_36_Enums.SubscriptionStatus": {
 				"type": "string",
 				"enum": [
@@ -403,7 +737,94 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ApiResponse_EntityData-Array_": {
+			"EntityWithSegments": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"external_id": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"updated_at": {
+						"type": "string"
+					},
+					"segments": {
+						"items": {
+							"properties": {
+								"createdAt": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"description": {
+									"type": "string"
+								},
+								"name": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"createdAt",
+								"description",
+								"name",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"org_id",
+					"properties",
+					"created_at",
+					"updated_at",
+					"segments"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityWithSegments_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EntityWithSegments"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityWithSegments-Array_": {
 				"properties": {
 					"status": {
 						"type": "string",
@@ -414,7 +835,7 @@
 					},
 					"data": {
 						"items": {
-							"$ref": "#/components/schemas/EntityData"
+							"$ref": "#/components/schemas/EntityWithSegments"
 						},
 						"type": "array",
 						"nullable": true
@@ -521,6 +942,33 @@
 					"data": {
 						"items": {
 							"$ref": "#/components/schemas/EventData"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityData-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/EntityData"
 						},
 						"type": "array",
 						"nullable": true
@@ -835,6 +1283,282 @@
 				"parameters": []
 			}
 		},
+		"/segments": {
+			"post": {
+				"operationId": "CreateSegment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Segment_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateSegmentDTO"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "ListSegments",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Segment-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/segments/{segmentId}": {
+			"get": {
+				"operationId": "GetSegment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Segment_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "segmentId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "UpdateSegment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Segment_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "segmentId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateSegmentDTO"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteSegment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_boolean_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "segmentId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/segments/{segmentId}/entities": {
+			"get": {
+				"operationId": "GetEntitiesInSegment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_string-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "segmentId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/segments/{segmentId}/analytics": {
+			"get": {
+				"operationId": "GetSegmentAnalytics",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SegmentAnalytics_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "segmentId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/segments/entity/{entityId}": {
+			"get": {
+				"operationId": "GetSegmentsForEntity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_Segment-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "entityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/organizations": {
 			"get": {
 				"operationId": "ListOrganizations",
@@ -1145,7 +1869,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EntityData-Array_"
+									"$ref": "#/components/schemas/ApiResponse_EntityWithSegments-Array_"
 								}
 							}
 						}
@@ -1171,7 +1895,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EntityData_"
+									"$ref": "#/components/schemas/ApiResponse_EntityWithSegments_"
 								}
 							}
 						}

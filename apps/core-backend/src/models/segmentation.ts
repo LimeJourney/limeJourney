@@ -10,6 +10,10 @@ export enum SegmentOperator {
   LESS_THAN = "less_than",
   CONTAINS = "contains",
   NOT_CONTAINS = "not_contains",
+  IN = "in",
+  NOT_IN = "not_in",
+  BETWEEN = "between",
+  NOT_BETWEEN = "not_between",
 }
 
 export enum LogicalOperator {
@@ -41,7 +45,7 @@ export interface Segment {
 
 export interface CreateSegmentDTO {
   name: string;
-  description?: string;
+  description: string;
   conditions: SegmentCondition[];
 }
 

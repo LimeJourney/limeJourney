@@ -8,12 +8,21 @@ import {
   LogicalOperator,
   SegmentAnalytics,
 } from "../models/segmentation";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { DatabaseError, ValidationError, NotFoundError } from "@lime/errors";
 import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
 const prisma = new PrismaClient();
+
+interface SegmentSizeResult {
+  count: string;
+}
+
+interface SegmentMembership {
+  entity_id: string;
+  segment_id: string;
+}
 
 export class SegmentationService {
   private clickhouse: ClickHouseClient;
@@ -31,17 +40,25 @@ export class SegmentationService {
         data: {
           ...data,
           organizationId,
+          conditions: JSON.stringify(data.conditions),
         },
       });
 
-      await this.createMaterializedView(segment);
+      const typedSegment: Segment = {
+        ...segment,
+        conditions: JSON.parse(
+          segment.conditions as string
+        ) as SegmentCondition[],
+      };
 
-      logger.info("segmentation", `Created segment ${segment.id}`, {
+      await this.createMaterializedView(typedSegment);
+
+      logger.info("lifecycle", `Created segment ${segment.id}`, {
         organizationId,
       });
-      return segment;
+      return typedSegment;
     } catch (error) {
-      logger.error("segmentation", "Failed to create segment", error as Error, {
+      logger.error("lifecycle", "Failed to create segment", error as Error, {
         organizationId,
       });
       throw new DatabaseError("Failed to create segment");
@@ -70,12 +87,12 @@ export class SegmentationService {
         },
       });
       logger.info(
-        "segmentation",
+        "lifecycle",
         `Created materialized view for segment ${segment.id}`
       );
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to create materialized view for segment ${segment.id}`,
         error as Error
       );
@@ -95,19 +112,96 @@ export class SegmentationService {
         },
       });
       if (!segment) {
-        logger.warn("segmentation", `Segment ${segmentId} not found`, {
+        logger.warn("lifecycle", `Segment ${segmentId} not found`, {
           organizationId,
         });
+
+        return null;
       }
-      return segment;
+      const typedSegment: Segment = {
+        ...segment,
+        conditions: JSON.parse(
+          segment.conditions as string
+        ) as SegmentCondition[],
+      };
+      return typedSegment;
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to get segment ${segmentId}`,
         error as Error,
         { organizationId }
       );
       throw new DatabaseError("Failed to get segment");
+    }
+  }
+
+  async getSegmentsForMultipleEntities(
+    entityIds: string[],
+    organizationId: string
+  ): Promise<{ [entityId: string]: Segment[] }> {
+    // Fetch all segments for the organization
+    const allSegments = await this.listSegments(organizationId);
+    const segmentMap = new Map(allSegments.map((s) => [s.id, s]));
+
+    // Fetch all segment memberships for the given entity IDs in a single query
+    const query = `
+      SELECT entity_id, segment_id
+      FROM (
+        ${allSegments
+          .map(
+            (s) => `
+          SELECT entity_id, '${s.id}' as segment_id
+          FROM segment_membership_${s.id}
+          WHERE entity_id IN {entityIds:Array(String)}
+        `
+          )
+          .join(" UNION ALL ")}
+      )
+    `;
+
+    try {
+      const result = await this.clickhouse.query({
+        query,
+        query_params: { entityIds },
+        format: "JSONEachRow",
+      });
+
+      const data = (await result.json()) as SegmentMembership[];
+
+      // Group segments by entity ID
+      const entitySegments: { [entityId: string]: Segment[] } = {};
+      for (const { entity_id, segment_id } of data) {
+        if (!entitySegments[entity_id]) {
+          entitySegments[entity_id] = [];
+        }
+        const segment = segmentMap.get(segment_id);
+        if (segment) {
+          entitySegments[entity_id].push({
+            id: segment.id,
+            name: segment.name,
+            description: segment.description,
+            createdAt: segment.createdAt,
+            organizationId: segment.organizationId,
+            conditions: segment.conditions,
+            updatedAt: segment.updatedAt,
+          });
+        }
+      }
+
+      logger.info("lifecycle", `Retrieved segments for multiple entities`, {
+        organizationId,
+        entityCount: entityIds.length,
+        segmentCount: allSegments.length,
+      });
+      return entitySegments;
+    } catch (error) {
+      logger.error(
+        "lifecycle",
+        `Error fetching segments for multiple entities`,
+        error instanceof Error ? error : new Error(String(error))
+      );
+      throw new DatabaseError("Failed to fetch segments for entities");
     }
   }
 
@@ -122,18 +216,28 @@ export class SegmentationService {
           id: segmentId,
           organizationId,
         },
-        data,
+        data: {
+          ...data,
+          conditions: JSON.stringify(data.conditions),
+        },
       });
 
-      await this.updateMaterializedView(segment);
+      const typedSegment: Segment = {
+        ...segment,
+        conditions: JSON.parse(
+          segment.conditions as string
+        ) as SegmentCondition[],
+      };
 
-      logger.info("segmentation", `Updated segment ${segmentId}`, {
+      await this.updateMaterializedView(typedSegment);
+
+      logger.info("lifecycle", `Updated segment ${segmentId}`, {
         organizationId,
       });
-      return segment;
+      return typedSegment;
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to update segment ${segmentId}`,
         error as Error,
         { organizationId }
@@ -161,13 +265,13 @@ export class SegmentationService {
 
       await this.deleteMaterializedView(segmentId);
 
-      logger.info("segmentation", `Deleted segment ${segmentId}`, {
+      logger.info("lifecycle", `Deleted segment ${segmentId}`, {
         organizationId,
       });
       return result.count > 0;
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to delete segment ${segmentId}`,
         error as Error,
         { organizationId }
@@ -181,12 +285,12 @@ export class SegmentationService {
     try {
       await this.clickhouse.query({ query });
       logger.info(
-        "segmentation",
+        "lifecycle",
         `Deleted materialized view for segment ${segmentId}`
       );
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to delete materialized view for segment ${segmentId}`,
         error as Error
       );
@@ -205,12 +309,18 @@ export class SegmentationService {
         },
       });
       logger.info(
-        "segmentation",
+        "lifecycle",
         `Listed segments for organization ${organizationId}`
       );
-      return segments;
+      const typedSegments: Segment[] = segments.map((segment) => ({
+        ...segment,
+        conditions: JSON.parse(
+          segment.conditions as string
+        ) as SegmentCondition[],
+      }));
+      return typedSegments;
     } catch (error) {
-      logger.error("segmentation", "Failed to list segments", error as Error, {
+      logger.error("lifecycle", "Failed to list segments", error as Error, {
         organizationId,
       });
       throw new DatabaseError("Failed to list segments");
@@ -236,15 +346,13 @@ export class SegmentationService {
       });
 
       const data = await result.json();
-      logger.info(
-        "segmentation",
-        `Retrieved entities for segment ${segmentId}`,
-        { organizationId }
-      );
+      logger.info("lifecycle", `Retrieved entities for segment ${segmentId}`, {
+        organizationId,
+      });
       return data.map((row: any) => row.entity_id);
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to get entities in segment ${segmentId}`,
         error as Error,
         { organizationId }
@@ -334,23 +442,21 @@ export class SegmentationService {
 
       const commonCharacteristics =
         await this.getCommonCharacteristics(segment);
-      const conversionRate = await this.getConversionRate(segment);
+      // const conversionRate = await this.getConversionRate(segment);
 
-      logger.info(
-        "segmentation",
-        `Retrieved analytics for segment ${segmentId}`,
-        { organizationId }
-      );
+      logger.info("lifecycle", `Retrieved analytics for segment ${segmentId}`, {
+        organizationId,
+      });
       return {
         segmentId: segment.id,
         size: currentSize,
         growthRate,
         commonCharacteristics,
-        conversionRate,
+        // conversionRate,
       };
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to get analytics for segment ${segmentId}`,
         error as Error,
         { organizationId }
@@ -365,7 +471,6 @@ export class SegmentationService {
   ): Promise<number> {
     const date = new Date();
     date.setDate(date.getDate() - daysAgo);
-
     const query = `
       SELECT COUNT(*) as count
       FROM segment_membership_${segment.id}
@@ -379,13 +484,23 @@ export class SegmentationService {
         format: "JSONEachRow",
       });
 
-      const data = await result.json();
-      return parseInt(data[0].count, 10);
+      const data = await result.json<SegmentSizeResult>();
+
+      if (data.length === 0 || typeof data[0].count !== "string") {
+        throw new Error("Unexpected query result format");
+      }
+
+      const count = parseInt(data[0].count, 10);
+      if (isNaN(count)) {
+        throw new Error(`Invalid count value: ${data[0].count}`);
+      }
+
+      return count;
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to get size for segment ${segment.id}`,
-        error as Error
+        error instanceof Error ? error : new Error(String(error))
       );
       throw new DatabaseError("Failed to get segment size");
     }
@@ -417,7 +532,7 @@ export class SegmentationService {
       return result.json();
     } catch (error) {
       logger.error(
-        "segmentation",
+        "lifecycle",
         `Failed to get common characteristics for segment ${segment.id}`,
         error as Error
       );
@@ -425,33 +540,33 @@ export class SegmentationService {
     }
   }
 
-  private async getConversionRate(segment: Segment): Promise<number> {
-    const query = `
-      SELECT 
-        SUM(CASE WHEN JSONExtractString(e.properties, 'has_purchased') = 'true' THEN 1 ELSE 0 END) / COUNT(*) as conversion_rate
-      FROM entities e
-      JOIN segment_membership_${segment.id} sm ON e.id = sm.entity_id
-      WHERE e.org_id = {organizationId:String}
-    `;
+  // private async getConversionRate(segment: Segment): Promise<number> {
+  //   const query = `
+  //     SELECT
+  //       SUM(CASE WHEN JSONExtractString(e.properties, 'has_purchased') = 'true' THEN 1 ELSE 0 END) / COUNT(*) as conversion_rate
+  //     FROM entities e
+  //     JOIN segment_membership_${segment.id} sm ON e.id = sm.entity_id
+  //     WHERE e.org_id = {organizationId:String}
+  //   `;
 
-    try {
-      const result = await this.clickhouse.query({
-        query,
-        query_params: { organizationId: segment.organizationId },
-        format: "JSONEachRow",
-      });
+  //   try {
+  //     const result = await this.clickhouse.query({
+  //       query,
+  //       query_params: { organizationId: segment.organizationId },
+  //       format: "JSONEachRow",
+  //     });
 
-      const data = await result.json();
-      return parseFloat(data[0].conversion_rate);
-    } catch (error) {
-      logger.error(
-        "segmentation",
-        `Failed to get conversion rate for segment ${segment.id}`,
-        error as Error
-      );
-      throw new DatabaseError("Failed to get conversion rate");
-    }
-  }
+  //     const data = await result.json();
+  //     return parseFloat(data[0].conversion_rate);
+  //   } catch (error) {
+  //     logger.error(
+  //       "lifecycle",
+  //       `Failed to get conversion rate for segment ${segment.id}`,
+  //       error as Error
+  //     );
+  //     throw new DatabaseError("Failed to get conversion rate");
+  //   }
+  // }
 
   async getSegmentsForEntity(
     entityId: string,
@@ -481,14 +596,14 @@ export class SegmentationService {
         }
       } catch (error) {
         logger.error(
-          "segmentation",
+          "lifecycle",
           `Error checking if entity ${entityId} is in segment ${segment.id}`,
           error as Error
         );
       }
     }
 
-    logger.info("segmentation", `Retrieved segments for entity ${entityId}`, {
+    logger.info("lifecycle", `Retrieved segments for entity ${entityId}`, {
       organizationId,
     });
     return entitySegments;

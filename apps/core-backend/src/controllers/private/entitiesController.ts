@@ -28,6 +28,15 @@ interface RecordEventRequest {
   properties: Record<string, any>;
 }
 
+interface EntityWithSegments extends EntityData {
+  segments: {
+    id: string;
+    name: string;
+    description: string;
+    createdAt: Date;
+  }[];
+}
+
 @Route("entities")
 @Tags("Entities")
 @Security("jwt")
@@ -71,11 +80,11 @@ export class EntityController {
   public async getEntity(
     @Path() entityId: string,
     @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EntityData>> {
+  ): Promise<ApiResponse<EntityWithSegments>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
-      const entity = await this.entityService.getEntity(
+      const entity = await this.entityService.getEntityWithSegments(
         organizationId,
         entityId
       );
@@ -99,7 +108,7 @@ export class EntityController {
   @Get()
   public async listEntities(
     @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EntityData[]>> {
+  ): Promise<ApiResponse<EntityWithSegments[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;

@@ -7,6 +7,7 @@ import {
 import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
+import { SegmentationService } from "./segmentationService";
 
 export interface EntityData {
   id: string;
@@ -17,6 +18,15 @@ export interface EntityData {
   updated_at: string;
 }
 
+interface EntityWithSegments extends EntityData {
+  segments: {
+    id: string;
+    name: string;
+    description: string;
+    createdAt: Date;
+  }[];
+}
+
 export interface EventData {
   name: string;
   properties: Record<string, any>;
@@ -24,9 +34,11 @@ export interface EventData {
 
 export class EntityService {
   private clickhouse: ClickHouseClient;
+  private segmentationService: SegmentationService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
+    this.segmentationService = new SegmentationService();
   }
 
   private async executeQuery(
@@ -133,17 +145,42 @@ export class EntityService {
     }
   }
 
-  async listEntities(organizationId: string): Promise<EntityData[]> {
+  async getEntityWithSegments(
+    entityId: string,
+    organizationId: string
+  ): Promise<EntityWithSegments> {
+    const entity = await this.getEntity(entityId, organizationId);
+    if (!entity) {
+      throw new Error("Entity not found");
+    }
+
+    const segments = await this.segmentationService.getSegmentsForEntity(
+      entityId,
+      organizationId
+    );
+
+    return {
+      ...entity,
+      segments: segments.map((segment) => ({
+        id: segment.id,
+        name: segment.name,
+        description: segment.description,
+        createdAt: segment.createdAt,
+      })),
+    };
+  }
+
+  async listEntities(organizationId: string): Promise<EntityWithSegments[]> {
     if (!organizationId) {
       throw new ValidationError("Organization ID is required");
     }
 
     const query = `
-        SELECT *
-        FROM entities
-        WHERE org_id = {organizationId}
-        ORDER BY updated_at DESC
-      `;
+      SELECT *
+      FROM entities
+      WHERE org_id = {organizationId}
+      ORDER BY updated_at DESC
+    `;
 
     const params = { organizationId };
 
@@ -153,7 +190,25 @@ export class EntityService {
         params,
         "Failed to list entities"
       );
-      return result.data;
+      const entities: EntityData[] = result.data;
+
+      // Fetch segments for all entities
+      const entityIds = entities.map((entity) => entity.id);
+      const entitySegments =
+        await this.segmentationService.getSegmentsForMultipleEntities(
+          entityIds,
+          organizationId
+        );
+
+      // Combine entity data with segment information
+      const entitiesWithSegments: EntityWithSegments[] = entities.map(
+        (entity) => ({
+          ...entity,
+          segments: entitySegments[entity.id] || [],
+        })
+      );
+
+      return entitiesWithSegments;
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw error;

@@ -50,3 +50,52 @@
 [32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/favicon-32x32.png"}
 [32minfo[39m: Request received {"category":"http","method":"POST","path":"/api/internal/v1/auth/authenticate"}
 [32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui.css"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-bundle.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-standalone-preset.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-init.js"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui.css"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-standalone-preset.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-bundle.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-init.js"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui.css"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-bundle.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-init.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-standalone-preset.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/favicon-32x32.png"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: SIGTERM received. Starting graceful shutdown {"category":"lifecycle"}
+[32minfo[39m: Server is running on port 3002 {"category":"lifecycle"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui.css"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-bundle.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-standalone-preset.js"}
+[32minfo[39m: Request received {"category":"http","method":"GET","path":"/docs/swagger-ui-init.js"}
+[32minfo[39m: SIGINT received. Starting graceful shutdown {"category":"lifecycle"}
