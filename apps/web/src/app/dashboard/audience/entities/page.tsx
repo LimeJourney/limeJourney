@@ -39,7 +39,26 @@ import {
   X,
   ChevronDown,
   ClipboardX,
+  Tag,
+  Layers,
+  Activity,
+  Calendar,
+  AlertCircle,
+  User,
+  Clock,
 } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+
+interface Segment {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+}
 
 interface EntityData {
   id: string;
@@ -48,6 +67,7 @@ interface EntityData {
   properties: Record<string, any>;
   created_at: string;
   updated_at: string;
+  segments: Segment[];
 }
 
 interface Event {
@@ -58,7 +78,15 @@ interface Event {
   timestamp: string;
 }
 
-// Mock data
+const generateRandomSegments = (count: number): Segment[] => {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `seg${index + 1}`,
+    name: `Segment ${index + 1}`,
+    description: `Description for Segment ${index + 1}`,
+    createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
+  }));
+};
+
 const mockEntities: EntityData[] = [
   {
     id: "1",
@@ -72,6 +100,7 @@ const mockEntities: EntityData[] = [
     },
     created_at: "2023-01-01",
     updated_at: "2023-08-01",
+    segments: generateRandomSegments(2), // Few segments
   },
   {
     id: "2",
@@ -84,6 +113,7 @@ const mockEntities: EntityData[] = [
     },
     created_at: "2023-02-15",
     updated_at: "2023-07-20",
+    segments: generateRandomSegments(15), // Many segments
   },
   {
     id: "3",
@@ -97,7 +127,9 @@ const mockEntities: EntityData[] = [
     },
     created_at: "2023-03-10",
     updated_at: "2023-08-05",
+    segments: generateRandomSegments(50), // A lot of segments
   },
+  // Add more mock entities as needed
 ];
 
 const mockEvents: Event[] = [
@@ -171,6 +203,7 @@ export default function EntityManagement() {
       properties: allProperties,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      segments: [],
     };
     setEntities([...entities, newEntity]);
     setIsCreateEntityOpen(false);
@@ -199,8 +232,59 @@ export default function EntityManagement() {
         : [...prev, property]
     );
   };
+
+  const renderSegments = (segments: Segment[]) => {
+    const maxDisplayed = 2;
+    const displayedSegments = segments.slice(0, maxDisplayed);
+    const remainingCount = segments.length - maxDisplayed;
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {displayedSegments.map((segment) => (
+          <HoverCard key={segment.id}>
+            <HoverCardTrigger asChild>
+              <div className="cursor-pointer">
+                <Badge
+                  variant="outline"
+                  className="bg-neutral-800 text-brightYellow border-brightYellow"
+                >
+                  {segment.name}
+                </Badge>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80 bg-neutral-800 border-neutral-700">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold text-brightYellow">
+                  {segment.name}
+                </h4>
+                <p className="text-sm text-neutral-300">
+                  {segment.description}
+                </p>
+                <div className="flex items-center pt-2">
+                  <Tag className="mr-2 h-4 w-4 text-neutral-400" />
+                  <span className="text-xs text-neutral-400">
+                    Created on{" "}
+                    {new Date(segment.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        ))}
+        {remainingCount > 0 && (
+          <Badge
+            variant="outline"
+            className="bg-neutral-800 text-brightYellow border-brightYellow"
+          >
+            +{remainingCount} more
+          </Badge>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="px-8 py-6">
+    <div className="px-8 py-6 bg-black text-white">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Entities</h1>
         <div className="flex items-center space-x-4">
@@ -211,7 +295,7 @@ export default function EntityManagement() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="border-brightYellow text-black hover:text-white hover:bg-neutral-800"
+                className="border-brightYellow bg-neutral-800 text-white hover:text-black hover:bg-brightYellow"
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Customize View
@@ -242,7 +326,7 @@ export default function EntityManagement() {
           </Dialog>
           <Sheet open={isCreateEntityOpen} onOpenChange={setIsCreateEntityOpen}>
             <SheetTrigger asChild>
-              <Button className="bg-neutral-800 text-white hover:bg-brightYellow hover:text-black border border-brightYellow">
+              <Button className="bg-white text-black hover:bg-brightYellow hover:text-black border border-brightYellow">
                 <Plus className="mr-2 h-4 w-4" /> Add Entity
               </Button>
             </SheetTrigger>
@@ -345,7 +429,7 @@ export default function EntityManagement() {
                     <Button
                       onClick={addCustomProperty}
                       variant="outline"
-                      className="mt-2"
+                      className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-brightYellow"
                     >
                       <Plus className="mr-2 h-4 w-4" /> Add Custom Property
                     </Button>
@@ -412,11 +496,11 @@ sdk.addEntity({
             placeholder="Search entities..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-4 py-2 bg-white text-black border border-brightYellow rounded-md focus:outline-none focus:ring-2 focus:ring-brightYellow focus:border-transparent w-full"
+            className="pl-8 pr-4 py-2 bg-neutral-800 text-white border rounded-md focus:outline-none focus:ring-2 focus:ring-brightYellow focus:border-transparent w-full"
           />
         </div>
       </div>
-      <Card className="bg-[#040b12] border-brightYellow">
+      <Card className="bg-neutral-900 border-brightYellow">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-neutral-800 border-brightYellow">
@@ -425,6 +509,7 @@ sdk.addEntity({
                   {prop.charAt(0).toUpperCase() + prop.slice(1)}
                 </TableHead>
               ))}
+              <TableHead className="text-white font-medium">Segments</TableHead>
               <TableHead className="text-white font-medium">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -432,7 +517,7 @@ sdk.addEntity({
             {filteredEntities.map((entity) => (
               <TableRow
                 key={entity.id}
-                className="hover:bg-neutral-900 hover:text-black border-white"
+                className="hover:bg-neutral-800 border-neutral-700"
               >
                 {visibleProperties.map((prop) => (
                   <TableCell key={prop} className="text-white">
@@ -456,10 +541,11 @@ sdk.addEntity({
                     )}
                   </TableCell>
                 ))}
+                <TableCell>{renderSegments(entity.segments)}</TableCell>
                 <TableCell>
                   <Button
                     variant="ghost"
-                    className="text-brightYellow hover:text-brightYellow/80 hover:bg-black"
+                    className="text-brightYellow hover:text-brightYellow/80 hover:bg-neutral-800"
                     onClick={() => setSelectedEntity(entity)}
                   >
                     View Details
@@ -476,113 +562,142 @@ sdk.addEntity({
           open={!!selectedEntity}
           onOpenChange={() => setSelectedEntity(null)}
         >
-          <SheetContent className="bg-[#040b12] text-black border-l border-neutral-700 w-[400px] sm:max-w-[400px]">
-            <SheetHeader className="flex justify-between items-center">
-              <SheetTitle className="text-white text-2xl">
+          <SheetContent className="bg-neutral-900 text-white border-l border-neutral-700 w-[600px] sm:max-w-[600px] overflow-y-auto">
+            <SheetHeader className="flex justify-between items-center mb-6">
+              <SheetTitle className="text-white text-3xl font-bold">
                 Entity Details
               </SheetTitle>
+              <Badge
+                variant="outline"
+                className="text-brightYellow border-brightYellow"
+              >
+                {selectedEntity.external_id || "No External ID"}
+              </Badge>
             </SheetHeader>
-            <ScrollArea className="h-[calc(100vh-100px)] mt-6 pr-4">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-brightYellow">
-                    Properties
-                  </h3>
-                  {Object.keys(selectedEntity.properties).length > 0 ? (
-                    <div className="space-y-2">
-                      {Object.entries(selectedEntity.properties).map(
-                        ([key, value]) => (
-                          <div
-                            key={key}
-                            className="bg-neutral-800 p-3 rounded-md"
-                          >
-                            <p className="text-neutral-400 text-sm">{key}</p>
-                            <p className="text-white font-medium truncate">
-                              {value.toString()}
-                            </p>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <Card className="bg-neutral-800 border-neutral-700">
-                      <CardContent className="flex flex-col items-center justify-center py-6">
-                        <ClipboardX className="h-12 w-12 text-neutral-500 mb-2" />
-                        <p className="text-neutral-400 text-center">
-                          No properties found for this entity.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+            <div className="space-y-8">
+              <section>
+                <h3 className="text-lg font-semibold mb-4 text-brightYellow flex items-center">
+                  <User className="mr-2 h-5 w-5" />
+                  Basic Information
+                </h3>
+                {Object.keys(selectedEntity.properties).length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(selectedEntity.properties).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="bg-neutral-800 p-4 rounded-md"
+                        >
+                          <p className="text-neutral-400 text-sm mb-1">{key}</p>
+                          <p className="text-white font-medium">
+                            {value.toString()}
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <Card className="bg-neutral-800 border-neutral-700">
+                    <CardContent className="flex flex-col items-center justify-center py-6">
+                      <AlertCircle className="h-12 w-12 text-neutral-500 mb-2" />
+                      <p className="text-neutral-400 text-center">
+                        No properties found for this entity.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </section>
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-3 text-brightYellow">
-                    Recent Events
-                  </h3>
-                  {mockEvents.filter(
-                    (event) => event.entityId === selectedEntity.id
-                  ).length > 0 ? (
-                    <div className="space-y-3">
-                      {mockEvents
-                        .filter((event) => event.entityId === selectedEntity.id)
-                        .map((event) => (
-                          <details key={event.id} className="group">
-                            <summary className="flex justify-between items-center cursor-pointer list-none bg-neutral-800 p-3 rounded-md">
-                              <div className="flex flex-col">
+              <section>
+                <h3 className="text-lg font-semibold mb-4 text-brightYellow flex items-center">
+                  <Layers className="mr-2 h-5 w-5" />
+                  Segments
+                </h3>
+                {selectedEntity.segments.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedEntity.segments.map((segment) => (
+                      <div
+                        key={segment.id}
+                        className="bg-neutral-800 p-4 rounded-md"
+                      >
+                        <h4 className="text-brightYellow font-medium mb-2">
+                          {segment.name}
+                        </h4>
+                        <p className="text-sm text-neutral-300 mb-3">
+                          {segment.description}
+                        </p>
+                        <div className="flex items-center text-xs text-neutral-400">
+                          <Calendar className="mr-1 h-3 w-3" />
+                          Created on{" "}
+                          {new Date(segment.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="bg-neutral-800 border-neutral-700">
+                    <CardContent className="flex flex-col items-center justify-center py-6">
+                      <Layers className="h-12 w-12 text-neutral-500 mb-2" />
+                      <p className="text-neutral-400 text-center">
+                        This entity is not part of any segments yet.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-4 text-brightYellow flex items-center">
+                  <Activity className="mr-2 h-5 w-5" />
+                  Recent Events
+                </h3>
+                {mockEvents.filter(
+                  (event) => event.entityId === selectedEntity.id
+                ).length > 0 ? (
+                  <div className="space-y-4">
+                    {mockEvents
+                      .filter((event) => event.entityId === selectedEntity.id)
+                      .map((event) => (
+                        <Card
+                          key={event.id}
+                          className="bg-neutral-800 border-neutral-700"
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
                                 <Badge
                                   variant="outline"
-                                  className="w-fit bg-brightYellow text-black mb-1"
+                                  className="bg-brightYellow text-black mb-2"
                                 >
                                   {event.name}
                                 </Badge>
-                                <span className="text-neutral-400 text-xs">
-                                  {new Date(event.timestamp).toLocaleString()}
-                                </span>
-                              </div>
-                              <ChevronDown className="h-4 w-4 text-neutral-400 group-open:rotate-180 transition-transform" />
-                            </summary>
-                            <div className="bg-neutral-700 p-3 mt-2 rounded-md text-sm">
-                              {Object.entries(event.properties).length > 0 ? (
-                                <div className="space-y-2">
-                                  {Object.entries(event.properties).map(
-                                    ([key, value]) => (
-                                      <div
-                                        key={key}
-                                        className="flex justify-between"
-                                      >
-                                        <span className="text-neutral-400">
-                                          {key}:
-                                        </span>
-                                        <span className="text-white">
-                                          {value.toString()}
-                                        </span>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              ) : (
-                                <p className="text-neutral-400">
-                                  No additional properties
+                                <p className="text-sm text-neutral-300">
+                                  {Object.entries(event.properties)
+                                    .map(([key, value]) => `${key}: ${value}`)
+                                    .join(", ")}
                                 </p>
-                              )}
+                              </div>
+                              <div className="flex items-center text-xs text-neutral-400">
+                                <Clock className="mr-1 h-3 w-3" />
+                                {new Date(event.timestamp).toLocaleString()}
+                              </div>
                             </div>
-                          </details>
-                        ))}
-                    </div>
-                  ) : (
-                    <Card className="bg-neutral-800 border-neutral-700">
-                      <CardContent className="flex flex-col items-center justify-center py-6">
-                        <ClipboardX className="h-12 w-12 text-neutral-500 mb-2" />
-                        <p className="text-neutral-400 text-center">
-                          No recent events found for this entity.
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            </ScrollArea>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                ) : (
+                  <Card className="bg-neutral-800 border-neutral-700">
+                    <CardContent className="flex flex-col items-center justify-center py-6">
+                      <Activity className="h-12 w-12 text-neutral-500 mb-2" />
+                      <p className="text-neutral-400 text-center">
+                        No recent events found for this entity.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </section>
+            </div>
           </SheetContent>
         </Sheet>
       )}
