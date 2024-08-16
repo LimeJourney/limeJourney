@@ -28,8 +28,12 @@ interface EntityWithSegments extends EntityData {
 }
 
 export interface EventData {
+  id: string;
+  org_id: string;
+  entity_id: string;
   name: string;
   properties: Record<string, any>;
+  timestamp: string;
 }
 
 export class EntityService {
@@ -220,8 +224,8 @@ export class EntityService {
   async recordEvent(
     organizationId: string,
     entityId: string,
-    eventData: EventData
-  ): Promise<EventData & { entity_id: string; timestamp: string }> {
+    eventData: Omit<EventData, "id" | "org_id" | "entity_id" | "timestamp">
+  ): Promise<EventData> {
     if (!organizationId || !entityId) {
       throw new ValidationError("Organization ID and Entity ID are required");
     }
@@ -245,7 +249,30 @@ export class EntityService {
 
       await this.executeQuery(query, params, "Failed to record event");
 
-      return { ...eventData, entity_id: entity.id, timestamp };
+      // Fetch the inserted event to get the generated ID
+      const fetchQuery = `
+        SELECT id, org_id, entity_id, name, properties, timestamp
+        FROM events
+        WHERE org_id = {organizationId} AND entity_id = {entityId} AND timestamp = {timestamp}
+        ORDER BY timestamp DESC
+        LIMIT 1
+      `;
+
+      const result = await this.executeQuery(
+        fetchQuery,
+        params,
+        "Failed to fetch recorded event"
+      );
+      const insertedEvent = result.data[0];
+
+      return {
+        id: insertedEvent.id,
+        org_id: insertedEvent.org_id,
+        entity_id: insertedEvent.entity_id,
+        name: insertedEvent.name,
+        properties: JSON.parse(insertedEvent.properties),
+        timestamp: insertedEvent.timestamp,
+      };
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof DatabaseError) {
         throw error;
@@ -263,7 +290,7 @@ export class EntityService {
     }
 
     const query = `
-          SELECT *
+          SELECT id, org_id, entity_id, name, properties, timestamp
           FROM events
           WHERE org_id = {organizationId} AND entity_id = {entityId}
           ORDER BY timestamp DESC
@@ -277,7 +304,10 @@ export class EntityService {
         params,
         "Failed to retrieve entity events"
       );
-      return result.data;
+      return result.data.map((event: any) => ({
+        ...event,
+        properties: JSON.parse(event.properties),
+      }));
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw error;

@@ -8,6 +8,10 @@ import {
   Security,
   Tags,
   Request,
+  Response,
+  SuccessResponse,
+  TsoaResponse,
+  Res,
 } from "tsoa";
 import {
   EntityService,
@@ -48,10 +52,15 @@ export class EntityController {
   }
 
   @Post()
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @SuccessResponse("201", "Created")
   public async createOrUpdateEntity(
     @Body() body: CreateOrUpdateEntityRequest,
-    @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EntityData>> {
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<EntityData> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
@@ -65,22 +74,30 @@ export class EntityController {
         message: "Entity created or updated successfully",
       };
     } catch (error) {
-      return {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while creating or updating the entity",
-      };
+        message: "An error occurred while creating or updating the entity",
+      });
     }
   }
 
   @Get("{entityId}")
+  @Response<ApiResponse<null>>(404, "Not Found")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntity(
     @Path() entityId: string,
-    @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EntityWithSegments>> {
+    @Request() request: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<EntityWithSegments> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
@@ -88,27 +105,33 @@ export class EntityController {
         organizationId,
         entityId
       );
+      if (!entity) {
+        return notFoundResponse(404, {
+          status: "error",
+          data: null,
+          message: "Entity not found",
+        });
+      }
       return {
         status: "success",
         data: entity,
         message: "Entity retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving the entity",
-      };
+        message: "An error occurred while retrieving the entity",
+      });
     }
   }
 
   @Get()
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async listEntities(
-    @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EntityWithSegments[]>> {
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<EntityWithSegments[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
@@ -119,50 +142,48 @@ export class EntityController {
         message: "Entities retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving entities",
-      };
+        message: "An error occurred while retrieving entities",
+      });
     }
   }
 
   @Get("entity_properties")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityProperties(
-    @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<string[]>> {
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<string[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
-      const entities =
+      const properties =
         await this.entityService.listUniqueProperties(organizationId);
       return {
         status: "success",
-        data: entities,
-        message: "Entities retrieved successfully",
+        data: properties,
+        message: "Entity properties retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving entities",
-      };
+        message: "An error occurred while retrieving entity properties",
+      });
     }
   }
 
   @Post("event")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async recordEvent(
     @Body() body: RecordEventRequest,
-    @Request() request: AuthenticatedRequest
-  ): Promise<
-    ApiResponse<EventData & { entity_id: string; timestamp: string }>
-  > {
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<EventData> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
@@ -180,22 +201,30 @@ export class EntityController {
         message: "Event recorded successfully",
       };
     } catch (error) {
-      return {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while recording the event",
-      };
+        message: "An error occurred while recording the event",
+      });
     }
   }
 
   @Get("{entityId}/events")
+  @Response<ApiResponse<null>>(404, "Not Found")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityEvents(
     @Path() entityId: string,
-    @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EventData[]>> {
+    @Request() request: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<EventData[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
@@ -203,29 +232,44 @@ export class EntityController {
         organizationId,
         entityId
       );
+      if (!events.length) {
+        return notFoundResponse(404, {
+          status: "error",
+          data: null,
+          message: "No events found for this entity",
+        });
+      }
       return {
         status: "success",
         data: events,
         message: "Entity events retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving entity events",
-      };
+        message: "An error occurred while retrieving entity events",
+      });
     }
   }
 
   @Get("search")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async searchEntities(
     @Query() searchQuery: string,
-    @Request() request: AuthenticatedRequest
-  ): Promise<ApiResponse<EntityData[]>> {
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<EntityData[]> | void> {
     try {
+      if (!searchQuery) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: "Search query is required",
+        });
+      }
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
       const entities = await this.entityService.searchEntities(
@@ -238,28 +282,25 @@ export class EntityController {
         message: "Entities searched successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while searching entities",
-      };
+        message: "An error occurred while searching entities",
+      });
     }
   }
 
   @Get("stats")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityStats(
-    @Request() request: AuthenticatedRequest
-  ): Promise<
-    ApiResponse<{
-      totalEntities: number;
-      oldestEntity: string;
-      newestEntity: string;
-      uniqueExternalIds: number;
-    }>
-  > {
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<{
+    totalEntities: number;
+    oldestEntity: string;
+    newestEntity: string;
+    uniqueExternalIds: number;
+  }> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;
@@ -270,14 +311,11 @@ export class EntityController {
         message: "Entity statistics retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving entity statistics",
-      };
+        message: "An error occurred while retrieving entity statistics",
+      });
     }
   }
 }

@@ -853,21 +853,37 @@
 			},
 			"EventData": {
 				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"entity_id": {
+						"type": "string"
+					},
 					"name": {
 						"type": "string"
 					},
 					"properties": {
 						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"timestamp": {
+						"type": "string"
 					}
 				},
 				"required": [
+					"id",
+					"org_id",
+					"entity_id",
 					"name",
-					"properties"
+					"properties",
+					"timestamp"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ApiResponse_EventData-and-_entity_id-string--timestamp-string__": {
+			"ApiResponse_EventData_": {
 				"properties": {
 					"status": {
 						"type": "string",
@@ -880,21 +896,6 @@
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/EventData"
-							},
-							{
-								"properties": {
-									"timestamp": {
-										"type": "string"
-									},
-									"entity_id": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"timestamp",
-									"entity_id"
-								],
-								"type": "object"
 							}
 						],
 						"nullable": true
@@ -1956,7 +1957,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EventData-and-_entity_id-string--timestamp-string__"
+									"$ref": "#/components/schemas/ApiResponse_EventData_"
 								}
 							}
 						}

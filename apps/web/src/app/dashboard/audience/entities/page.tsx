@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Search,
   Plus,
@@ -46,120 +48,27 @@ import {
   AlertCircle,
   User,
   Clock,
+  Loader2,
 } from "lucide-react";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-
-interface Segment {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-}
-
-interface EntityData {
-  id: string;
-  org_id: string;
-  external_id?: string;
-  properties: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  segments: Segment[];
-}
-
-interface Event {
-  id: string;
-  entityId: string;
-  name: string;
-  properties: Record<string, any>;
-  timestamp: string;
-}
-
-const generateRandomSegments = (count: number): Segment[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    id: `seg${index + 1}`,
-    name: `Segment ${index + 1}`,
-    description: `Description for Segment ${index + 1}`,
-    createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
-  }));
-};
-
-const mockEntities: EntityData[] = [
-  {
-    id: "1",
-    org_id: "org1",
-    external_id: "user1",
-    properties: {
-      name: "John Doe",
-      email: "john@example.com",
-      plan: "premium",
-      lastPurchase: "2023-07-15",
-    },
-    created_at: "2023-01-01",
-    updated_at: "2023-08-01",
-    segments: generateRandomSegments(2), // Few segments
-  },
-  {
-    id: "2",
-    org_id: "org1",
-    external_id: "user2",
-    properties: {
-      name: "Jane Smith",
-      email: "jane@example.com",
-      plan: "basic",
-    },
-    created_at: "2023-02-15",
-    updated_at: "2023-07-20",
-    segments: generateRandomSegments(15), // Many segments
-  },
-  {
-    id: "3",
-    org_id: "org1",
-    external_id: "user3",
-    properties: {
-      name: "Bob Johnson",
-      email: "bob@example.com",
-      plan: "premium",
-      company: "Acme Inc.",
-    },
-    created_at: "2023-03-10",
-    updated_at: "2023-08-05",
-    segments: generateRandomSegments(50), // A lot of segments
-  },
-  // Add more mock entities as needed
-];
-
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    entityId: "1",
-    name: "login",
-    properties: {},
-    timestamp: "2023-08-01T10:00:00Z",
-  },
-  {
-    id: "2",
-    entityId: "1",
-    name: "purchase",
-    properties: { product: "Widget X", amount: 99.99 },
-    timestamp: "2023-08-02T14:30:00Z",
-  },
-  {
-    id: "3",
-    entityId: "2",
-    name: "login",
-    properties: {},
-    timestamp: "2023-07-20T09:15:00Z",
-  },
-];
+import {
+  EntityData,
+  EntityWithSegments,
+  EventData,
+  entityService,
+} from "@/services/entitiesService";
+import Loading from "@/components/loading";
 
 export default function EntityManagement() {
-  const [entities, setEntities] = useState<EntityData[]>(mockEntities);
+  const [entities, setEntities] = useState<EntityWithSegments[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEntity, setSelectedEntity] = useState<EntityData | null>(null);
+  const [selectedEntity, setSelectedEntity] =
+    useState<EntityWithSegments | null>(null);
   const [isCreateEntityOpen, setIsCreateEntityOpen] = useState(false);
   const [newEntityData, setNewEntityData] = useState<Partial<EntityData>>({
     properties: {},
@@ -174,21 +83,63 @@ export default function EntityManagement() {
   const [customProperties, setCustomProperties] = useState<
     { key: string; value: string }[]
   >([]);
+  const { toast } = useToast();
+  const router = useRouter();
+
   useEffect(() => {
-    const propertySet = new Set<string>();
-    entities.forEach((entity) => {
-      Object.keys(entity.properties).forEach((prop) => propertySet.add(prop));
+    fetchEntities();
+  }, []);
+
+  const fetchEntities = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedEntities = await entityService.listEntities();
+      console.log("fetchedEntities", fetchedEntities);
+      // Ensure we always have an array of EntityWithSegments
+      const entitiesArray = Array.isArray(fetchedEntities)
+        ? fetchedEntities
+        : [fetchedEntities];
+      const entitiesWithSegments: EntityWithSegments[] = entitiesArray.map(
+        (entity) => ({
+          ...entity,
+          segments: "segments" in entity ? entity.segments : [],
+        })
+      );
+      setEntities(entitiesWithSegments);
+      const propertySet = new Set<string>();
+      entitiesWithSegments.forEach((entity) => {
+        Object.keys(entity.properties).forEach((prop) => propertySet.add(prop));
+      });
+      setAllProperties(Array.from(propertySet));
+    } catch (error) {
+      console.log("error", error);
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleError = (error: any) => {
+    if (error.response && error.response.status === 401) {
+      router.push("/login");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message || "There was a problem with your request.",
+      });
+    }
+  };
+
+  const filteredEntities = entities.filter((entity) => {
+    if (!entity.properties) return false;
+    return Object.values(entity.properties).some((value) => {
+      if (value === null || value === undefined) return false;
+      return value.toString().toLowerCase().includes(searchQuery.toLowerCase());
     });
-    setAllProperties(Array.from(propertySet));
-  }, [entities]);
+  });
 
-  const filteredEntities = entities.filter((entity) =>
-    Object.values(entity.properties).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
-
-  const handleCreateEntity = () => {
+  const handleCreateEntity = async () => {
     const allProperties = {
       ...newEntityData.properties,
       ...Object.fromEntries(
@@ -196,19 +147,27 @@ export default function EntityManagement() {
       ),
     };
 
-    const newEntity: EntityData = {
-      id: (entities.length + 1).toString(),
-      org_id: "org1",
-      external_id: newEntityData.external_id,
-      properties: allProperties,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      segments: [],
-    };
-    setEntities([...entities, newEntity]);
-    setIsCreateEntityOpen(false);
-    setNewEntityData({ properties: {} });
-    setCustomProperties([]);
+    try {
+      const createdEntity = await entityService.createOrUpdateEntity({
+        external_id: newEntityData.external_id,
+        properties: allProperties,
+      });
+      // Ensure the created entity has a segments property
+      const entityWithSegments: EntityWithSegments = {
+        ...createdEntity,
+        segments: [],
+      };
+      setEntities([...entities, entityWithSegments]);
+      setIsCreateEntityOpen(false);
+      setNewEntityData({ properties: {} });
+      setCustomProperties([]);
+      toast({
+        title: "Success",
+        description: "Entity created successfully",
+      });
+    } catch (error) {
+      handleError(error);
+    }
   };
 
   const addCustomProperty = () => {
@@ -225,6 +184,7 @@ export default function EntityManagement() {
     const updatedProperties = customProperties.filter((_, i) => i !== index);
     setCustomProperties(updatedProperties);
   };
+
   const handlePropertyChange = (property: string) => {
     setVisibleProperties((prev) =>
       prev.includes(property)
@@ -233,7 +193,14 @@ export default function EntityManagement() {
     );
   };
 
-  const renderSegments = (segments: Segment[]) => {
+  const renderSegments = (
+    segments: {
+      id: string;
+      name: string;
+      description: string;
+      createdAt: string;
+    }[]
+  ) => {
     const maxDisplayed = 2;
     const displayedSegments = segments.slice(0, maxDisplayed);
     const remainingCount = segments.length - maxDisplayed;
@@ -283,8 +250,25 @@ export default function EntityManagement() {
     );
   };
 
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center h-64 bg-neutral-900 rounded-lg border border-neutral-800 p-8">
+      <ClipboardX className="w-16 h-16 text-neutral-600 mb-4" />
+      <h2 className="text-2xl font-bold text-white mb-2">No entities found</h2>
+      <p className="text-neutral-400 text-center mb-6">
+        It looks like you haven't added any entities yet. Start by creating your
+        first entity!
+      </p>
+      <Button
+        onClick={() => setIsCreateEntityOpen(true)}
+        className="bg-brightYellow text-black hover:bg-brightYellow/90"
+      >
+        <Plus className="mr-2 h-4 w-4" /> Create Your First Entity
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="px-8 py-6 bg-black text-white">
+    <div className="px-8 py-6 bg-black text-white min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Entities</h1>
         <div className="flex items-center space-x-4">
@@ -500,62 +484,75 @@ sdk.addEntity({
           />
         </div>
       </div>
-      <Card className="bg-neutral-900  border-neutral-700">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-neutral-800 border-neutral-700">
-              {visibleProperties.map((prop) => (
-                <TableHead key={prop} className="text-white font-medium">
-                  {prop.charAt(0).toUpperCase() + prop.slice(1)}
-                </TableHead>
-              ))}
-              <TableHead className="text-white font-medium">Segments</TableHead>
-              <TableHead className="text-white font-medium">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredEntities.map((entity) => (
-              <TableRow
-                key={entity.id}
-                className="hover:bg-neutral-800 border-neutral-700"
-              >
+      {isLoading ? (
+        // <div className="flex justify-center items-center h-64">
+        //   <Loader2 className="h-8 w-8 animate-spin text-brightYellow" />
+        // </div>
+        <Loading />
+      ) : entities.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <Card className="bg-neutral-900 border-neutral-700">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-neutral-800 border-neutral-700">
                 {visibleProperties.map((prop) => (
-                  <TableCell key={prop} className="text-white">
-                    {prop === "plan" ? (
-                      <Badge
-                        variant={
-                          entity.properties[prop] === "premium"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={
-                          entity.properties[prop] === "premium"
-                            ? "bg-brightYellow text-black"
-                            : "bg-neutral-700"
-                        }
-                      >
-                        {entity.properties[prop]}
-                      </Badge>
-                    ) : (
-                      entity.properties[prop] || "-"
-                    )}
-                  </TableCell>
+                  <TableHead key={prop} className="text-white font-medium">
+                    {prop.charAt(0).toUpperCase() + prop.slice(1)}
+                  </TableHead>
                 ))}
-                <TableCell>{renderSegments(entity.segments)}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    className="text-brightYellow hover:text-brightYellow/80 hover:bg-neutral-800"
-                    onClick={() => setSelectedEntity(entity)}
-                  >
-                    View Details
-                  </Button>
-                </TableCell>
+                <TableHead className="text-white font-medium">
+                  Segments
+                </TableHead>
+                <TableHead className="text-white font-medium">
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {filteredEntities.map((entity) => (
+                <TableRow
+                  key={entity.id}
+                  className="hover:bg-neutral-800 border-neutral-700"
+                >
+                  {visibleProperties.map((prop) => (
+                    <TableCell key={prop} className="text-white">
+                      {prop === "plan" ? (
+                        <Badge
+                          variant={
+                            entity.properties[prop] === "premium"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            entity.properties[prop] === "premium"
+                              ? "bg-brightYellow text-black"
+                              : "bg-neutral-700"
+                          }
+                        >
+                          {entity.properties[prop]}
+                        </Badge>
+                      ) : (
+                        entity.properties[prop] || "-"
+                      )}
+                    </TableCell>
+                  ))}
+                  <TableCell>{renderSegments(entity.segments)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      className="text-brightYellow hover:text-brightYellow/80 hover:bg-neutral-800"
+                      onClick={() => setSelectedEntity(entity)}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
       {selectedEntity && (
         <Sheet
@@ -651,51 +648,14 @@ sdk.addEntity({
                   <Activity className="mr-2 h-5 w-5" />
                   Recent Events
                 </h3>
-                {mockEvents.filter(
-                  (event) => event.entityId === selectedEntity.id
-                ).length > 0 ? (
-                  <div className="space-y-4">
-                    {mockEvents
-                      .filter((event) => event.entityId === selectedEntity.id)
-                      .map((event) => (
-                        <Card
-                          key={event.id}
-                          className="bg-neutral-800 border-neutral-700"
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start mb-3">
-                              <div>
-                                <Badge
-                                  variant="outline"
-                                  className="bg-brightYellow text-black mb-2"
-                                >
-                                  {event.name}
-                                </Badge>
-                                <p className="text-sm text-neutral-300">
-                                  {Object.entries(event.properties)
-                                    .map(([key, value]) => `${key}: ${value}`)
-                                    .join(", ")}
-                                </p>
-                              </div>
-                              <div className="flex items-center text-xs text-neutral-400">
-                                <Clock className="mr-1 h-3 w-3" />
-                                {new Date(event.timestamp).toLocaleString()}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                  </div>
-                ) : (
-                  <Card className="bg-neutral-800 border-neutral-700">
-                    <CardContent className="flex flex-col items-center justify-center py-6">
-                      <Activity className="h-12 w-12 text-neutral-500 mb-2" />
-                      <p className="text-neutral-400 text-center">
-                        No recent events found for this entity.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card className="bg-neutral-800 border-neutral-700">
+                  <CardContent className="flex flex-col items-center justify-center py-6">
+                    <Activity className="h-12 w-12 text-neutral-500 mb-2" />
+                    <p className="text-neutral-400 text-center">
+                      No recent events found for this entity.
+                    </p>
+                  </CardContent>
+                </Card>
               </section>
             </div>
           </SheetContent>

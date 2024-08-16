@@ -335,17 +335,21 @@ const models: TsoaRoute.Models = {
     "EventData": {
         "dataType": "refObject",
         "properties": {
+            "id": {"dataType":"string","required":true},
+            "org_id": {"dataType":"string","required":true},
+            "entity_id": {"dataType":"string","required":true},
             "name": {"dataType":"string","required":true},
             "properties": {"ref":"Record_string.any_","required":true},
+            "timestamp": {"dataType":"string","required":true},
         },
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_EventData-and-_entity_id-string--timestamp-string__": {
+    "ApiResponse_EventData_": {
         "dataType": "refObject",
         "properties": {
             "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
-            "data": {"dataType":"union","subSchemas":[{"dataType":"intersection","subSchemas":[{"ref":"EventData"},{"dataType":"nestedObjectLiteral","nestedProperties":{"timestamp":{"dataType":"string","required":true},"entity_id":{"dataType":"string","required":true}}}]},{"dataType":"enum","enums":[null]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"ref":"EventData"},{"dataType":"enum","enums":[null]}],"required":true},
             "message": {"dataType":"string"},
         },
         "additionalProperties": false,
