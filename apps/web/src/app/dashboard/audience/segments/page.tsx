@@ -11,6 +11,8 @@ import {
   X,
   Info,
   ChevronDown,
+  Sparkles,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,184 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { create } from "domain";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
+const mockAIProcessing = async (text) => {
+  // Simulate API call delay
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  // Simulate success or failure
+  if (text.toLowerCase().includes("error")) {
+    throw new Error(
+      "Unable to process your request. Please try again with a different description."
+    );
+  }
+
+  // Return mock conditions
+  return [
+    {
+      criteria: [
+        {
+          type: "property",
+          field: "age",
+          operator: "greaterThan",
+          value: "30",
+        },
+        {
+          type: "property",
+          field: "totalPurchases",
+          operator: "greaterThan",
+          value: "1000",
+        },
+      ],
+      logicalOperator: "and",
+    },
+    {
+      criteria: [
+        {
+          type: "property",
+          field: "country",
+          operator: "equals",
+          value: "USA",
+        },
+      ],
+      logicalOperator: "or",
+    },
+  ];
+};
+
+const AIPoweredSegmentCreation = ({ onSegmentCreated }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [generatedConditions, setGeneratedConditions] = useState(null);
+
+  const handleAISegmentCreation = async () => {
+    setIsProcessing(true);
+    try {
+      const conditions = await mockAIProcessing(aiInput);
+      setGeneratedConditions(conditions);
+    } catch (err) {
+      console.error(err);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmSegment = () => {
+    onSegmentCreated({
+      name: aiInput.split(" ").slice(0, 3).join(" "),
+      description: aiInput,
+      conditions: generatedConditions,
+      createdBy: "AI",
+    });
+    setAiInput("");
+    setGeneratedConditions(null);
+    setIsExpanded(false);
+  };
+
+  return (
+    <Card className="bg-white shadow-sm mb-6">
+      <CardContent className="p-6">
+        <div
+          className="flex justify-between items-center cursor-pointer"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <div className="flex items-center space-x-4">
+            <Sparkles className="h-6 w-6 text-yellow-500" />
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                AI-Powered Segment Creation
+              </h2>
+              <p className="text-sm text-gray-600">
+                Create segments effortlessly using natural language
+              </p>
+            </div>
+          </div>
+          <Button className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+            {isExpanded ? (
+              <>
+                <ChevronUp className="mr-2 h-4 w-4" />
+                Close
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-2 h-4 w-4" />
+                Try AI Segment Creation
+              </>
+            )}
+          </Button>
+        </div>
+        {isExpanded && (
+          <div className="mt-4 space-y-4">
+            <Textarea
+              placeholder="Describe your segment in natural language..."
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              className="w-full p-3 bg-gray-200 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brightYellow focus:border-transparent placeholder-gray-500 transition-all duration-300"
+              rows={4}
+            />
+            <Button
+              onClick={handleAISegmentCreation}
+              disabled={isProcessing || !aiInput.trim()}
+              className="w-full bg-brightYellow/60 text-black hover:bg-black hover:text-white transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
+            >
+              {isProcessing ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                "Generate Segment"
+              )}
+            </Button>
+
+            {generatedConditions && (
+              <div className="space-y-4">
+                <h3 className="text-black text-lg font-semibold">
+                  Generated Conditions:
+                </h3>
+                <ConditionVisualizer conditions={generatedConditions} />
+                <Button
+                  onClick={handleConfirmSegment}
+                  className="w-full bg-green-500 text-white hover:bg-green-600 transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
+                >
+                  Confirm and Create Segment
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const CustomDropdown = ({
   options,
@@ -143,6 +323,7 @@ const mockSegments = [
     ],
     createdAt: "2024-08-13T10:30:00Z",
     updatedAt: "2024-08-13T10:30:00Z",
+    createdBy: "AI",
   },
   {
     id: "seg2",
@@ -163,6 +344,7 @@ const mockSegments = [
     ],
     createdAt: "2024-08-12T15:45:00Z",
     updatedAt: "2024-08-12T15:45:00Z",
+    createdBy: "manual",
   },
   // Add more mock segments as needed
 ];
@@ -499,6 +681,7 @@ export default function SegmentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSegment, setSelectedSegment] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isAICreationOpen, setIsAICreationOpen] = useState(false);
   const [newSegment, setNewSegment] = useState({
     name: "",
     description: "",
@@ -516,7 +699,7 @@ export default function SegmentManagement() {
       segment.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateSegment = () => {
+  const handleCreateSegment = (newSegment) => {
     const createdSegment = {
       ...newSegment,
       id: `seg${segments.length + 1}`,
@@ -559,79 +742,104 @@ export default function SegmentManagement() {
                 className="pl-10 pr-4 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-brightYellow focus:border-transparent"
               />
             </div>
-            <Dialog
+            <Sheet
               open={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
             >
-              <DialogTrigger asChild>
+              <SheetTrigger asChild>
                 <Button className="bg-brightYellow text-black hover:bg-brightYellow/90">
                   <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-neutral-800 border border-neutral-700 max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle className="text-white text-2xl">
+              </SheetTrigger>
+              <SheetContent className="bg-neutral-900 border-l border-neutral-700 w-full sm:max-w-xl overflow-hidden flex flex-col">
+                <SheetHeader>
+                  <SheetTitle className="text-white text-2xl">
                     Create New Segment
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-6 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right text-white">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={newSegment.name}
-                      onChange={(e) =>
-                        setNewSegment({ ...newSegment, name: e.target.value })
-                      }
-                      className="col-span-3 bg-neutral-700 text-white border-neutral-600"
-                    />
+                  </SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="flex-grow overflow-auto py-4">
+                  <div className="grid gap-6 pr-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className=" text-white">
+                        Name
+                      </Label>
+                      <Input
+                        id="name"
+                        value={newSegment.name}
+                        onChange={(e) =>
+                          setNewSegment({ ...newSegment, name: e.target.value })
+                        }
+                        className="bg-neutral-800 text-white border-neutral-700"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description" className="text-white">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="description"
+                        value={newSegment.description}
+                        onChange={(e) =>
+                          setNewSegment({
+                            ...newSegment,
+                            description: e.target.value,
+                          })
+                        }
+                        className="bg-neutral-800 text-white border-neutral-700"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Conditions</Label>
+                      <ConditionEditor
+                        conditions={newSegment.conditions}
+                        setConditions={(conditions) =>
+                          setNewSegment({ ...newSegment, conditions })
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label
-                      htmlFor="description"
-                      className="text-right text-white mt-2"
-                    >
-                      Description
-                    </Label>
-                    <Textarea
-                      id="description"
-                      value={newSegment.description}
-                      onChange={(e) =>
-                        setNewSegment({
-                          ...newSegment,
-                          description: e.target.value,
-                        })
-                      }
-                      className="col-span-3 bg-neutral-700 text-white border-neutral-600"
-                    />
-                  </div>
-                  <div className="mt-6">
-                    <Label className="mb-4 block text-lg font-semibold text-brightYellow">
-                      Conditions
-                    </Label>
-                    <ConditionEditor
-                      conditions={newSegment.conditions}
-                      setConditions={(conditions) =>
-                        setNewSegment({ ...newSegment, conditions })
-                      }
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
+                </ScrollArea>
+                <SheetFooter className="mt-4">
                   <Button
                     onClick={handleCreateSegment}
                     className="bg-brightYellow text-black hover:bg-brightYellow/90"
                   >
                     Create Segment
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-
+        {/* <Card className="bg-white shadow-sm mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                <Sparkles className="h-6 w-6 text-yellow-500" />
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    AI-Powered Segment Creation
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Create segments effortlessly using natural language
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setIsAICreationOpen(!isAICreationOpen)}
+                className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+              >
+                {isAICreationOpen ? "Close" : "Try AI Segment Creation"}
+              </Button>
+            </div>
+            {isAICreationOpen && (
+              <div className="mt-4">
+                <AISegmentCreation onSegmentCreated={() => {}} />
+              </div>
+            )}
+          </CardContent>
+        </Card> */}
+        <AIPoweredSegmentCreation onSegmentCreated={handleCreateSegment} />
         <Card className="bg-neutral-900 border-neutral-700">
           <Table>
             <TableHeader>
@@ -640,6 +848,7 @@ export default function SegmentManagement() {
                 <TableHead className="text-white">Description</TableHead>
                 <TableHead className="text-white">Created</TableHead>
                 <TableHead className="text-white">Updated</TableHead>
+                <TableHead className="text-white">Created By</TableHead>
                 <TableHead className="text-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -660,6 +869,18 @@ export default function SegmentManagement() {
                   </TableCell>
                   <TableCell className="text-neutral-300">
                     {new Date(segment.updatedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-neutral-300">
+                    {segment.createdBy === "AI" ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-brightYellow text-black"
+                      >
+                        AI Generated
+                      </Badge>
+                    ) : (
+                      "Manual"
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

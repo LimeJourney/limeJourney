@@ -326,7 +326,7 @@ export default function EntityManagement() {
           </Dialog>
           <Sheet open={isCreateEntityOpen} onOpenChange={setIsCreateEntityOpen}>
             <SheetTrigger asChild>
-              <Button className="bg-white text-black hover:bg-brightYellow hover:text-black border border-brightYellow">
+              <Button className="bg-white text-indigo-600 hover:bg-brightYellow hover:text-black border border-brightYellow">
                 <Plus className="mr-2 h-4 w-4" /> Add Entity
               </Button>
             </SheetTrigger>
@@ -500,10 +500,10 @@ sdk.addEntity({
           />
         </div>
       </div>
-      <Card className="bg-neutral-900 border-brightYellow">
+      <Card className="bg-neutral-900  border-neutral-700">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-neutral-800 border-brightYellow">
+            <TableRow className="hover:bg-neutral-800 border-neutral-700">
               {visibleProperties.map((prop) => (
                 <TableHead key={prop} className="text-white font-medium">
                   {prop.charAt(0).toUpperCase() + prop.slice(1)}

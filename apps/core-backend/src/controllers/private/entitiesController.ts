@@ -130,6 +130,32 @@ export class EntityController {
     }
   }
 
+  @Get("entity_properties")
+  public async getEntityProperties(
+    @Request() request: AuthenticatedRequest
+  ): Promise<ApiResponse<string[]>> {
+    try {
+      const user = request.user as JWTAuthenticatedUser;
+      const organizationId = user.currentOrganizationId as string;
+      const entities =
+        await this.entityService.listUniqueProperties(organizationId);
+      return {
+        status: "success",
+        data: entities,
+        message: "Entities retrieved successfully",
+      };
+    } catch (error) {
+      return {
+        status: "error",
+        data: null,
+        message:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while retrieving entities",
+      };
+    }
+  }
+
   @Post("event")
   public async recordEvent(
     @Body() body: RecordEventRequest,

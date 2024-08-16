@@ -1921,6 +1921,32 @@
 				]
 			}
 		},
+		"/entities/entity_properties": {
+			"get": {
+				"operationId": "GetEntityProperties",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_string-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/entities/event": {
 			"post": {
 				"operationId": "RecordEvent",

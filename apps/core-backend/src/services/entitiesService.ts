@@ -360,4 +360,37 @@ export class EntityService {
       );
     }
   }
+
+  public async listUniqueProperties(organizationId: string): Promise<string[]> {
+    if (!organizationId) {
+      throw new ValidationError("Organization ID is required");
+    }
+
+    const query = `
+      SELECT DISTINCT arrayJoin(JSONExtractKeys(properties)) AS property_name
+      FROM entities
+      WHERE org_id = {organizationId}
+      ORDER BY property_name
+    `;
+
+    const params = { organizationId };
+
+    try {
+      const result = await this.executeQuery(
+        query,
+        params,
+        "Failed to list unique properties"
+      );
+      return result.data.map(
+        (row: { property_name: string }) => row.property_name
+      );
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw error;
+      }
+      throw new Error(
+        "Unexpected error occurred while listing unique properties"
+      );
+    }
+  }
 }
