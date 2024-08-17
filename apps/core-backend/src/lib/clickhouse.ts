@@ -41,15 +41,15 @@ class ClickHouseManager {
 
   private schemas = {
     entities: `
-      CREATE TABLE IF NOT EXISTS entities (
-        id UUID DEFAULT generateUUIDv4(),
-        org_id String,
-        external_id String,
-        properties String,
-        created_at DateTime,
-        updated_at DateTime
-      ) ENGINE = MergeTree()
-      ORDER BY (org_id, id)
+    CREATE TABLE IF NOT EXISTS entities (
+      org_id String,
+      external_id String,
+      properties String,
+      created_at DateTime,
+      updated_at DateTime
+    ) ENGINE = ReplacingMergeTree(updated_at)
+    ORDER BY (org_id, external_id)
+    PRIMARY KEY (org_id, external_id)
     `,
     events: `
       CREATE TABLE IF NOT EXISTS events (

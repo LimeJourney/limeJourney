@@ -140,9 +140,14 @@ export class SegmentationService {
     entityIds: string[],
     organizationId: string
   ): Promise<{ [entityId: string]: Segment[] }> {
+    console.log("getSegmentsForMultipleEntities");
     // Fetch all segments for the organization
     const allSegments = await this.listSegments(organizationId);
     const segmentMap = new Map(allSegments.map((s) => [s.id, s]));
+
+    if (allSegments.length === 0) {
+      return {};
+    }
 
     // Fetch all segment memberships for the given entity IDs in a single query
     const query = `
@@ -159,6 +164,8 @@ export class SegmentationService {
           .join(" UNION ALL ")}
       )
     `;
+
+    console.log("query", query);
 
     try {
       const result = await this.clickhouse.query({
@@ -312,12 +319,14 @@ export class SegmentationService {
         "lifecycle",
         `Listed segments for organization ${organizationId}`
       );
+
       const typedSegments: Segment[] = segments.map((segment) => ({
         ...segment,
         conditions: JSON.parse(
           segment.conditions as string
         ) as SegmentCondition[],
       }));
+
       return typedSegments;
     } catch (error) {
       logger.error("lifecycle", "Failed to list segments", error as Error, {

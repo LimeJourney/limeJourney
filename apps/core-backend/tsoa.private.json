@@ -19,5 +19,6 @@
       "scheme": "bearer",
       "bearerFormat": "JWT"
     }
-  }
+  },
+  "useMethodResponseInterface": true
 }

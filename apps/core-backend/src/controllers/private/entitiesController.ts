@@ -20,7 +20,7 @@ import {
 } from "../../services/entitiesService";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
-
+import { Response as expressResponse } from "express";
 interface CreateOrUpdateEntityRequest {
   external_id?: string;
   properties: Record<string, any>;
@@ -127,9 +127,12 @@ export class EntityController {
   }
 
   @Get()
+  @Response<ApiResponse<EntityWithSegments>>(200, "Retrieved entities")
+  @Response<ApiResponse<null>>(400, "Bad request")
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async listEntities(
     @Request() request: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<400, ApiResponse<null>>,
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EntityWithSegments[]> | void> {
     try {
@@ -142,10 +145,25 @@ export class EntityController {
         message: "Entities retrieved successfully",
       };
     } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === "BadRequestException") {
+          return notFoundResponse(400, {
+            status: "error",
+            data: null,
+            message: error.message,
+          });
+        } else {
+          return serverErrorResponse(500, {
+            status: "error",
+            data: null,
+            message: error.message || "An unexpected error occurred",
+          });
+        }
+      }
       return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message: "An error occurred while retrieving entities",
+        message: "An unexpected error occurred",
       });
     }
   }

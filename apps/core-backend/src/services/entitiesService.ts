@@ -45,6 +45,23 @@ export class EntityService {
     this.segmentationService = new SegmentationService();
   }
 
+  private async executeInsert(
+    table: string,
+    data: Record<string, any>,
+    errorMessage: string
+  ): Promise<void> {
+    try {
+      await this.clickhouse.insert({
+        table,
+        values: [data],
+        format: "JSONEachRow",
+      });
+    } catch (error: any) {
+      logger.error("database", `${errorMessage}: ${error}`, error);
+      throw new DatabaseError(errorMessage);
+    }
+  }
+
   private async executeQuery(
     query: string,
     params: Record<string, any>,
@@ -64,51 +81,95 @@ export class EntityService {
 
   async createOrUpdateEntity(
     organizationId: string,
-    data: Omit<EntityData, "id" | "org_id" | "created_at" | "updated_at">
+    data: Omit<EntityData, "org_id" | "created_at" | "updated_at" | "id">
   ): Promise<EntityData> {
     if (!organizationId) {
       throw new ValidationError("Organization ID is required");
     }
-
     const { external_id, properties } = data;
-    const timestamp = new Date().toISOString();
 
-    const query = `
-        INSERT INTO entities (org_id, external_id, properties, created_at, updated_at)
-        VALUES ({organizationId}, {external_id}, {properties}, {timestamp}, {timestamp})
-        ON DUPLICATE KEY UPDATE
-          properties = {properties},
-          updated_at = {timestamp}
-      `;
-
-    const params = {
-      organizationId,
-      external_id: external_id || "",
-      properties: JSON.stringify(properties),
-      timestamp,
-    };
+    // Format the timestamp correctly for ClickHouse
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/T/, " ")
+      .replace(/\..+/, "")
+      .slice(0, 19);
 
     try {
-      await this.executeQuery(
-        query,
-        params,
-        "Failed to create or update entity"
+      // First, check if the entity exists
+      const checkQuery = `
+        SELECT *
+        FROM entities
+        WHERE org_id = {org_id:String} AND external_id = {external_id:String}
+        LIMIT 1
+      `;
+
+      const checkResult = await this.executeQuery(
+        checkQuery,
+        {
+          org_id: organizationId,
+          external_id: external_id || "",
+        },
+        "Failed to check entity existence"
       );
+      const entityResult = await checkResult.json();
+      const entityExists = entityResult.length > 0;
+
+      if (entityExists) {
+        const existingProperties = JSON.parse(entityResult[0].properties);
+
+        // Merge existing and new properties
+        const mergedProperties = {
+          ...existingProperties,
+          ...properties,
+        };
+        // Update existing entity
+        const updateQuery = `
+          ALTER TABLE entities
+          UPDATE properties = {properties:String}
+          WHERE org_id = {org_id:String} AND external_id = {external_id:String}
+        `;
+
+        await this.executeQuery(
+          updateQuery,
+          {
+            org_id: organizationId,
+            external_id: external_id || "",
+            properties: JSON.stringify(mergedProperties),
+            updated_at: timestamp,
+          },
+          "Failed to update entity"
+        );
+      } else {
+        // Insert new entity
+        const insertData = {
+          org_id: organizationId,
+          external_id: external_id || "",
+          properties: properties,
+        };
+
+        await this.executeInsert(
+          "entities",
+          insertData,
+          "Failed to create entity"
+        );
+      }
+
       return {
         id: "",
         org_id: organizationId,
-        external_id,
-        properties,
+        external_id: data.external_id,
+        properties: data.properties,
         created_at: timestamp,
         updated_at: timestamp,
       };
-    } catch (error) {
-      if (error instanceof DatabaseError) {
-        throw error;
-      }
-      throw new Error(
-        "Unexpected error occurred while creating or updating entity"
+    } catch (error: any) {
+      logger.error(
+        "database",
+        `Failed to create/update entity: ${error}`,
+        error
       );
+      throw new DatabaseError("Failed to create/update entity");
     }
   }
 
@@ -182,7 +243,7 @@ export class EntityService {
     const query = `
       SELECT *
       FROM entities
-      WHERE org_id = {organizationId}
+      WHERE org_id = {organizationId:String}
       ORDER BY updated_at DESC
     `;
 
@@ -194,10 +255,17 @@ export class EntityService {
         params,
         "Failed to list entities"
       );
-      const entities: EntityData[] = result.data;
+      const entities = await result.json();
+
+      const parsedEntities: EntityData[] = entities.map(
+        (entity: { properties: string }) => ({
+          ...entity,
+          properties: JSON.parse(entity.properties as string),
+        })
+      );
 
       // Fetch segments for all entities
-      const entityIds = entities.map((entity) => entity.id);
+      const entityIds = parsedEntities.map((entity) => entity.id);
       const entitySegments =
         await this.segmentationService.getSegmentsForMultipleEntities(
           entityIds,
@@ -205,7 +273,7 @@ export class EntityService {
         );
 
       // Combine entity data with segment information
-      const entitiesWithSegments: EntityWithSegments[] = entities.map(
+      const entitiesWithSegments: EntityWithSegments[] = parsedEntities.map(
         (entity) => ({
           ...entity,
           segments: entitySegments[entity.id] || [],

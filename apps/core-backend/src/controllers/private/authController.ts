@@ -40,7 +40,6 @@ export class AuthController {
         message: "Authentication successful",
       };
     } catch (error) {
-      console.log(error);
       if (error instanceof Error) {
         if (error.name === "BadRequestException") {
           return notFoundResponse(400, {

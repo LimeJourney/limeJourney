@@ -20,7 +20,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -49,6 +48,9 @@ import {
   User,
   Clock,
   Loader2,
+  Edit,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   HoverCard,
@@ -62,6 +64,13 @@ import {
   entityService,
 } from "@/services/entitiesService";
 import Loading from "@/components/loading";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
 
 export default function EntityManagement() {
   const [entities, setEntities] = useState<EntityWithSegments[]>([]);
@@ -73,16 +82,22 @@ export default function EntityManagement() {
   const [newEntityData, setNewEntityData] = useState<Partial<EntityData>>({
     properties: {},
   });
-  const [visibleProperties, setVisibleProperties] = useState<string[]>([
-    "name",
-    "email",
-    "plan",
-  ]);
+  const [visibleProperties, setVisibleProperties] = useState<string[]>([]);
   const [allProperties, setAllProperties] = useState<string[]>([]);
   const [isCustomizeViewOpen, setIsCustomizeViewOpen] = useState(false);
   const [customProperties, setCustomProperties] = useState<
     { key: string; value: string }[]
   >([]);
+  const [isEditEntityOpen, setIsEditEntityOpen] = useState(false);
+  const [editingEntity, setEditingEntity] = useState<EntityWithSegments | null>(
+    null
+  );
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+
+  useEffect(() => {
+    setSelectedProperties(visibleProperties);
+  }, [visibleProperties]);
+
   const { toast } = useToast();
   const router = useRouter();
 
@@ -94,8 +109,6 @@ export default function EntityManagement() {
     setIsLoading(true);
     try {
       const fetchedEntities = await entityService.listEntities();
-      console.log("fetchedEntities", fetchedEntities);
-      // Ensure we always have an array of EntityWithSegments
       const entitiesArray = Array.isArray(fetchedEntities)
         ? fetchedEntities
         : [fetchedEntities];
@@ -110,15 +123,31 @@ export default function EntityManagement() {
       entitiesWithSegments.forEach((entity) => {
         Object.keys(entity.properties).forEach((prop) => propertySet.add(prop));
       });
-      setAllProperties(Array.from(propertySet));
+      const allPropsArray = Array.from(propertySet);
+      setAllProperties(allPropsArray);
+
+      // Set the first 3 properties as visible by default
+      setVisibleProperties(allPropsArray.slice(0, 3));
     } catch (error) {
-      console.log("error", error);
+      console.error("Error fetching entities:", error);
       handleError(error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handlePropertyToggle = (property: string) => {
+    setSelectedProperties((prev) =>
+      prev.includes(property)
+        ? prev.filter((p) => p !== property)
+        : [...prev, property]
+    );
+  };
+
+  const applyCustomView = () => {
+    setVisibleProperties(selectedProperties);
+    setIsCustomizeViewOpen(false);
+  };
   const handleError = (error: any) => {
     if (error.response && error.response.status === 401) {
       router.push("/login");
@@ -152,12 +181,26 @@ export default function EntityManagement() {
         external_id: newEntityData.external_id,
         properties: allProperties,
       });
-      // Ensure the created entity has a segments property
       const entityWithSegments: EntityWithSegments = {
         ...createdEntity,
         segments: [],
       };
-      setEntities([...entities, entityWithSegments]);
+
+      // Update the entities state immediately
+      setEntities((prevEntities) => [...prevEntities, entityWithSegments]);
+      // Update allProperties and visibleProperties
+      const newProps = Object.keys(allProperties);
+
+      setAllProperties((prevProps) => [
+        ...prevProps,
+        ...newProps.filter((prop) => !prevProps.includes(prop)),
+      ]);
+
+      setVisibleProperties((prevProps) => [
+        ...prevProps,
+        ...newProps.filter((prop) => !prevProps.includes(prop)),
+      ]);
+
       setIsCreateEntityOpen(false);
       setNewEntityData({ properties: {} });
       setCustomProperties([]);
@@ -172,6 +215,11 @@ export default function EntityManagement() {
 
   const addCustomProperty = () => {
     setCustomProperties([...customProperties, { key: "", value: "" }]);
+  };
+
+  const handleEditEntity = (entity: EntityWithSegments) => {
+    setEditingEntity(entity);
+    setIsEditEntityOpen(true);
   };
 
   const updateCustomProperty = (index: number, key: string, value: string) => {
@@ -191,6 +239,54 @@ export default function EntityManagement() {
         ? prev.filter((p) => p !== property)
         : [...prev, property]
     );
+  };
+  const handleUpdateEntity = async () => {
+    if (!editingEntity) return;
+
+    const updatedProperties = {
+      ...editingEntity.properties,
+      ...Object.fromEntries(
+        customProperties.map((prop) => [prop.key, prop.value])
+      ),
+    };
+
+    try {
+      const updatedEntity = await entityService.createOrUpdateEntity({
+        external_id: editingEntity.external_id,
+        properties: updatedProperties,
+      });
+
+      // Update the entities state immediately
+      setEntities((prevEntities) =>
+        prevEntities.map((entity) =>
+          entity.external_id === updatedEntity.external_id
+            ? { ...entity, properties: updatedEntity.properties }
+            : entity
+        )
+      );
+
+      // Update allProperties if new properties were added
+      const newProps = Object.keys(updatedProperties);
+      setAllProperties((prevProps) => [
+        ...prevProps,
+        ...newProps.filter((prop) => !prevProps.includes(prop)),
+      ]);
+
+      setVisibleProperties((prevProps) => [
+        ...prevProps,
+        ...newProps.filter((prop) => !prevProps.includes(prop)),
+      ]);
+
+      setIsEditEntityOpen(false);
+      setEditingEntity(null);
+      setCustomProperties([]);
+      toast({
+        title: "Success",
+        description: "Entity updated successfully",
+      });
+    } catch (error) {
+      handleError(error);
+    }
   };
 
   const renderSegments = (
@@ -285,27 +381,106 @@ export default function EntityManagement() {
                 Customize View
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-neutral-900 border-neutral-700">
+            <DialogContent className="bg-neutral-900 border-neutral-700 max-w-3xl">
               <DialogHeader>
-                <DialogTitle className="text-white">Customize View</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-white flex items-center">
+                  <Settings className="mr-2 h-6 w-6" />
+                  Customize Entity View
+                </DialogTitle>
               </DialogHeader>
-              <ScrollArea className="h-[300px] mt-4">
-                {allProperties.map((property) => (
-                  <div
-                    key={property}
-                    className="flex items-center space-x-2 py-2"
-                  >
-                    <Checkbox
-                      id={property}
-                      checked={visibleProperties.includes(property)}
-                      onCheckedChange={() => handlePropertyChange(property)}
-                    />
-                    <Label htmlFor={property} className="text-white">
-                      {property}
-                    </Label>
+              <div className="mt-4">
+                <p className="text-neutral-400 mb-6">
+                  Select the properties you want to display in the entity table.
+                  You can reorder them by dragging.
+                </p>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-brightYellow flex items-center">
+                      <Eye className="mr-2 h-5 w-5" />
+                      Visible Properties
+                    </h3>
+                    <ScrollArea className="h-[300px] rounded-md border border-neutral-700 bg-neutral-800 p-4">
+                      {selectedProperties.map((property) => (
+                        <div
+                          key={property}
+                          className="flex items-center justify-between py-2 border-b border-neutral-700 last:border-b-0"
+                        >
+                          <span className="text-white">{property}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handlePropertyToggle(property)}
+                                >
+                                  <EyeOff className="h-4 w-4 text-neutral-400" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Hide this property</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      ))}
+                    </ScrollArea>
                   </div>
-                ))}
-              </ScrollArea>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-brightYellow flex items-center">
+                      <EyeOff className="mr-2 h-5 w-5" />
+                      Hidden Properties
+                    </h3>
+                    <ScrollArea className="h-[300px] rounded-md border border-neutral-700 bg-neutral-800 p-4">
+                      {allProperties
+                        .filter((prop) => !selectedProperties.includes(prop))
+                        .map((property) => (
+                          <div
+                            key={property}
+                            className="flex items-center justify-between py-2 border-b border-neutral-700 last:border-b-0"
+                          >
+                            <span className="text-neutral-400">{property}</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handlePropertyToggle(property)
+                                    }
+                                  >
+                                    <Eye className="h-4 w-4 text-neutral-400" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Show this property</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        ))}
+                    </ScrollArea>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-between items-center">
+                  <div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsCustomizeViewOpen(false)}
+                      className="mr-2"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={applyCustomView}
+                      className="bg-brightYellow text-black hover:bg-brightYellow/90"
+                    >
+                      Apply Changes
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
           <Sheet open={isCreateEntityOpen} onOpenChange={setIsCreateEntityOpen}>
@@ -546,6 +721,14 @@ sdk.addEntity({
                     >
                       View Details
                     </Button>
+                    <Button
+                      variant="ghost"
+                      className="text-green-500 hover:text-green-400 hover:bg-neutral-800"
+                      onClick={() => handleEditEntity(entity)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -661,6 +844,85 @@ sdk.addEntity({
           </SheetContent>
         </Sheet>
       )}
+
+      <Sheet open={isEditEntityOpen} onOpenChange={setIsEditEntityOpen}>
+        <SheetContent className="bg-neutral-900 text-white border-l border-neutral-700">
+          <SheetHeader>
+            <SheetTitle className="text-white">Edit Entity</SheetTitle>
+          </SheetHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="external_id">External ID (read-only)</Label>
+              <Input
+                id="external_id"
+                value={editingEntity?.external_id || ""}
+                readOnly
+                className="bg-neutral-800 border-neutral-700 text-white mt-1"
+              />
+            </div>
+            {allProperties.map((prop) => (
+              <div key={prop}>
+                <Label htmlFor={prop}>{prop}</Label>
+                <Input
+                  id={prop}
+                  value={editingEntity?.properties?.[prop] || ""}
+                  onChange={(e) =>
+                    setEditingEntity({
+                      ...editingEntity!,
+                      properties: {
+                        ...editingEntity!.properties,
+                        [prop]: e.target.value,
+                      },
+                    })
+                  }
+                  className="bg-neutral-800 border-neutral-700 text-white mt-1"
+                />
+              </div>
+            ))}
+            {customProperties.map((prop, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <Input
+                  placeholder="Property Name"
+                  value={prop.key}
+                  onChange={(e) =>
+                    updateCustomProperty(index, e.target.value, prop.value)
+                  }
+                  className="bg-neutral-800 border-neutral-700 text-white"
+                />
+                <Input
+                  placeholder="Value"
+                  value={prop.value}
+                  onChange={(e) =>
+                    updateCustomProperty(index, prop.key, e.target.value)
+                  }
+                  className="bg-neutral-800 border-neutral-700 text-white"
+                />
+                <Button
+                  onClick={() => removeCustomProperty(index)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:text-red-400"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              onClick={addCustomProperty}
+              variant="outline"
+              className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-brightYellow"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Custom Property
+            </Button>
+            <Button
+              onClick={handleUpdateEntity}
+              className="bg-neutral-800 text-white hover:bg-neutral-700 border border-brightYellow mt-4"
+            >
+              Update Entity
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -17,5 +17,6 @@
       "type": "apiKey",
       "in": "header"
     }
-  }
+  },
+  "useMethodResponseInterface": true
 }

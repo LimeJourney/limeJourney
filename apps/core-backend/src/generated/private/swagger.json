@@ -722,6 +722,30 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ApiResponse_null_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"anyOf": [],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"CreateOrUpdateEntityRequest": {
 				"properties": {
 					"external_id": {
@@ -1086,30 +1110,6 @@
 								"$ref": "#/components/schemas/AuthData"
 							}
 						],
-						"nullable": true
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_null_": {
-				"properties": {
-					"status": {
-						"type": "string",
-						"enum": [
-							"success",
-							"error"
-						]
-					},
-					"data": {
-						"anyOf": [],
 						"nullable": true
 					},
 					"message": {
@@ -1831,12 +1831,37 @@
 			"post": {
 				"operationId": "CreateOrUpdateEntity",
 				"responses": {
-					"200": {
-						"description": "Ok",
+					"201": {
+						"description": "Created",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EntityData_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityData_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1870,7 +1895,32 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EntityWithSegments-Array_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityWithSegments-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1896,7 +1946,32 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EntityWithSegments_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityWithSegments_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1931,7 +2006,22 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_string-Array_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_string-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1957,7 +2047,32 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EventData_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1993,7 +2108,32 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -2028,7 +2168,32 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EntityData-Array_"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityData-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -2063,7 +2228,22 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__totalEntities-number--oldestEntity-string--newestEntity-string--uniqueExternalIds-number__"
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse__totalEntities-number--oldestEntity-string--newestEntity-string--uniqueExternalIds-number__"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
