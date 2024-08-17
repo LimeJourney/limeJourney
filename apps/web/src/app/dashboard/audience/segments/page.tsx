@@ -185,13 +185,13 @@ const AIPoweredSegmentCreation = ({ onSegmentCreated }) => {
               placeholder="Describe your segment in natural language..."
               value={aiInput}
               onChange={(e) => setAiInput(e.target.value)}
-              className="w-full p-3 bg-gray-200 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brightYellow focus:border-transparent placeholder-gray-500 transition-all duration-300"
+              className="w-full p-3 bg-gray-200 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-screaminGreen focus:border-transparent placeholder-gray-500 transition-all duration-300"
               rows={4}
             />
             <Button
               onClick={handleAISegmentCreation}
               disabled={isProcessing || !aiInput.trim()}
-              className="w-full bg-brightYellow/60 text-black hover:bg-black hover:text-white transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
+              className="w-full bg-screaminGreen/60 text-black hover:bg-black hover:text-white transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
             >
               {isProcessing ? (
                 <span className="flex items-center justify-center">
@@ -739,7 +739,7 @@ export default function SegmentManagement() {
                 placeholder="Search segments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-brightYellow focus:border-transparent"
+                className="pl-10 pr-4 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-screaminGreen focus:border-transparent"
               />
             </div>
             <Sheet
@@ -747,7 +747,7 @@ export default function SegmentManagement() {
               onOpenChange={setIsCreateDialogOpen}
             >
               <SheetTrigger asChild>
-                <Button className="bg-brightYellow text-black hover:bg-brightYellow/90">
+                <Button className="bg-screaminGreen text-black hover:bg-screaminGreen/90">
                   <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
                 </Button>
               </SheetTrigger>
@@ -802,7 +802,7 @@ export default function SegmentManagement() {
                 <SheetFooter className="mt-4">
                   <Button
                     onClick={handleCreateSegment}
-                    className="bg-brightYellow text-black hover:bg-brightYellow/90"
+                    className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
                   >
                     Create Segment
                   </Button>
@@ -874,7 +874,7 @@ export default function SegmentManagement() {
                     {segment.createdBy === "AI" ? (
                       <Badge
                         variant="secondary"
-                        className="bg-brightYellow text-black"
+                        className="bg-screaminGreen text-black"
                       >
                         AI Generated
                       </Badge>
@@ -918,13 +918,13 @@ export default function SegmentManagement() {
                           </SheetHeader>
                           <div className="mt-6 space-y-6">
                             <div>
-                              <h3 className="text-lg font-semibold mb-2 text-brightYellow">
+                              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
                                 Name
                               </h3>
                               <p className="text-neutral-300">{segment.name}</p>
                             </div>
                             <div>
-                              <h3 className="text-lg font-semibold mb-2 text-brightYellow">
+                              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
                                 Description
                               </h3>
                               <p className="text-neutral-300">
@@ -932,7 +932,7 @@ export default function SegmentManagement() {
                               </p>
                             </div>
                             <div>
-                              <h3 className="text-lg font-semibold mb-2 text-brightYellow">
+                              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
                                 Conditions
                               </h3>
                               {segment.conditions.map((condition, index) => (
@@ -965,7 +965,7 @@ export default function SegmentManagement() {
                             </div>
                             <div className="flex justify-between items-center">
                               <div>
-                                <h3 className="text-lg font-semibold mb-2 text-brightYellow">
+                                <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
                                   Created
                                 </h3>
                                 <p className="text-neutral-300">
@@ -973,7 +973,7 @@ export default function SegmentManagement() {
                                 </p>
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold mb-2 text-brightYellow">
+                                <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
                                   Updated
                                 </h3>
                                 <p className="text-neutral-300">
@@ -1049,7 +1049,7 @@ export default function SegmentManagement() {
               <SheetFooter className="mt-4">
                 <Button
                   onClick={() => handleUpdateSegment(selectedSegment)}
-                  className="bg-brightYellow text-black hover:bg-brightYellow/90 w-full"
+                  className="bg-screaminGreen text-black hover:bg-screaminGreen/90 w-full"
                 >
                   Update Segment
                 </Button>

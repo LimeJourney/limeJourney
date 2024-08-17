@@ -149,7 +149,7 @@ export default function ApiKeysPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCopyKey(apiKey.key)}
-                      className="text-brightYellow hover:text-brightYellow/90 hover:bg-neutral-700 mr-2"
+                      className="text-screaminGreen hover:text-screaminGreen/90 hover:bg-neutral-700 mr-2"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -192,7 +192,7 @@ export default function ApiKeysPage() {
             <Button
               onClick={handleGenerateKey}
               disabled={isGeneratingKey || !newKeyName}
-              className="bg-brightYellow text-black hover:bg-brightYellow/90"
+              className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
             >
               {isGeneratingKey ? (
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -206,7 +206,7 @@ export default function ApiKeysPage() {
       </Card>
 
       <div className="mt-8 p-4 bg-neutral-700 rounded-lg flex items-start">
-        <AlertCircle className="text-brightYellow mr-3 mt-1 flex-shrink-0" />
+        <AlertCircle className="text-screaminGreen mr-3 mt-1 flex-shrink-0" />
         <p className="text-neutral-300 text-sm">
           Your API keys carry many privileges, so be sure to keep them secure!
           Do not share your API keys in publicly accessible areas such as

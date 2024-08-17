@@ -223,7 +223,7 @@ export default function TeamMembersPage() {
             <Button
               onClick={handleInviteMember}
               disabled={isInviting || !newMemberEmail}
-              className="bg-brightYellow text-black hover:bg-brightYellow/90 w-full md:w-auto"
+              className="bg-screaminGreen text-black hover:bg-screaminGreen/90 w-full md:w-auto"
             >
               {isInviting ? (
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -237,7 +237,7 @@ export default function TeamMembersPage() {
       </Card>
 
       <div className="mt-8 p-4 bg-neutral-700 rounded-lg flex items-start">
-        <AlertCircle className="text-brightYellow mr-3 mt-1 flex-shrink-0" />
+        <AlertCircle className="text-screaminGreen mr-3 mt-1 flex-shrink-0" />
         <p className="text-neutral-300 text-sm">
           Team members have access to your organization's resources based on
           their role. Admins can manage team members and billing, Members can

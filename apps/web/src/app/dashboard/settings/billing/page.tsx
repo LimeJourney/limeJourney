@@ -124,7 +124,7 @@ export default function SubscriptionPage() {
               </div>
               <Badge
                 variant="outline"
-                className="text-brightYellow border-brightYellow"
+                className="text-screaminGreen border-screaminGreen"
               >
                 {subscription.status}
               </Badge>
@@ -148,7 +148,7 @@ export default function SubscriptionPage() {
           <CardFooter className="bg-neutral-800 border-t border-neutral-700 p-4">
             <Button
               onClick={handleUpgrade}
-              className="mr-4 bg-brightYellow text-black hover:bg-brightYellow/90"
+              className="mr-4 bg-screaminGreen text-black hover:bg-screaminGreen/90"
             >
               Upgrade Plan
             </Button>
@@ -174,21 +174,21 @@ export default function SubscriptionPage() {
                 <CreditCard className="mr-3 h-5 w-5 text-neutral-400" />
                 <span className="text-white">Update payment method</span>
               </div>
-              <ChevronRight className="h-5 w-5 text-neutral-500 group-hover:text-brightYellow transition-colors duration-200" />
+              <ChevronRight className="h-5 w-5 text-neutral-500 group-hover:text-screaminGreen transition-colors duration-200" />
             </button>
             <button className="w-full p-4 text-left hover:bg-neutral-700 transition-colors duration-200 flex justify-between items-center group border-t border-neutral-700">
               <div className="flex items-center">
                 <Users className="mr-3 h-5 w-5 text-neutral-400" />
                 <span className="text-white">Manage team members</span>
               </div>
-              <ChevronRight className="h-5 w-5 text-neutral-500 group-hover:text-brightYellow transition-colors duration-200" />
+              <ChevronRight className="h-5 w-5 text-neutral-500 group-hover:text-screaminGreen transition-colors duration-200" />
             </button>
             <button className="w-full p-4 text-left hover:bg-neutral-700 transition-colors duration-200 flex justify-between items-center group border-t border-neutral-700">
               <div className="flex items-center">
                 <DownloadCloudIcon className="mr-3 h-5 w-5 text-neutral-400" />
                 <span className="text-white">Download All Invoices</span>
               </div>
-              <ChevronRight className="h-5 w-5 text-neutral-500 group-hover:text-brightYellow transition-colors duration-200" />
+              <ChevronRight className="h-5 w-5 text-neutral-500 group-hover:text-screaminGreen transition-colors duration-200" />
             </button>
           </CardContent>
         </Card>
@@ -231,7 +231,7 @@ export default function SubscriptionPage() {
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
-                      className="text-brightYellow hover:text-brightYellow/90 hover:bg-neutral-700"
+                      className="text-screaminGreen hover:text-screaminGreen/90 hover:bg-neutral-700"
                     >
                       Download
                     </Button>

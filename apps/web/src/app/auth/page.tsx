@@ -9,7 +9,7 @@ export default function AuthenticationPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black px-4 py-8">
       <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white mb-6 text-center">
-        Start Your <span className="text-brightYellow">Lime Journey</span>
+        Start Your <span className="text-screaminGreen">Lime Journey</span>
       </h1>
       <div className="w-full max-w-md bg-neutral-200 rounded-lg shadow-xl overflow-hidden text-black">
         <div className="p-6 sm:p-8">
@@ -24,14 +24,14 @@ export default function AuthenticationPage() {
               By clicking sign in, you agree to our{" "}
               <Link
                 href="/terms"
-                className="underline underline-offset-4 hover:text-brightYellow"
+                className="underline underline-offset-4 hover:text-screaminGreen"
               >
                 Terms of Service
               </Link>{" "}
               and{" "}
               <Link
                 href="/privacy"
-                className="underline underline-offset-4 hover:text-brightYellow"
+                className="underline underline-offset-4 hover:text-screaminGreen"
               >
                 Privacy Policy
               </Link>

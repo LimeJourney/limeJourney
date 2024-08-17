@@ -209,7 +209,7 @@ export function DashboardSidebar({
                     level > 0 && "pl-8",
                     isCollapsed && "px-2",
                     item.id === selectedItemId
-                      ? "bg-brightYellow text-black"
+                      ? "bg-screaminGreen text-black"
                       : "hover:bg-green-100 hover:text-black",
                     "transition-colors duration-200"
                   )}
@@ -231,7 +231,7 @@ export function DashboardSidebar({
                           <div
                             className={cn(
                               "rounded-full p-1 transition-all duration-200 ease-in-out",
-                              "bg-brightYellow",
+                              "bg-screaminGreen",
                               "shadow-sm hover:shadow-md",
                               "transform hover:scale-105",
                               openItems.includes(item.id) ? "rotate-180" : ""

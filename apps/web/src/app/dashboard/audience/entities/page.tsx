@@ -309,7 +309,7 @@ export default function EntityManagement() {
               <div className="cursor-pointer">
                 <Badge
                   variant="outline"
-                  className="bg-neutral-800 text-brightYellow border-brightYellow"
+                  className="bg-neutral-800 text-screaminGreen border-screaminGreen"
                 >
                   {segment.name}
                 </Badge>
@@ -317,7 +317,7 @@ export default function EntityManagement() {
             </HoverCardTrigger>
             <HoverCardContent className="w-80 bg-neutral-800 border-neutral-700">
               <div className="space-y-1">
-                <h4 className="text-sm font-semibold text-brightYellow">
+                <h4 className="text-sm font-semibold text-screaminGreen">
                   {segment.name}
                 </h4>
                 <p className="text-sm text-neutral-300">
@@ -337,7 +337,7 @@ export default function EntityManagement() {
         {remainingCount > 0 && (
           <Badge
             variant="outline"
-            className="bg-neutral-800 text-brightYellow border-brightYellow"
+            className="bg-neutral-800 text-screaminGreen border-screaminGreen"
           >
             +{remainingCount} more
           </Badge>
@@ -356,7 +356,7 @@ export default function EntityManagement() {
       </p>
       <Button
         onClick={() => setIsCreateEntityOpen(true)}
-        className="bg-brightYellow text-black hover:bg-brightYellow/90"
+        className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
       >
         <Plus className="mr-2 h-4 w-4" /> Create Your First Entity
       </Button>
@@ -375,7 +375,7 @@ export default function EntityManagement() {
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className="border-brightYellow bg-neutral-800 text-white hover:text-black hover:bg-brightYellow"
+                className="border-screaminGreen bg-neutral-800 text-white hover:text-black hover:bg-screaminGreen"
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Customize View
@@ -395,7 +395,7 @@ export default function EntityManagement() {
                 </p>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-3 text-brightYellow flex items-center">
+                    <h3 className="text-lg font-semibold mb-3 text-screaminGreen flex items-center">
                       <Eye className="mr-2 h-5 w-5" />
                       Visible Properties
                     </h3>
@@ -427,7 +427,7 @@ export default function EntityManagement() {
                     </ScrollArea>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold mb-3 text-brightYellow flex items-center">
+                    <h3 className="text-lg font-semibold mb-3 text-screaminGreen flex items-center">
                       <EyeOff className="mr-2 h-5 w-5" />
                       Hidden Properties
                     </h3>
@@ -474,7 +474,7 @@ export default function EntityManagement() {
                     </Button>
                     <Button
                       onClick={applyCustomView}
-                      className="bg-brightYellow text-black hover:bg-brightYellow/90"
+                      className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
                     >
                       Apply Changes
                     </Button>
@@ -485,7 +485,7 @@ export default function EntityManagement() {
           </Dialog>
           <Sheet open={isCreateEntityOpen} onOpenChange={setIsCreateEntityOpen}>
             <SheetTrigger asChild>
-              <Button className="bg-white text-indigo-600 hover:bg-brightYellow hover:text-black border border-brightYellow">
+              <Button className="bg-white text-indigo-600 hover:bg-screaminGreen hover:text-black border border-screaminGreen">
                 <Plus className="mr-2 h-4 w-4" /> Add Entity
               </Button>
             </SheetTrigger>
@@ -497,19 +497,19 @@ export default function EntityManagement() {
                 <TabsList className="bg-neutral-800">
                   <TabsTrigger
                     value="manual"
-                    className="data-[state=active]:bg-brightYellow"
+                    className="data-[state=active]:bg-screaminGreen"
                   >
                     Manual
                   </TabsTrigger>
                   <TabsTrigger
                     value="sdk"
-                    className="data-[state=active]:bg-brightYellow"
+                    className="data-[state=active]:bg-screaminGreen"
                   >
                     SDK
                   </TabsTrigger>
                   <TabsTrigger
                     value="integration"
-                    className="data-[state=active]:bg-brightYellow"
+                    className="data-[state=active]:bg-screaminGreen"
                   >
                     Integration
                   </TabsTrigger>
@@ -588,13 +588,13 @@ export default function EntityManagement() {
                     <Button
                       onClick={addCustomProperty}
                       variant="outline"
-                      className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-brightYellow"
+                      className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-screaminGreen"
                     >
                       <Plus className="mr-2 h-4 w-4" /> Add Custom Property
                     </Button>
                     <Button
                       onClick={handleCreateEntity}
-                      className="bg-neutral-800 text-white hover:bg-neutral-700 border border-brightYellow mt-4"
+                      className="bg-neutral-800 text-white hover:bg-neutral-700 border border-screaminGreen mt-4"
                     >
                       Create Entity
                     </Button>
@@ -655,13 +655,13 @@ sdk.addEntity({
             placeholder="Search entities..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-4 py-2 bg-neutral-800 text-white border rounded-md focus:outline-none focus:ring-2 focus:ring-brightYellow focus:border-transparent w-full"
+            className="pl-8 pr-4 py-2 bg-neutral-800 text-white border rounded-md focus:outline-none focus:ring-2 focus:ring-screaminGreen focus:border-transparent w-full"
           />
         </div>
       </div>
       {isLoading ? (
         // <div className="flex justify-center items-center h-64">
-        //   <Loader2 className="h-8 w-8 animate-spin text-brightYellow" />
+        //   <Loader2 className="h-8 w-8 animate-spin text-screaminGreen" />
         // </div>
         <Loading />
       ) : entities.length === 0 ? (
@@ -701,7 +701,7 @@ sdk.addEntity({
                           }
                           className={
                             entity.properties[prop] === "premium"
-                              ? "bg-brightYellow text-black"
+                              ? "bg-screaminGreen text-black"
                               : "bg-neutral-700"
                           }
                         >
@@ -716,7 +716,7 @@ sdk.addEntity({
                   <TableCell>
                     <Button
                       variant="ghost"
-                      className="text-brightYellow hover:text-brightYellow/80 hover:bg-neutral-800"
+                      className="text-screaminGreen hover:text-screaminGreen/80 hover:bg-neutral-800"
                       onClick={() => setSelectedEntity(entity)}
                     >
                       View Details
@@ -749,14 +749,14 @@ sdk.addEntity({
               </SheetTitle>
               <Badge
                 variant="outline"
-                className="text-brightYellow border-brightYellow"
+                className="text-screaminGreen border-screaminGreen"
               >
                 {selectedEntity.external_id || "No External ID"}
               </Badge>
             </SheetHeader>
             <div className="space-y-8">
               <section>
-                <h3 className="text-lg font-semibold mb-4 text-brightYellow flex items-center">
+                <h3 className="text-lg font-semibold mb-4 text-screaminGreen flex items-center">
                   <User className="mr-2 h-5 w-5" />
                   Basic Information
                 </h3>
@@ -789,7 +789,7 @@ sdk.addEntity({
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-4 text-brightYellow flex items-center">
+                <h3 className="text-lg font-semibold mb-4 text-screaminGreen flex items-center">
                   <Layers className="mr-2 h-5 w-5" />
                   Segments
                 </h3>
@@ -800,7 +800,7 @@ sdk.addEntity({
                         key={segment.id}
                         className="bg-neutral-800 p-4 rounded-md"
                       >
-                        <h4 className="text-brightYellow font-medium mb-2">
+                        <h4 className="text-screaminGreen font-medium mb-2">
                           {segment.name}
                         </h4>
                         <p className="text-sm text-neutral-300 mb-3">
@@ -827,7 +827,7 @@ sdk.addEntity({
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-4 text-brightYellow flex items-center">
+                <h3 className="text-lg font-semibold mb-4 text-screaminGreen flex items-center">
                   <Activity className="mr-2 h-5 w-5" />
                   Recent Events
                 </h3>
@@ -910,13 +910,13 @@ sdk.addEntity({
             <Button
               onClick={addCustomProperty}
               variant="outline"
-              className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-brightYellow"
+              className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-screaminGreen"
             >
               <Plus className="mr-2 h-4 w-4" /> Add Custom Property
             </Button>
             <Button
               onClick={handleUpdateEntity}
-              className="bg-neutral-800 text-white hover:bg-neutral-700 border border-brightYellow mt-4"
+              className="bg-neutral-800 text-white hover:bg-neutral-700 border border-screaminGreen mt-4"
             >
               Update Entity
             </Button>
