@@ -61,7 +61,7 @@ export const entityService = {
   },
 
   async getEntityProperties(): Promise<string[]> {
-    return apiCall<string[]>("get", "/entities/entity_properties");
+    return apiCall<string[]>("get", "/entities/list/entity_properties");
   },
 
   async recordEvent(

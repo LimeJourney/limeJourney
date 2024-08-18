@@ -265,7 +265,9 @@ export class EntityService {
       );
 
       // Fetch segments for all entities
-      const entityIds = parsedEntities.map((entity) => entity.id);
+      const entityIds = parsedEntities.map(
+        (entity) => entity.external_id || ""
+      );
       const entitySegments =
         await this.segmentationService.getSegmentsForMultipleEntities(
           entityIds,
@@ -276,7 +278,7 @@ export class EntityService {
       const entitiesWithSegments: EntityWithSegments[] = parsedEntities.map(
         (entity) => ({
           ...entity,
-          segments: entitySegments[entity.id] || [],
+          segments: entitySegments[entity.external_id!] || [],
         })
       );
 
@@ -467,7 +469,7 @@ export class EntityService {
     const query = `
       SELECT DISTINCT arrayJoin(JSONExtractKeys(properties)) AS property_name
       FROM entities
-      WHERE org_id = {organizationId}
+      WHERE org_id = {organizationId:String}
       ORDER BY property_name
     `;
 
@@ -479,9 +481,13 @@ export class EntityService {
         params,
         "Failed to list unique properties"
       );
-      return result.data.map(
-        (row: { property_name: string }) => row.property_name
-      );
+
+      const rows = await result.json();
+      const out = rows.map((row: { property_name: string }) => {
+        return row.property_name;
+      });
+
+      return out;
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw error;

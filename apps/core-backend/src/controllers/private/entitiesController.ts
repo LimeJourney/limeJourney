@@ -51,6 +51,32 @@ export class EntityController {
     this.entityService = new EntityService();
   }
 
+  @Get("list/entity_properties")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getEntityProperties(
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<string[]> | void> {
+    try {
+      const user = request.user as JWTAuthenticatedUser;
+      const organizationId = user.currentOrganizationId as string;
+      const properties =
+        await this.entityService.listUniqueProperties(organizationId);
+
+      return {
+        status: "success",
+        data: properties,
+        message: "Entity properties retrieved successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving entity properties",
+      });
+    }
+  }
+
   @Post()
   @Response<ApiResponse<null>>(400, "Bad Request")
   @Response<ApiResponse<null>>(500, "Internal Server Error")
@@ -89,7 +115,7 @@ export class EntityController {
     }
   }
 
-  @Get("{entityId}")
+  @Get(":entityId")
   @Response<ApiResponse<null>>(404, "Not Found")
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntity(
@@ -164,31 +190,6 @@ export class EntityController {
         status: "error",
         data: null,
         message: "An unexpected error occurred",
-      });
-    }
-  }
-
-  @Get("entity_properties")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
-  public async getEntityProperties(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
-  ): Promise<ApiResponse<string[]> | void> {
-    try {
-      const user = request.user as JWTAuthenticatedUser;
-      const organizationId = user.currentOrganizationId as string;
-      const properties =
-        await this.entityService.listUniqueProperties(organizationId);
-      return {
-        status: "success",
-        data: properties,
-        message: "Entity properties retrieved successfully",
-      };
-    } catch (error) {
-      return serverErrorResponse(500, {
-        status: "error",
-        data: null,
-        message: "An error occurred while retrieving entity properties",
       });
     }
   }
@@ -309,6 +310,7 @@ export class EntityController {
   }
 
   @Get("stats")
+  @Response<ApiResponse<string[]>>(200, "Retrieved unique properties")
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityStats(
     @Request() request: AuthenticatedRequest,

@@ -9,6 +9,8 @@ import {
   Security,
   Tags,
   Request,
+  Res,
+  TsoaResponse,
 } from "tsoa";
 import {
   Segment,
@@ -33,7 +35,9 @@ export class SegmentController {
   @Post()
   public async createSegment(
     @Body() body: CreateSegmentDTO,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -48,21 +52,27 @@ export class SegmentController {
         message: "Segment created successfully",
       };
     } catch (error) {
-      return {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while creating the segment",
-      };
+        message: "An error occurred while creating the segment",
+      });
     }
   }
 
   @Get("{segmentId}")
   public async getSegment(
     @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -72,11 +82,11 @@ export class SegmentController {
         organizationId
       );
       if (!segment) {
-        return {
+        return badRequestResponse(400, {
           status: "error",
           data: null,
           message: "Segment not found",
-        };
+        });
       }
       return {
         status: "success",
@@ -84,14 +94,11 @@ export class SegmentController {
         message: "Segment retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving the segment",
-      };
+        message: "An error occurred while retrieving the segment",
+      });
     }
   }
 
@@ -99,7 +106,9 @@ export class SegmentController {
   public async updateSegment(
     @Path() segmentId: string,
     @Body() body: UpdateSegmentDTO,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -110,11 +119,11 @@ export class SegmentController {
         body
       );
       if (!segment) {
-        return {
+        return badRequestResponse(400, {
           status: "error",
           data: null,
           message: "Segment not found",
-        };
+        });
       }
       return {
         status: "success",
@@ -122,21 +131,20 @@ export class SegmentController {
         message: "Segment updated successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while updating the segment",
-      };
+        message: "An error occurred while updating the segment",
+      });
     }
   }
 
   @Delete("{segmentId}")
   public async deleteSegment(
     @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<boolean>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -153,20 +161,18 @@ export class SegmentController {
           : "Segment not found or already deleted",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
-        data: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while deleting the segment",
-      };
+        data: null,
+        message: "An error occurred while deleting the segment",
+      });
     }
   }
 
   @Get()
   public async listSegments(
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -179,21 +185,20 @@ export class SegmentController {
         message: "Segments retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving segments",
-      };
+        message: "An error occurred while retrieving segments",
+      });
     }
   }
 
   @Get("{segmentId}/entities")
   public async getEntitiesInSegment(
     @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<string[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -208,21 +213,20 @@ export class SegmentController {
         message: "Entities in segment retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving entities in the segment",
-      };
+        message: "An error occurred while retrieving entities in the segment",
+      });
     }
   }
 
   @Get("{segmentId}/analytics")
   public async getSegmentAnalytics(
     @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<SegmentAnalytics>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -237,21 +241,20 @@ export class SegmentController {
         message: "Segment analytics retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving segment analytics",
-      };
+        message: "An error occurred while retrieving segment analytics",
+      });
     }
   }
 
   @Get("entity/{entityId}")
   public async getSegmentsForEntity(
     @Path() entityId: string,
-    @Request() request: AuthenticatedRequest
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -266,14 +269,11 @@ export class SegmentController {
         message: "Segments for entity retrieved successfully",
       };
     } catch (error) {
-      return {
+      return serverErrorResponse(500, {
         status: "error",
         data: null,
-        message:
-          error instanceof Error
-            ? error.message
-            : "An error occurred while retrieving segments for the entity",
-      };
+        message: "An error occurred while retrieving segments for the entity",
+      });
     }
   }
 }

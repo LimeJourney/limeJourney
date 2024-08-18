@@ -182,6 +182,30 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ApiResponse_null_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"anyOf": [],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"UpdateSegmentDTO": {
 				"properties": {
 					"name": {
@@ -709,30 +733,6 @@
 								"$ref": "#/components/schemas/EntityData"
 							}
 						],
-						"nullable": true
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_null_": {
-				"properties": {
-					"status": {
-						"type": "string",
-						"enum": [
-							"success",
-							"error"
-						]
-					},
-					"data": {
-						"anyOf": [],
 						"nullable": true
 					},
 					"message": {
@@ -1297,6 +1297,26 @@
 								}
 							}
 						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -1331,6 +1351,16 @@
 								}
 							}
 						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -1354,6 +1384,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_Segment_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1387,6 +1437,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_Segment_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1433,6 +1503,26 @@
 								}
 							}
 						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -1465,6 +1555,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_string-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1503,6 +1613,26 @@
 								}
 							}
 						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -1535,6 +1665,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_Segment-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
 								}
 							}
 						}
@@ -1827,6 +1977,47 @@
 				}
 			}
 		},
+		"/entities/list/entity_properties": {
+			"get": {
+				"operationId": "GetEntityProperties",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_string-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
 		"/entities": {
 			"post": {
 				"operationId": "CreateOrUpdateEntity",
@@ -1995,47 +2186,6 @@
 						}
 					}
 				]
-			}
-		},
-		"/entities/entity_properties": {
-			"get": {
-				"operationId": "GetEntityProperties",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"anyOf": [
-										{
-											"$ref": "#/components/schemas/ApiResponse_string-Array_"
-										},
-										{}
-									]
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_null_"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Entities"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": []
 			}
 		},
 		"/entities/event": {

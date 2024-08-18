@@ -31,31 +31,28 @@ export const apiInstance: AxiosInstance = axios.create({
   headers: API_CONFIG.HEADERS,
 });
 
+type Method = "get" | "post" | "put" | "delete";
 export async function apiCall<T>(
-  method: "get" | "post",
+  method: Method,
   url: string,
   data?: any
 ): Promise<T> {
   try {
-    const response = await (method === "get"
-      ? apiInstance.get<ApiResponse<T>>(
-          url,
-          data ? { params: data } : undefined
-        )
-      : apiInstance.post<ApiResponse<T>>(url, data));
+    const response = await apiInstance.request<ApiResponse<T>>({
+      method,
+      url,
+      data: method !== "get" ? data : undefined,
+      params: method === "get" ? data : undefined,
+    });
 
     if (response.data.status === "error") {
       throw new Error(response.data.message);
     }
-
     return response.data.data as T;
   } catch (error) {
     if (error instanceof AxiosError) {
-      // Check the status code from the headers
       const statusCode = error.response?.status;
-
       if (statusCode === 401) {
-        // Redirect to login page for unauthorized access
         Router.push("/login");
         throw new Error("Unauthorized access. Please log in.");
       } else if (statusCode === 403) {
@@ -63,13 +60,10 @@ export async function apiCall<T>(
           "Access forbidden. You do not have permission to perform this action."
         );
       }
-
-      // For other error status codes, throw the error message from the API if available
       if (error.response?.data && error.response.data.message) {
         throw new Error(error.response.data.message);
       }
     }
-    // If it's not an AxiosError or doesn't have a response, throw the original error
     throw error;
   }
 }

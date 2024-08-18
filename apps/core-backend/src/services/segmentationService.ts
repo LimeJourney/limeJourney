@@ -31,6 +31,10 @@ export class SegmentationService {
     this.clickhouse = clickhouseManager.getClient();
   }
 
+  private createSafeSegmentId(id: string): string {
+    return id.replace(/-/g, "_");
+  }
+
   async createSegment(
     organizationId: string,
     data: CreateSegmentDTO
@@ -67,12 +71,16 @@ export class SegmentationService {
 
   private async createMaterializedView(segment: Segment): Promise<void> {
     const { query, params } = this.buildSegmentCondition(segment.conditions);
+
+    // Replace hyphens with underscores in the segment ID
+    const safeSegmentId = segment.id.replace(/-/g, "_");
+
     const createViewQuery = `
-      CREATE MATERIALIZED VIEW IF NOT EXISTS segment_membership_${segment.id}
+      CREATE MATERIALIZED VIEW IF NOT EXISTS segment_membership_${safeSegmentId}
       ENGINE = MergeTree()
-      ORDER BY (entity_id)
+      ORDER BY (org_id)
       POPULATE
-      AS SELECT DISTINCT id AS entity_id
+      AS SELECT DISTINCT org_id, external_id, properties
       FROM entities
       WHERE org_id = {organizationId:String}
       AND ${query}
@@ -140,7 +148,6 @@ export class SegmentationService {
     entityIds: string[],
     organizationId: string
   ): Promise<{ [entityId: string]: Segment[] }> {
-    console.log("getSegmentsForMultipleEntities");
     // Fetch all segments for the organization
     const allSegments = await this.listSegments(organizationId);
     const segmentMap = new Map(allSegments.map((s) => [s.id, s]));
@@ -149,33 +156,33 @@ export class SegmentationService {
       return {};
     }
 
+    // Format entityIds for ClickHouse
+    const formattedEntityIds = entityIds.map((id) => `'${id}'`).join(",");
+
     // Fetch all segment memberships for the given entity IDs in a single query
     const query = `
-      SELECT entity_id, segment_id
+      SELECT external_id as entity_id, segment_id
       FROM (
         ${allSegments
           .map(
             (s) => `
-          SELECT entity_id, '${s.id}' as segment_id
-          FROM segment_membership_${s.id}
-          WHERE entity_id IN {entityIds:Array(String)}
-        `
+              SELECT external_id, '${s.id}' as segment_id
+              FROM segment_membership_${this.createSafeSegmentId(s.id)}
+              WHERE external_id IN (${formattedEntityIds})
+              AND org_id = '${organizationId}'
+            `
           )
           .join(" UNION ALL ")}
       )
     `;
 
-    console.log("query", query);
-
     try {
       const result = await this.clickhouse.query({
         query,
-        query_params: { entityIds },
         format: "JSONEachRow",
       });
 
       const data = (await result.json()) as SegmentMembership[];
-
       // Group segments by entity ID
       const entitySegments: { [entityId: string]: Segment[] } = {};
       for (const { entity_id, segment_id } of data) {
@@ -201,6 +208,7 @@ export class SegmentationService {
         entityCount: entityIds.length,
         segmentCount: allSegments.length,
       });
+
       return entitySegments;
     } catch (error) {
       logger.error(
@@ -288,7 +296,7 @@ export class SegmentationService {
   }
 
   private async deleteMaterializedView(segmentId: string): Promise<void> {
-    const query = `DROP VIEW IF EXISTS segment_membership_${segmentId}`;
+    const query = `DROP VIEW IF EXISTS segment_membership_${this.createSafeSegmentId(segmentId)}`;
     try {
       await this.clickhouse.query({ query });
       logger.info(
@@ -548,34 +556,6 @@ export class SegmentationService {
       throw new DatabaseError("Failed to get common characteristics");
     }
   }
-
-  // private async getConversionRate(segment: Segment): Promise<number> {
-  //   const query = `
-  //     SELECT
-  //       SUM(CASE WHEN JSONExtractString(e.properties, 'has_purchased') = 'true' THEN 1 ELSE 0 END) / COUNT(*) as conversion_rate
-  //     FROM entities e
-  //     JOIN segment_membership_${segment.id} sm ON e.id = sm.entity_id
-  //     WHERE e.org_id = {organizationId:String}
-  //   `;
-
-  //   try {
-  //     const result = await this.clickhouse.query({
-  //       query,
-  //       query_params: { organizationId: segment.organizationId },
-  //       format: "JSONEachRow",
-  //     });
-
-  //     const data = await result.json();
-  //     return parseFloat(data[0].conversion_rate);
-  //   } catch (error) {
-  //     logger.error(
-  //       "lifecycle",
-  //       `Failed to get conversion rate for segment ${segment.id}`,
-  //       error as Error
-  //     );
-  //     throw new DatabaseError("Failed to get conversion rate");
-  //   }
-  // }
 
   async getSegmentsForEntity(
     entityId: string,

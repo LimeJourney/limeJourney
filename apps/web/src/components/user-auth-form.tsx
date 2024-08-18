@@ -100,7 +100,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           ) : (
             <Icons.gitHub className="mr-2 h-4 w-4" />
           )}
-          Sign In With Google
+          Sign In With Github
         </Button>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
