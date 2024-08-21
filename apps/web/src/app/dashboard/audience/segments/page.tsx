@@ -151,35 +151,51 @@ const ConditionVisualizer: React.FC<{ conditions: SegmentCondition[] }> = ({
                 <span className="text-indigo-700 font-medium">
                   Condition {index + 1}
                 </span>
-                <span className="text-indigo-500 ml-2">
-                  ({condition.logicalOperator.toUpperCase()})
-                </span>
               </div>
             </div>
             <div className="ml-6">
               {condition.criteria.map((criterion, cIndex) => (
-                <div key={cIndex} className="flex items-center mt-2">
-                  <div className="w-4 h-8 border-l-2 border-b-2 border-gray-300 mr-2"></div>
-                  <div className="bg-gray-50 p-2 rounded-md">
-                    <span className="text-gray-600">
-                      {criterion.field} {criterion.operator} {criterion.value}
-                    </span>
+                <React.Fragment key={cIndex}>
+                  {cIndex > 0 && (
+                    <div className="ml-4 my-2 text-gray-500">AND</div>
+                  )}
+                  <div className="flex items-center mt-2">
+                    <div className="w-4 h-8 border-l-2 border-b-2 border-gray-300 mr-2"></div>
+                    <div className="bg-gray-50 p-2 rounded-md">
+                      <span className="text-gray-600">
+                        {criterion.field} {criterion.operator} {criterion.value}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </React.Fragment>
               ))}
             </div>
           </div>
         ))}
       </div>
+      <div className="mt-4 flex items-center">
+        <span className="text-indigo-700 font-medium mr-2">
+          Conditions are combined with:
+        </span>
+        <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
+          {conditions[0]?.logicalOperator.toUpperCase() || "AND"}
+        </span>
+      </div>
     </div>
   );
 };
 
-const ConditionEditor: React.FC<{
+interface ConditionEditorProps {
   conditions: SegmentCondition[];
   setConditions: (conditions: SegmentCondition[]) => void;
   entityProperties: string[];
-}> = ({ conditions, setConditions, entityProperties }) => {
+}
+
+const ConditionEditor: React.FC<ConditionEditorProps> = ({
+  conditions,
+  setConditions,
+  entityProperties,
+}) => {
   const addCondition = () => {
     setConditions([
       ...conditions,
@@ -231,18 +247,17 @@ const ConditionEditor: React.FC<{
     setConditions(newConditions);
   };
 
-  const updateLogicalOperator = (
-    conditionIndex: number,
-    value: LogicalOperator
-  ) => {
+  const updateLogicalOperator = (value: LogicalOperator) => {
     const newConditions = [...conditions];
-    newConditions[conditionIndex].logicalOperator = value;
+    newConditions.forEach((condition) => {
+      condition.logicalOperator = value;
+    });
     setConditions(newConditions);
   };
 
   const PROPERTY_FIELDS = entityProperties.map((prop: string) => ({
     value: prop,
-    label: prop.charAt(0).toUpperCase() + prop.slice(1), // Capitalize first letter
+    label: prop.charAt(0).toUpperCase() + prop.slice(1),
   }));
 
   const OPERATORS = [
@@ -256,6 +271,38 @@ const ConditionEditor: React.FC<{
     { value: SegmentOperator.NOT_IN, label: "Not in" },
   ];
 
+  const CombineConditionsSelector = () => (
+    <div className="my-8 flex flex-col items-center">
+      <Label className="text-lg font-semibold text-gray-700 mb-4">
+        Combine Conditions with:
+      </Label>
+      <div className="flex space-x-4">
+        <Button
+          onClick={() => updateLogicalOperator(LogicalOperator.AND)}
+          className={`w-32 h-16 flex items-center justify-center text-lg font-bold transition-all duration-200 ${
+            conditions[0]?.logicalOperator === LogicalOperator.AND
+              ? "bg-indigo-600 text-white shadow-lg scale-105"
+              : "bg-white text-indigo-600 border-2 border-indigo-600 hover:bg-indigo-50"
+          }`}
+        >
+          {/* <AndIcon className="mr-2 h-6 w-6" /> */}
+          AND
+        </Button>
+        <Button
+          onClick={() => updateLogicalOperator(LogicalOperator.OR)}
+          className={`w-32 h-16 flex items-center justify-center text-lg font-bold transition-all duration-200 ${
+            conditions[0]?.logicalOperator === LogicalOperator.OR
+              ? "bg-indigo-600 text-white shadow-lg scale-105"
+              : "bg-white text-indigo-600 border-2 border-indigo-600 hover:bg-indigo-50"
+          }`}
+        >
+          {/* <OrIcon className="mr-2 h-6 w-6" /> */}
+          OR
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg">
@@ -268,13 +315,14 @@ const ConditionEditor: React.FC<{
         <CardContent>
           <p className="text-sm opacity-90">
             Create complex segment conditions by adding multiple conditions and
-            criteria. Each condition can have multiple criteria joined by AND or
-            OR operators. Use the visual representation below to understand how
-            your conditions are structured.
+            criteria. Each condition can have multiple criteria joined by AND.
+            Conditions are combined using the operator you select at the bottom.
+            Use the visual representation below to understand how your
+            conditions are structured.
           </p>
         </CardContent>
       </Card>
-
+      <CombineConditionsSelector />
       {conditions.map((condition, conditionIndex) => (
         <Card key={conditionIndex} className="bg-white shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -302,106 +350,112 @@ const ConditionEditor: React.FC<{
           <CardContent>
             <div className="space-y-4">
               {condition.criteria.map((criterion, criterionIndex) => (
-                <div
-                  key={criterionIndex}
-                  className="flex items-center space-x-2"
-                >
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-[150px]">
-                          <CustomDropdown
-                            options={PROPERTY_FIELDS}
-                            value={criterion.field}
-                            onValueChange={(value) =>
-                              updateCriterion(
-                                conditionIndex,
-                                criterionIndex,
-                                "field",
-                                value
-                              )
-                            }
-                            placeholder="Select property"
-                          />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Select the property to filter on</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  {criterion.field && (
+                <div key={criterionIndex}>
+                  {criterionIndex > 0 && (
+                    <div className="flex items-center my-2">
+                      <div className="flex-grow border-t border-gray-300"></div>
+                      <span className="px-2 text-gray-500 bg-white">AND</span>
+                      <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="w-[150px]">
                             <CustomDropdown
-                              options={OPERATORS}
-                              value={criterion.operator}
+                              options={PROPERTY_FIELDS}
+                              value={criterion.field}
                               onValueChange={(value) =>
                                 updateCriterion(
                                   conditionIndex,
                                   criterionIndex,
-                                  "operator",
-                                  value as SegmentOperator
+                                  "field",
+                                  value
                                 )
                               }
-                              placeholder="Select operator"
+                              placeholder="Select property"
                             />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Choose how to compare the property</p>
+                          <p>Select the property to filter on</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
 
-                  {criterion.field && criterion.operator && (
+                    {criterion.field && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="w-[150px]">
+                              <CustomDropdown
+                                options={OPERATORS}
+                                value={criterion.operator}
+                                onValueChange={(value) =>
+                                  updateCriterion(
+                                    conditionIndex,
+                                    criterionIndex,
+                                    "operator",
+                                    value as SegmentOperator
+                                  )
+                                }
+                                placeholder="Select operator"
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Choose how to compare the property</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
+                    {criterion.field && criterion.operator && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Input
+                              placeholder="Value"
+                              value={criterion.value as string}
+                              onChange={(e) =>
+                                updateCriterion(
+                                  conditionIndex,
+                                  criterionIndex,
+                                  "value",
+                                  e.target.value
+                                )
+                              }
+                              className="bg-white border-gray-300 text-gray-700"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Enter the value to compare against</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Input
-                            placeholder="Value"
-                            value={criterion.value as string}
-                            onChange={(e) =>
-                              updateCriterion(
-                                conditionIndex,
-                                criterionIndex,
-                                "value",
-                                e.target.value
-                              )
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              removeCriterion(conditionIndex, criterionIndex)
                             }
-                            className="bg-white border-gray-300 text-gray-700"
-                          />
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Enter the value to compare against</p>
+                          <p>Remove this criterion</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  )}
-
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            removeCriterion(conditionIndex, criterionIndex)
-                          }
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Remove this criterion</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  </div>
                 </div>
               ))}
 
@@ -423,58 +477,48 @@ const ConditionEditor: React.FC<{
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="w-[80px]">
-                        <CustomDropdown
-                          options={[
-                            { value: LogicalOperator.AND, label: "AND" },
-                            { value: LogicalOperator.OR, label: "OR" },
-                          ]}
-                          value={condition.logicalOperator}
-                          onValueChange={(value) =>
-                            updateLogicalOperator(
-                              conditionIndex,
-                              value as LogicalOperator
-                            )
-                          }
-                          placeholder="Combine with"
-                          width="80px"
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        Choose how to combine criteria within this condition
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
               </div>
             </div>
           </CardContent>
         </Card>
       ))}
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              onClick={addCondition}
-              className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Condition
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Add a new condition to your segment</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="flex items-center justify-between space-x-4">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={addCondition}
+                className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Condition
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add a new condition to your segment</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
+        {/* <div className="flex items-center space-x-2">
+          <Label className="text-gray-700 whitespace-nowrap">
+            Combine Conditions:
+          </Label>
+          <CustomDropdown
+            options={[
+              { value: LogicalOperator.AND, label: "AND" },
+              { value: LogicalOperator.OR, label: "OR" },
+            ]}
+            value={conditions[0]?.logicalOperator || LogicalOperator.AND}
+            onValueChange={(value) =>
+              updateLogicalOperator(value as LogicalOperator)
+            }
+            placeholder="Select operator"
+            width="100px"
+          />
+        </div> */}
+      </div>
       <ConditionVisualizer conditions={conditions} />
     </div>
   );

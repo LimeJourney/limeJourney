@@ -382,9 +382,7 @@ export class SegmentationService {
     query: string;
     params: Record<string, any>;
   } {
-    let paramCounter = 0;
     const params: Record<string, any> = {};
-
     const conditionStrings = conditions.map((condition, conditionIndex) => {
       const criteriaStrings = condition.criteria.map((c, criterionIndex) => {
         const fieldParam = `field_${conditionIndex}_${criterionIndex}`;
@@ -392,28 +390,52 @@ export class SegmentationService {
         params[fieldParam] = c.field;
         params[valueParam] = c.value;
 
-        if (c.type === SegmentCriterionType.PROPERTY) {
-          return `JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}`;
-        } else if (c.type === SegmentCriterionType.EVENT) {
+        if (c.type === SegmentCriterionType.EVENT) {
           const eventNameParam = `event_${conditionIndex}_${criterionIndex}`;
           params[eventNameParam] = c.field;
-          return `EXISTS (
-            SELECT 1 FROM events
-            WHERE entity_id = entities.id 
-            AND name = {${eventNameParam}:String}
-            AND JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}
-          )`;
+
+          switch (c.operator) {
+            case SegmentOperator.HAS_DONE:
+              return `EXISTS (SELECT 1 FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String})`;
+            case SegmentOperator.HAS_NOT_DONE:
+              return `NOT EXISTS (SELECT 1 FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String})`;
+            case SegmentOperator.HAS_DONE_TIMES:
+              return `(SELECT COUNT(*) FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String}) = {${valueParam}:Int64}`;
+            case SegmentOperator.HAS_DONE_FIRST_TIME:
+              return `(SELECT MIN(timestamp) FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String}) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime}`;
+            case SegmentOperator.HAS_DONE_LAST_TIME:
+              return `(SELECT MAX(timestamp) FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String}) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime}`;
+            case SegmentOperator.HAS_DONE_WITHIN:
+            case SegmentOperator.HAS_NOT_DONE_WITHIN:
+              const withinOperator =
+                c.operator === SegmentOperator.HAS_DONE_WITHIN
+                  ? "EXISTS"
+                  : "NOT EXISTS";
+              return `${withinOperator} (SELECT 1 FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String} AND timestamp > now() - INTERVAL {${valueParam}:Int64} DAY)`;
+            default:
+              return `EXISTS (
+                SELECT 1 FROM events
+                WHERE entity_id = entities.id
+                AND name = {${eventNameParam}:String}
+                AND JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}
+              )`;
+          }
+        } else if (c.type === SegmentCriterionType.PROPERTY) {
+          return `JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}`;
         } else {
           throw new Error(`Unsupported criterion type: ${c.type}`);
         }
       });
-
-      const logicalOp =
-        condition.logicalOperator === LogicalOperator.AND ? "AND" : "OR";
-      return `(${criteriaStrings.join(` ${logicalOp} `)})`;
+      // All criteria within a condition are combined with AND
+      return `(${criteriaStrings.join(" AND ")})`;
     });
 
-    const query = conditionStrings.join(" AND ");
+    // Use the logicalOperator of the first condition to combine all conditions
+    const conditionLogicalOp =
+      conditions.length > 0
+        ? conditions[0].logicalOperator
+        : LogicalOperator.AND;
+    const query = conditionStrings.join(` ${conditionLogicalOp} `);
     return { query, params };
   }
 
