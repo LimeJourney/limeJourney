@@ -36,6 +36,7 @@ import {
   GearIcon,
   MagicWandIcon,
   PersonIcon,
+  StarIcon,
 } from "@radix-ui/react-icons";
 import { DashboardLogo } from "./dashboard-logo";
 
@@ -73,6 +74,12 @@ const navItems: NavItem[] = [
         href: "/dashboard/audience/insights",
       },
     ],
+  },
+  {
+    id: "events",
+    title: "Events",
+    icon: StarIcon,
+    href: "/dashboard/events",
   },
   { id: "inbox", title: "Inbox", icon: Inbox, href: "/dashboard/inbox" },
   { id: "drafts", title: "Drafts", icon: File, href: "/dashboard/drafts" },

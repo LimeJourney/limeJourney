@@ -12,7 +12,8 @@ type LogCategory =
   | "http"
   | "database"
   | "task"
-  | "websockets";
+  | "websockets"
+  | "events";
 
 type LogLevel =
   | "error"
