@@ -86,6 +86,7 @@ export class SegmentationService {
       AND ${query}
     `;
 
+    console.log("QUERY", createViewQuery);
     try {
       await this.clickhouse.query({
         query: createViewQuery,
@@ -99,6 +100,7 @@ export class SegmentationService {
         `Created materialized view for segment ${segment.id}`
       );
     } catch (error) {
+      console.log("Error", error);
       logger.error(
         "lifecycle",
         `Failed to create materialized view for segment ${segment.id}`,
@@ -396,27 +398,33 @@ export class SegmentationService {
 
           switch (c.operator) {
             case SegmentOperator.HAS_DONE:
-              return `EXISTS (SELECT 1 FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String})`;
+              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String})`;
             case SegmentOperator.HAS_NOT_DONE:
-              return `NOT EXISTS (SELECT 1 FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String})`;
+              return `external_id NOT IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String})`;
             case SegmentOperator.HAS_DONE_TIMES:
-              return `(SELECT COUNT(*) FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String}) = {${valueParam}:Int64}`;
+              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String} GROUP BY entity_id HAVING COUNT(*) = {${valueParam}:Int64})`;
             case SegmentOperator.HAS_DONE_FIRST_TIME:
-              return `(SELECT MIN(timestamp) FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String}) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime}`;
+              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String} GROUP BY entity_id HAVING MIN(timestamp) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime})`;
             case SegmentOperator.HAS_DONE_LAST_TIME:
-              return `(SELECT MAX(timestamp) FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String}) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime}`;
+              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String} GROUP BY entity_id HAVING MAX(timestamp) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime})`;
             case SegmentOperator.HAS_DONE_WITHIN:
             case SegmentOperator.HAS_NOT_DONE_WITHIN:
               const withinOperator =
                 c.operator === SegmentOperator.HAS_DONE_WITHIN
-                  ? "EXISTS"
-                  : "NOT EXISTS";
-              return `${withinOperator} (SELECT 1 FROM events WHERE entity_id = entities.id AND name = {${eventNameParam}:String} AND timestamp > now() - INTERVAL {${valueParam}:Int64} DAY)`;
+                  ? "IN"
+                  : "NOT IN";
+              const timeUnitParam = `timeUnit_${conditionIndex}_${criterionIndex}`;
+              params[timeUnitParam] = c.timeUnit || "days";
+              return `external_id ${withinOperator} (
+                SELECT entity_id 
+                FROM events 
+                WHERE name = {${eventNameParam}:String} 
+                AND timestamp > subtractSeconds(now(), toUInt32({${valueParam}:Int64} * ${this.getSecondsMultiplier(params[timeUnitParam])}))
+              )`;
             default:
-              return `EXISTS (
-                SELECT 1 FROM events
-                WHERE entity_id = entities.id
-                AND name = {${eventNameParam}:String}
+              return `external_id IN (
+                SELECT entity_id FROM events
+                WHERE name = {${eventNameParam}:String}
                 AND JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}
               )`;
           }
@@ -426,11 +434,9 @@ export class SegmentationService {
           throw new Error(`Unsupported criterion type: ${c.type}`);
         }
       });
-      // All criteria within a condition are combined with AND
       return `(${criteriaStrings.join(" AND ")})`;
     });
 
-    // Use the logicalOperator of the first condition to combine all conditions
     const conditionLogicalOp =
       conditions.length > 0
         ? conditions[0].logicalOperator
@@ -463,6 +469,18 @@ export class SegmentationService {
         return "NOT BETWEEN";
       default:
         throw new Error(`Unsupported operator: ${operator}`);
+    }
+  }
+
+  private getSecondsMultiplier(timeUnit: string): number {
+    switch (timeUnit) {
+      case "minutes":
+        return 60;
+      case "hours":
+        return 3600;
+      case "days":
+      default:
+        return 86400;
     }
   }
 

@@ -42,6 +42,7 @@ class ClickHouseManager {
   private schemas = {
     entities: `
     CREATE TABLE IF NOT EXISTS entities (
+      id UUID DEFAULT generateUUIDv4(),
       org_id String,
       external_id String,
       properties String,
@@ -55,7 +56,7 @@ class ClickHouseManager {
       CREATE TABLE IF NOT EXISTS events (
         id UUID DEFAULT generateUUIDv4(),
         org_id String,
-        entity_id UUID,
+        entity_id String,
         name String,
         properties String,
         timestamp DateTime

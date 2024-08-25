@@ -8,6 +8,7 @@ import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
 import { SegmentationService } from "./segmentationService";
+import { EventData } from "../models/events";
 
 export interface EntityData {
   id: string;
@@ -25,15 +26,6 @@ interface EntityWithSegments extends EntityData {
     description: string;
     createdAt: Date;
   }[];
-}
-
-export interface EventData {
-  id: string;
-  org_id: string;
-  entity_id: string;
-  name: string;
-  properties: Record<string, any>;
-  timestamp: string;
 }
 
 export class EntityService {
@@ -351,6 +343,17 @@ export class EntityService {
     }
   }
 
+  private parseEventProperties(event: EventData): EventData {
+    return {
+      ...event,
+      properties:
+        typeof event.properties === "string"
+          ? JSON.parse(event.properties)
+          : event.properties,
+      timestamp: new Date(event.timestamp),
+    };
+  }
+
   async getEntityEvents(
     organizationId: string,
     entityId: string
@@ -360,24 +363,22 @@ export class EntityService {
     }
 
     const query = `
-          SELECT id, org_id, entity_id, name, properties, timestamp
-          FROM events
-          WHERE org_id = {organizationId} AND entity_id = {entityId}
-          ORDER BY timestamp DESC
-        `;
+    SELECT *
+    FROM events
+    WHERE org_id = {org_id:String}
+    AND entity_id = {entity_id:String}
+    ORDER BY timestamp DESC
+  `;
 
-    const params = { organizationId, entityId };
-
+    const params = { org_id: organizationId, entity_id: entityId };
     try {
       const result = await this.executeQuery(
         query,
         params,
         "Failed to retrieve entity events"
       );
-      return result.data.map((event: any) => ({
-        ...event,
-        properties: JSON.parse(event.properties),
-      }));
+      const events: EventData[] = await result.json();
+      return events.map((event) => this.parseEventProperties(event));
     } catch (error) {
       if (error instanceof DatabaseError) {
         throw error;

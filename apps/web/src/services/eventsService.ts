@@ -10,7 +10,7 @@ export interface EventData {
 }
 
 export interface RecordEventRequest {
-  entityId: string;
+  entity_id: string;
   name: string;
   properties: Record<string, any>;
 }
@@ -36,5 +36,9 @@ export const eventsService = {
   ): Promise<EventData[]> {
     const params = { searchQuery, limit, offset };
     return apiCall<EventData[]>("get", "/events/search", params);
+  },
+
+  async getUniqueEventNames(): Promise<string[]> {
+    return apiCall<string[]>("get", "/events/names");
   },
 };

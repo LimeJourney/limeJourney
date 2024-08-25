@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -72,6 +72,100 @@ import {
 } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 
+interface RecentEventsSectionProps {
+  entityId: string;
+}
+
+const RecentEventsSection: React.FC<RecentEventsSectionProps> = ({
+  entityId,
+}) => {
+  const [events, setEvents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!entityId) return;
+      setIsLoading(true);
+      try {
+        console.log("fetching events");
+        const recentEvents = await entityService.getEntityEvents(entityId);
+        setEvents(recentEvents);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        toast({
+          variant: "destructive",
+          title: "Error fetching events",
+          description: "There was a problem retrieving the recent events.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Card className="bg-neutral-800 border-neutral-700">
+        <CardContent className="flex items-center justify-center py-6">
+          <Loader2 className="h-8 w-8 animate-spin text-screaminGreen" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <Card className="bg-neutral-800 border-neutral-700">
+        <CardContent className="flex flex-col items-center justify-center py-6">
+          <Activity className="h-12 w-12 text-neutral-500 mb-2" />
+          <p className="text-neutral-400 text-center">
+            No recent events found for this entity.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {events.map((event, index) => (
+        <Card key={index} className="bg-neutral-800 border-neutral-700">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <div>
+                <Badge
+                  variant="outline"
+                  className="bg-screaminGreen text-black mb-2"
+                >
+                  {event.name}
+                </Badge>
+                <p className="text-sm text-neutral-300">{event.description}</p>
+              </div>
+              <div className="flex items-center text-xs text-neutral-400">
+                <Clock className="mr-1 h-3 w-3" />
+                {new Date(event.timestamp).toLocaleString()}
+              </div>
+            </div>
+            {event.properties && (
+              <div className="mt-2">
+                <p className="text-xs text-neutral-400">Properties:</p>
+                <p className="text-sm text-neutral-300">
+                  {Object.entries(event.properties)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(", ")}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 export default function EntityManagement() {
   const [entities, setEntities] = useState<EntityWithSegments[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +187,7 @@ export default function EntityManagement() {
     null
   );
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
 
   useEffect(() => {
     setSelectedProperties(visibleProperties);
@@ -530,8 +625,8 @@ export default function EntityManagement() {
                         className="bg-neutral-800 border-neutral-700 text-white mt-1"
                       />
                     </div>
-                    {allProperties.map((prop) => (
-                      <div key={prop}>
+                    {allProperties.map((prop, index) => (
+                      <div key={index}>
                         <Label htmlFor={prop}>{prop}</Label>
                         <Input
                           id={prop}
@@ -671,8 +766,8 @@ sdk.addEntity({
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-neutral-800 border-neutral-700">
-                {visibleProperties.map((prop) => (
-                  <TableHead key={prop} className="text-white font-medium">
+                {visibleProperties.map((prop, index) => (
+                  <TableHead key={index} className="text-white font-medium">
                     {prop.charAt(0).toUpperCase() + prop.slice(1)}
                   </TableHead>
                 ))}
@@ -690,8 +785,8 @@ sdk.addEntity({
                   key={entity.id}
                   className="hover:bg-neutral-800 border-neutral-700"
                 >
-                  {visibleProperties.map((prop) => (
-                    <TableCell key={prop} className="text-white">
+                  {visibleProperties.map((prop, index) => (
+                    <TableCell key={index} className="text-white">
                       {prop === "plan" ? (
                         <Badge
                           variant={
@@ -795,7 +890,7 @@ sdk.addEntity({
                 </h3>
                 {selectedEntity.segments.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4">
-                    {selectedEntity.segments.map((segment) => (
+                    {selectedEntity.segments.map((segment, index) => (
                       <div
                         key={segment.id}
                         className="bg-neutral-800 p-4 rounded-md"
@@ -825,20 +920,16 @@ sdk.addEntity({
                   </Card>
                 )}
               </section>
-
               <section>
                 <h3 className="text-lg font-semibold mb-4 text-screaminGreen flex items-center">
                   <Activity className="mr-2 h-5 w-5" />
                   Recent Events
                 </h3>
-                <Card className="bg-neutral-800 border-neutral-700">
-                  <CardContent className="flex flex-col items-center justify-center py-6">
-                    <Activity className="h-12 w-12 text-neutral-500 mb-2" />
-                    <p className="text-neutral-400 text-center">
-                      No recent events found for this entity.
-                    </p>
-                  </CardContent>
-                </Card>
+                {selectedEntity && (
+                  <RecentEventsSection
+                    entityId={selectedEntity.external_id || ""}
+                  />
+                )}
               </section>
             </div>
           </SheetContent>
@@ -860,8 +951,8 @@ sdk.addEntity({
                 className="bg-neutral-800 border-neutral-700 text-white mt-1"
               />
             </div>
-            {allProperties.map((prop) => (
-              <div key={prop}>
+            {allProperties.map((prop, index) => (
+              <div key={index}>
                 <Label htmlFor={prop}>{prop}</Label>
                 <Input
                   id={prop}

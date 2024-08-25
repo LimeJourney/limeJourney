@@ -16,6 +16,13 @@ export enum SegmentOperator {
   NOT_IN = "not_in",
   BETWEEN = "between",
   NOT_BETWEEN = "not_between",
+  HAS_DONE = "has_done",
+  HAS_NOT_DONE = "has_not_done",
+  HAS_DONE_TIMES = "has_done_times",
+  HAS_DONE_FIRST_TIME = "has_done_first_time",
+  HAS_DONE_LAST_TIME = "has_done_last_time",
+  HAS_DONE_WITHIN = "has_done_within",
+  HAS_NOT_DONE_WITHIN = "has_not_done_within",
 }
 
 export enum LogicalOperator {
@@ -28,6 +35,7 @@ export interface SegmentCriterion {
   field: string;
   operator: SegmentOperator;
   value: string | number | boolean;
+  timeUnit?: "minutes" | "hours" | "days";
 }
 
 export interface SegmentCondition {

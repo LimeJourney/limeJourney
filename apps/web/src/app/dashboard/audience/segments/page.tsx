@@ -63,6 +63,7 @@ import segmentationService, {
   UpdateSegmentDTO,
 } from "@/services/segmentationService";
 import { entityService } from "@/services/entitiesService";
+import { eventsService } from "@/services/eventsService";
 
 interface CustomDropdownProps {
   options: { value: string; label: string }[];
@@ -137,6 +138,22 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 const ConditionVisualizer: React.FC<{ conditions: SegmentCondition[] }> = ({
   conditions,
 }) => {
+  const formatCriterion = (criterion: SegmentCriterion) => {
+    if (criterion.type === SegmentCriterionType.EVENT) {
+      switch (criterion.operator) {
+        case SegmentOperator.HAS_DONE_TIMES:
+          return `${criterion.field} ${criterion.operator} ${criterion.value} times`;
+        case SegmentOperator.HAS_DONE_WITHIN:
+        case SegmentOperator.HAS_NOT_DONE_WITHIN:
+          return `${criterion.field} ${criterion.operator} ${criterion.value} ${criterion.timeUnit}`;
+        default:
+          return `${criterion.field} ${criterion.operator}`;
+      }
+    } else {
+      return `${criterion.field} ${criterion.operator} ${criterion.value}`;
+    }
+  };
+
   return (
     <div className="mt-6 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">
@@ -163,7 +180,7 @@ const ConditionVisualizer: React.FC<{ conditions: SegmentCondition[] }> = ({
                     <div className="w-4 h-8 border-l-2 border-b-2 border-gray-300 mr-2"></div>
                     <div className="bg-gray-50 p-2 rounded-md">
                       <span className="text-gray-600">
-                        {criterion.field} {criterion.operator} {criterion.value}
+                        {formatCriterion(criterion)}
                       </span>
                     </div>
                   </div>
@@ -189,12 +206,14 @@ interface ConditionEditorProps {
   conditions: SegmentCondition[];
   setConditions: (conditions: SegmentCondition[]) => void;
   entityProperties: string[];
+  eventNames: string[];
 }
 
 const ConditionEditor: React.FC<ConditionEditorProps> = ({
   conditions,
   setConditions,
   entityProperties,
+  eventNames,
 }) => {
   const addCondition = () => {
     setConditions([
@@ -258,9 +277,18 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
   const PROPERTY_FIELDS = entityProperties.map((prop: string) => ({
     value: prop,
     label: prop.charAt(0).toUpperCase() + prop.slice(1),
+    type: SegmentCriterionType.PROPERTY,
   }));
 
-  const OPERATORS = [
+  const EVENT_FIELDS = eventNames.map((name: string) => ({
+    value: name,
+    label: name,
+    type: SegmentCriterionType.EVENT,
+  }));
+
+  const ALL_FIELDS = [...PROPERTY_FIELDS, ...EVENT_FIELDS];
+
+  const PROPERTY_OPERATORS = [
     { value: SegmentOperator.EQUALS, label: "Equals" },
     { value: SegmentOperator.NOT_EQUALS, label: "Does not equal" },
     { value: SegmentOperator.CONTAINS, label: "Contains" },
@@ -270,6 +298,115 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
     { value: SegmentOperator.IN, label: "In" },
     { value: SegmentOperator.NOT_IN, label: "Not in" },
   ];
+
+  const EVENT_OPERATORS = [
+    { value: SegmentOperator.HAS_DONE, label: "has been performed" },
+    { value: SegmentOperator.HAS_NOT_DONE, label: "has not been performed" },
+    {
+      value: SegmentOperator.HAS_DONE_TIMES,
+      label: "has been performed at least",
+    },
+    {
+      value: SegmentOperator.HAS_DONE_FIRST_TIME,
+      label: "was first performed",
+    },
+    { value: SegmentOperator.HAS_DONE_LAST_TIME, label: "was last performed" },
+    {
+      value: SegmentOperator.HAS_DONE_WITHIN,
+      label: "has been performed within the last",
+    },
+    {
+      value: SegmentOperator.HAS_NOT_DONE_WITHIN,
+      label: "has not been performed within the last",
+    },
+  ];
+
+  const TIME_UNITS = [
+    { value: "minutes", label: "minutes" },
+    { value: "hours", label: "hours" },
+    { value: "days", label: "days" },
+  ];
+
+  const renderCriterionValue = (
+    criterion: SegmentCriterion,
+    conditionIndex: number,
+    criterionIndex: number
+  ) => {
+    if (criterion.type === SegmentCriterionType.EVENT) {
+      switch (criterion.operator) {
+        case SegmentOperator.HAS_DONE_TIMES:
+          return (
+            <>
+              <Input
+                type="number"
+                value={criterion.value as number}
+                onChange={(e) =>
+                  updateCriterion(
+                    conditionIndex,
+                    criterionIndex,
+                    "value",
+                    parseInt(e.target.value)
+                  )
+                }
+                className="w-20 mr-2"
+              />
+              <span>times</span>
+            </>
+          );
+        case SegmentOperator.HAS_DONE_WITHIN:
+        case SegmentOperator.HAS_NOT_DONE_WITHIN:
+          return (
+            <>
+              <Input
+                type="number"
+                value={criterion.value as number}
+                onChange={(e) =>
+                  updateCriterion(
+                    conditionIndex,
+                    criterionIndex,
+                    "value",
+                    parseInt(e.target.value)
+                  )
+                }
+                className="w-20 mr-2"
+              />
+              <CustomDropdown
+                options={TIME_UNITS}
+                value={criterion.timeUnit || "days"}
+                onValueChange={(value) =>
+                  updateCriterion(
+                    conditionIndex,
+                    criterionIndex,
+                    "timeUnit",
+                    value
+                  )
+                }
+                placeholder="Select time unit"
+                width="100px"
+              />
+            </>
+          );
+        default:
+          return null;
+      }
+    } else {
+      return (
+        <Input
+          placeholder="Value"
+          value={criterion.value as string}
+          onChange={(e) =>
+            updateCriterion(
+              conditionIndex,
+              criterionIndex,
+              "value",
+              e.target.value
+            )
+          }
+          className="bg-white border-gray-300 text-gray-700"
+        />
+      );
+    }
+  };
 
   const CombineConditionsSelector = () => (
     <div className="my-8 flex flex-col items-center">
@@ -362,24 +499,34 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="w-[150px]">
+                          <div className="w-[200px]">
                             <CustomDropdown
-                              options={PROPERTY_FIELDS}
+                              options={ALL_FIELDS}
                               value={criterion.field}
-                              onValueChange={(value) =>
+                              onValueChange={(value) => {
+                                const selectedField = ALL_FIELDS.find(
+                                  (f) => f.value === value
+                                );
                                 updateCriterion(
                                   conditionIndex,
                                   criterionIndex,
                                   "field",
                                   value
-                                )
-                              }
-                              placeholder="Select property"
+                                );
+                                updateCriterion(
+                                  conditionIndex,
+                                  criterionIndex,
+                                  "type",
+                                  selectedField?.type ||
+                                    SegmentCriterionType.PROPERTY
+                                );
+                              }}
+                              placeholder="Select field"
                             />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Select the property to filter on</p>
+                          <p>Select the property or event to filter on</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -388,9 +535,13 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="w-[150px]">
+                            <div className="w-[200px]">
                               <CustomDropdown
-                                options={OPERATORS}
+                                options={
+                                  criterion.type === SegmentCriterionType.EVENT
+                                    ? EVENT_OPERATORS
+                                    : PROPERTY_OPERATORS
+                                }
                                 value={criterion.operator}
                                 onValueChange={(value) =>
                                   updateCriterion(
@@ -405,36 +556,24 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Choose how to compare the property</p>
+                            <p>
+                              Choose how to compare the{" "}
+                              {criterion.type === SegmentCriterionType.EVENT
+                                ? "event"
+                                : "property"}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     )}
 
-                    {criterion.field && criterion.operator && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Input
-                              placeholder="Value"
-                              value={criterion.value as string}
-                              onChange={(e) =>
-                                updateCriterion(
-                                  conditionIndex,
-                                  criterionIndex,
-                                  "value",
-                                  e.target.value
-                                )
-                              }
-                              className="bg-white border-gray-300 text-gray-700"
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Enter the value to compare against</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    {criterion.field &&
+                      criterion.operator &&
+                      renderCriterionValue(
+                        criterion,
+                        conditionIndex,
+                        criterionIndex
+                      )}
 
                     <TooltipProvider>
                       <Tooltip>
@@ -713,6 +852,7 @@ export default function SegmentManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
   const [entityProperties, setEntityProperties] = useState<string[]>([]);
+  const [eventNames, setEventNames] = useState<string[]>([]);
   const [newSegment, setNewSegment] = useState<CreateSegmentDTO>({
     name: "",
     description: "",
@@ -734,6 +874,7 @@ export default function SegmentManagement() {
   useEffect(() => {
     fetchSegments();
     fetchEntityProperties();
+    fetchEventNames();
   }, []);
 
   const fetchSegments = async () => {
@@ -751,6 +892,15 @@ export default function SegmentManagement() {
       setEntityProperties(properties);
     } catch (error) {
       console.error("Failed to fetch entity properties:", error);
+    }
+  };
+
+  const fetchEventNames = async () => {
+    try {
+      const names = await eventsService.getUniqueEventNames();
+      setEventNames(names);
+    } catch (error) {
+      console.error("Failed to fetch event names:", error);
     }
   };
 
@@ -889,6 +1039,7 @@ export default function SegmentManagement() {
                           setNewSegment({ ...newSegment, conditions })
                         }
                         entityProperties={entityProperties}
+                        eventNames={eventNames}
                       />
                     </div>
                   </div>
@@ -1117,6 +1268,7 @@ export default function SegmentManagement() {
                         setSelectedSegment({ ...selectedSegment, conditions })
                       }
                       entityProperties={entityProperties}
+                      eventNames={eventNames}
                     />
                   </div>
                 </div>

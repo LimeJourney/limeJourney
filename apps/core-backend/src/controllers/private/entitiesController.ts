@@ -13,22 +13,13 @@ import {
   TsoaResponse,
   Res,
 } from "tsoa";
-import {
-  EntityService,
-  EntityData,
-  EventData,
-} from "../../services/entitiesService";
+import { EntityService, EntityData } from "../../services/entitiesService";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
 import { Response as expressResponse } from "express";
+import { EventData, RecordEventRequest } from "../../models/events";
 interface CreateOrUpdateEntityRequest {
   external_id?: string;
-  properties: Record<string, any>;
-}
-
-interface RecordEventRequest {
-  entityId: string;
-  name: string;
   properties: Record<string, any>;
 }
 
@@ -208,7 +199,7 @@ export class EntityController {
       const organizationId = user.currentOrganizationId as string;
       const event = await this.entityService.recordEvent(
         organizationId,
-        body.entityId,
+        body.entity_id,
         {
           name: body.name,
           properties: body.properties,
@@ -251,13 +242,6 @@ export class EntityController {
         organizationId,
         entityId
       );
-      if (!events.length) {
-        return notFoundResponse(404, {
-          status: "error",
-          data: null,
-          message: "No events found for this entity",
-        });
-      }
       return {
         status: "success",
         data: events,

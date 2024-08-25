@@ -240,7 +240,7 @@ export default function EventsManagement() {
 
     try {
       const createdEvent = await eventsService.recordEvent({
-        entityId: newEventData.entity_id!,
+        entity_id: newEventData.entity_id!,
         name: newEventData.name!,
         properties: allProperties,
       });

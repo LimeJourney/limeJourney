@@ -25,7 +25,14 @@
 					"in",
 					"not_in",
 					"between",
-					"not_between"
+					"not_between",
+					"has_done",
+					"has_not_done",
+					"has_done_times",
+					"has_done_first_time",
+					"has_done_last_time",
+					"has_done_within",
+					"has_not_done_within"
 				],
 				"type": "string"
 			},
@@ -52,6 +59,14 @@
 							{
 								"type": "boolean"
 							}
+						]
+					},
+					"timeUnit": {
+						"type": "string",
+						"enum": [
+							"minutes",
+							"hours",
+							"days"
 						]
 					}
 				},
@@ -687,6 +702,120 @@
 				"type": "object",
 				"description": "Construct a type with a set of properties K of type T"
 			},
+			"EventData": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"entity_id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"timestamp": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					}
+				},
+				"required": [
+					"org_id",
+					"entity_id",
+					"name",
+					"properties",
+					"timestamp"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EventData_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EventData"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RecordEventRequest": {
+				"properties": {
+					"entity_id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					}
+				},
+				"required": [
+					"entity_id",
+					"name",
+					"properties"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EventData-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/EventData"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"EntityData": {
 				"properties": {
 					"id": {
@@ -860,113 +989,6 @@
 					"data": {
 						"items": {
 							"$ref": "#/components/schemas/EntityWithSegments"
-						},
-						"type": "array",
-						"nullable": true
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"EventData": {
-				"properties": {
-					"id": {
-						"type": "string"
-					},
-					"org_id": {
-						"type": "string"
-					},
-					"entity_id": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"properties": {
-						"$ref": "#/components/schemas/Record_string.any_"
-					},
-					"timestamp": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"id",
-					"org_id",
-					"entity_id",
-					"name",
-					"properties",
-					"timestamp"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_EventData_": {
-				"properties": {
-					"status": {
-						"type": "string",
-						"enum": [
-							"success",
-							"error"
-						]
-					},
-					"data": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/EventData"
-							}
-						],
-						"nullable": true
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RecordEventRequest": {
-				"properties": {
-					"entityId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"properties": {
-						"$ref": "#/components/schemas/Record_string.any_"
-					}
-				},
-				"required": [
-					"entityId",
-					"name",
-					"properties"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_EventData-Array_": {
-				"properties": {
-					"status": {
-						"type": "string",
-						"enum": [
-							"success",
-							"error"
-						]
-					},
-					"data": {
-						"items": {
-							"$ref": "#/components/schemas/EventData"
 						},
 						"type": "array",
 						"nullable": true
@@ -1975,6 +1997,252 @@
 						}
 					}
 				}
+			}
+		},
+		"/events": {
+			"post": {
+				"operationId": "RecordEvent",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RecordEventRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetEvents",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "entityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/events/search": {
+			"get": {
+				"operationId": "SearchEvents",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "searchQuery",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/events/names": {
+			"get": {
+				"operationId": "GetUniqueEventNames",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_string-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
 			}
 		},
 		"/entities/list/entity_properties": {

@@ -2,15 +2,7 @@ import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
-
-export interface EventData {
-  id?: string;
-  org_id: string;
-  entity_id: string;
-  name: string;
-  properties: Record<string, any>;
-  timestamp: Date;
-}
+import { EventData } from "../models/events";
 
 type QueryParamsType = Record<string, unknown>;
 
@@ -29,7 +21,7 @@ export class EventService {
       const event: EventData = {
         ...eventData,
         org_id: organizationId,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString().slice(0, 19).replace("T", " "),
         properties: eventData.properties,
       };
 
@@ -79,7 +71,7 @@ export class EventService {
         format: "JSONEachRow",
       });
 
-      const events: EventData[] = await result.json<{ events: EventData[] }>();
+      const events: EventData[] = await result.json();
       return events.map((event: EventData) => this.parseEventProperties(event));
     } catch (error: any) {
       logger.error("events", `Error fetching events`, error);
@@ -116,7 +108,7 @@ export class EventService {
         format: "JSONEachRow",
       });
 
-      const events = await result.json<EventData[]>();
+      const events: EventData[] = await result.json();
       return events.map((event) => this.parseEventProperties(event));
     } catch (error: any) {
       logger.error("events", `Error searching events`, error);
@@ -134,4 +126,82 @@ export class EventService {
       timestamp: new Date(event.timestamp),
     };
   }
+
+  async getUniqueEventNames(organizationId: string): Promise<string[]> {
+    try {
+      const query = `
+        SELECT DISTINCT name
+        FROM events
+        WHERE org_id = {org_id:String}
+        ORDER BY name ASC
+      `;
+
+      const params: QueryParamsType = {
+        org_id: organizationId,
+      };
+
+      const result = await this.clickhouse.query({
+        query,
+        query_params: params,
+        format: "JSONEachRow",
+      });
+
+      const eventNames: { name: string }[] = await result.json();
+      console.log("EVENTNAMES", eventNames);
+      return eventNames.map((event) => event.name);
+    } catch (error: any) {
+      logger.error("events", `Error fetching unique event names`, error);
+      throw new AppError(
+        "Failed to fetch unique event names",
+        500,
+        "EVENT_NAMES_FETCH_ERROR"
+      );
+    }
+  }
+
+  // async getEventsByEntityId(
+  //   organizationId: string,
+  //   entityId: string,
+  //   limit: number = 0,
+  //   offset: number = 0
+  // ): Promise<EventData[]> {
+  //   try {
+  // const query = `
+  //   SELECT *
+  //   FROM events
+  //   WHERE org_id = {org_id:String}
+  //     AND entity_id = {entity_id:String}
+  //   ORDER BY timestamp DESC
+  //   LIMIT {limit:UInt32}
+  //   OFFSET {offset:UInt32}
+  // `;
+
+  //     const params: QueryParamsType = {
+  //       org_id: organizationId,
+  //       entity_id: entityId,
+  //       limit,
+  //       offset,
+  //     };
+
+  //     const result = await this.clickhouse.query({
+  //       query,
+  //       query_params: params,
+  //       format: "JSONEachRow",
+  //     });
+
+  // const events: EventData[] = await result.json();
+  // return events.map((event) => this.parseEventProperties(event));
+  //   } catch (error: any) {
+  //     logger.error(
+  //       "events",
+  //       `Error fetching events for entity ${entityId} in organization ${organizationId}`,
+  //       error
+  //     );
+  //     throw new AppError(
+  //       "Failed to fetch events for entity",
+  //       500,
+  //       "ENTITY_EVENTS_FETCH_ERROR"
+  //     );
+  //   }
+  // }
 }

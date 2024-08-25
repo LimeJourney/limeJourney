@@ -35,6 +35,7 @@ export interface SegmentCriterion {
   field: string;
   operator: SegmentOperator;
   value: string | number | boolean;
+  timeUnit?: "minutes" | "hours" | "days";
 }
 
 export interface SegmentCondition {
