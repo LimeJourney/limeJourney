@@ -262,7 +262,8 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
     value: any
   ) => {
     const newConditions = [...conditions];
-    newConditions[conditionIndex].criteria[criterionIndex][field] = value;
+    (newConditions[conditionIndex].criteria[criterionIndex] as any)[field] =
+      value;
     setConditions(newConditions);
   };
 
@@ -336,7 +337,7 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
       switch (criterion.operator) {
         case SegmentOperator.HAS_DONE_TIMES:
           return (
-            <>
+            <div className="flex items-center space-x-2">
               <Input
                 type="number"
                 value={criterion.value as number}
@@ -348,15 +349,15 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                     parseInt(e.target.value)
                   )
                 }
-                className="w-20 mr-2"
+                className="w-20"
               />
-              <span>times</span>
-            </>
+              <span className="text-white">times</span>
+            </div>
           );
         case SegmentOperator.HAS_DONE_WITHIN:
         case SegmentOperator.HAS_NOT_DONE_WITHIN:
           return (
-            <>
+            <div className="flex items-center space-x-2">
               <Input
                 type="number"
                 value={criterion.value as number}
@@ -368,7 +369,7 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                     parseInt(e.target.value)
                   )
                 }
-                className="w-20 mr-2"
+                className="w-20"
               />
               <CustomDropdown
                 options={TIME_UNITS}
@@ -384,7 +385,7 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                 placeholder="Select time unit"
                 width="100px"
               />
-            </>
+            </div>
           );
         default:
           return null;
@@ -402,7 +403,7 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
               e.target.value
             )
           }
-          className="bg-white border-gray-300 text-gray-700"
+          className="bg-neutral-800 text-white border-neutral-700"
         />
       );
     }
@@ -461,7 +462,7 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
       </Card>
       <CombineConditionsSelector />
       {conditions.map((condition, conditionIndex) => (
-        <Card key={conditionIndex} className="bg-white shadow-md">
+        <Card key={conditionIndex} className="bg-neutral-800 shadow-md">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-indigo-700 text-sm font-medium">
               Condition {conditionIndex + 1}
@@ -495,96 +496,74 @@ const ConditionEditor: React.FC<ConditionEditorProps> = ({
                       <div className="flex-grow border-t border-gray-300"></div>
                     </div>
                   )}
-                  <div className="flex items-center space-x-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="w-[200px]">
-                            <CustomDropdown
-                              options={ALL_FIELDS}
-                              value={criterion.field}
-                              onValueChange={(value) => {
-                                const selectedField = ALL_FIELDS.find(
-                                  (f) => f.value === value
-                                );
-                                updateCriterion(
-                                  conditionIndex,
-                                  criterionIndex,
-                                  "field",
-                                  value
-                                );
-                                updateCriterion(
-                                  conditionIndex,
-                                  criterionIndex,
-                                  "type",
-                                  selectedField?.type ||
-                                    SegmentCriterionType.PROPERTY
-                                );
-                              }}
-                              placeholder="Select field"
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Select the property or event to filter on</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
+                    <div className="w-full sm:w-1/3">
+                      <CustomDropdown
+                        options={ALL_FIELDS}
+                        value={criterion.field}
+                        onValueChange={(value) => {
+                          const selectedField = ALL_FIELDS.find(
+                            (f) => f.value === value
+                          );
+                          updateCriterion(
+                            conditionIndex,
+                            criterionIndex,
+                            "field",
+                            value
+                          );
+                          updateCriterion(
+                            conditionIndex,
+                            criterionIndex,
+                            "type",
+                            selectedField?.type || SegmentCriterionType.PROPERTY
+                          );
+                        }}
+                        placeholder="Select field"
+                      />
+                    </div>
 
                     {criterion.field && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="w-[200px]">
-                              <CustomDropdown
-                                options={
-                                  criterion.type === SegmentCriterionType.EVENT
-                                    ? EVENT_OPERATORS
-                                    : PROPERTY_OPERATORS
-                                }
-                                value={criterion.operator}
-                                onValueChange={(value) =>
-                                  updateCriterion(
-                                    conditionIndex,
-                                    criterionIndex,
-                                    "operator",
-                                    value as SegmentOperator
-                                  )
-                                }
-                                placeholder="Select operator"
-                              />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              Choose how to compare the{" "}
-                              {criterion.type === SegmentCriterionType.EVENT
-                                ? "event"
-                                : "property"}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="w-full sm:w-1/3">
+                        <CustomDropdown
+                          options={
+                            criterion.type === SegmentCriterionType.EVENT
+                              ? EVENT_OPERATORS
+                              : PROPERTY_OPERATORS
+                          }
+                          value={criterion.operator}
+                          onValueChange={(value) =>
+                            updateCriterion(
+                              conditionIndex,
+                              criterionIndex,
+                              "operator",
+                              value as SegmentOperator
+                            )
+                          }
+                          placeholder="Select operator"
+                        />
+                      </div>
                     )}
 
-                    {criterion.field &&
-                      criterion.operator &&
-                      renderCriterionValue(
-                        criterion,
-                        conditionIndex,
-                        criterionIndex
-                      )}
+                    {criterion.field && criterion.operator && (
+                      <div className="w-full sm:w-1/3">
+                        {renderCriterionValue(
+                          criterion,
+                          conditionIndex,
+                          criterionIndex
+                        )}
+                      </div>
+                    )}
 
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={() =>
                               removeCriterion(conditionIndex, criterionIndex)
                             }
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-neutral-300 hover:text-white"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -994,7 +973,7 @@ export default function SegmentManagement() {
                   <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
                 </Button>
               </SheetTrigger>
-              <SheetContent className="bg-neutral-900 border-l border-neutral-700 w-full sm:max-w-xl overflow-hidden flex flex-col">
+              <SheetContent className="bg-neutral-900 border-l border-neutral-700 w-full sm:max-w-2xl overflow-hidden flex flex-col">
                 <SheetHeader>
                   <SheetTitle className="text-white text-2xl">
                     Create New Segment
