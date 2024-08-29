@@ -107,9 +107,9 @@ const eventQueueConfig =
     ? {
         type: "kafka" as const,
         options: {
-          brokers: [process.env.KAFKA_BROKER!],
-          clientId: "my-app",
-          groupId: "my-app-group",
+          brokers: config.eventQueue.options.brokers,
+          clientId: config.eventQueue.options.clientId,
+          groupId: config.eventQueue.options.groupId,
           username: config.eventQueue.options.username,
           password: config.eventQueue.options.password,
           ssl: config.eventQueue.options.ssl,
