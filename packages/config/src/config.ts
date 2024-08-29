@@ -34,6 +34,19 @@ const configSchema = z.object({
     user: z.string(),
     password: z.string(),
   }),
+  eventQueue: z.object({
+    type: z.enum(["memory", "kafka"]).default("memory"),
+    options: z.object({
+      brokers: z.array(z.string()),
+      clientId: z.string(),
+      groupId: z.string(),
+      username: z.string(),
+      password: z.string(),
+      ssl: z.boolean().default(false),
+      bootstrapEndpoint: z.string(),
+      topic: z.string(),
+    }),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -68,11 +81,42 @@ const config = {
     user: env("CLICKHOUSE_USER", "default"),
     password: env("CLICKHOUSE_PASSWORD", ""),
   },
+  eventQueue: {
+    type: env("EVENT_QUEUE_TYPE", "memory"),
+    options: {
+      brokers: env("KAFKA_BROKERS", "localhost:9092").split(","),
+      clientId: env("KAFKA_CLIENT_ID", "my-app"),
+      groupId: env("KAFKA_GROUP_ID", "my-app-group"),
+      username: env("KAFKA_USERNAME"),
+      password: env("KAFKA_PASSWORD"),
+      ssl: env("KAFKA_USE_SSL", "false") === "true",
+      bootstrapEndpoint: env("KAFKA_BOOTSTRAP_ENDPOINT", "localhost:9092"),
+      topic: env("KAFKA_TOPIC", "events"),
+    },
+  },
 };
 
 // Parse and validate the configuration
 export const AppConfig = configSchema.parse(config);
 
-console.log("AppConfig", AppConfig);
 // Type for the configuration
 export type AppConfigType = z.infer<typeof configSchema>;
+
+const eventQueueConfig =
+  config.eventQueue.type === "kafka"
+    ? {
+        type: "kafka" as const,
+        options: {
+          brokers: [process.env.KAFKA_BROKER!],
+          clientId: "my-app",
+          groupId: "my-app-group",
+          username: config.eventQueue.options.username,
+          password: config.eventQueue.options.password,
+          ssl: config.eventQueue.options.ssl,
+          bootstrapEndpoint: config.eventQueue.options.bootstrapEndpoint,
+          topic: config.eventQueue.options.topic,
+        },
+      }
+    : { type: "memory" as const };
+
+export { eventQueueConfig };

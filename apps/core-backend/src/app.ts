@@ -12,16 +12,31 @@ import passport from "passport";
 import { expressErrorMiddleware } from "@lime/errors";
 import { SwaggerController } from "./controllers/private/swaggerController";
 import * as SwaggerJson from "./generated/private/swagger.json";
+import { EventQueueService } from "./lib/queue";
 export class App {
   private app: Express;
   private server: Server | null = null;
+  private eventQueueService: EventQueueService;
 
   constructor() {
     this.app = express();
+    this.eventQueueService = EventQueueService.getInstance();
     this.configureMiddleware();
     this.configureRoutes();
+    this.configureEventHandlers();
   }
 
+  private configureEventHandlers(): void {
+    // const entityService = new EntityService();
+    // const segmentationService = new SegmentationService();
+    // this.eventQueueService.registerEventHandler("entity_events", async (message) => {
+    //   await entityService.processEvent(message);
+    // });
+    // this.eventQueueService.registerEventHandler("segment_events", async (message) => {
+    //   await segmentationService.processEvent(message);
+    // });
+    // // Add more event handlers as needed
+  }
   private configureMiddleware(): void {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -58,7 +73,8 @@ export class App {
     // SwaggerController.setupSwaggerRoute(this.app);
   }
 
-  public start(port: number): void {
+  public async start(port: number): Promise<void> {
+    await this.eventQueueService.initialize();
     this.server = this.app.listen(port, () => {
       logger.info("lifecycle", `Server is running on port ${port}`);
     });
@@ -71,13 +87,26 @@ export class App {
   public async stop(): Promise<void> {
     if (this.server) {
       return new Promise((resolve, reject) => {
-        this.server!.close((err) => {
+        this.server!.close(async (err) => {
           if (err) {
             logger.error("lifecycle", "Error shutting down server", err);
             reject(err);
           } else {
-            logger.info("lifecycle", "Server shut down gracefully");
-            resolve();
+            try {
+              await this.eventQueueService.shutdown();
+              logger.info(
+                "lifecycle",
+                "Server and EventQueueService shut down gracefully"
+              );
+              resolve();
+            } catch (error) {
+              logger.error(
+                "lifecycle",
+                "Error shutting down EventQueueService",
+                error as Error
+              );
+              reject(error);
+            }
           }
         });
       });
