@@ -13,10 +13,17 @@ import {
   ChevronDown,
   Sparkles,
   ChevronUp,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -25,6 +32,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +51,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -139,65 +154,61 @@ const ConditionVisualizer: React.FC<{ conditions: SegmentCondition[] }> = ({
   conditions,
 }) => {
   const formatCriterion = (criterion: SegmentCriterion) => {
-    if (criterion.type === SegmentCriterionType.EVENT) {
-      switch (criterion.operator) {
-        case SegmentOperator.HAS_DONE_TIMES:
-          return `${criterion.field} ${criterion.operator} ${criterion.value} times`;
-        case SegmentOperator.HAS_DONE_WITHIN:
-        case SegmentOperator.HAS_NOT_DONE_WITHIN:
-          return `${criterion.field} ${criterion.operator} ${criterion.value} ${criterion.timeUnit}`;
-        default:
-          return `${criterion.field} ${criterion.operator}`;
-      }
-    } else {
-      return `${criterion.field} ${criterion.operator} ${criterion.value}`;
-    }
+    return `${criterion.field} ${criterion.operator} ${criterion.value}`;
   };
 
   return (
-    <div className="mt-6 p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        Condition Structure
-      </h3>
-      <div className="flex flex-col items-start">
-        {conditions.map((condition, index) => (
-          <div key={index} className="mb-4 last:mb-0">
-            <div className="flex items-center">
-              <div className="w-4 h-8 border-l-2 border-b-2 border-indigo-500 mr-2"></div>
-              <div className="bg-indigo-50 p-2 rounded-md">
-                <span className="text-indigo-700 font-medium">
-                  Condition {index + 1}
-                </span>
-              </div>
-            </div>
-            <div className="ml-6">
-              {condition.criteria.map((criterion, cIndex) => (
-                <React.Fragment key={cIndex}>
-                  {cIndex > 0 && (
-                    <div className="ml-4 my-2 text-gray-500">AND</div>
-                  )}
-                  <div className="flex items-center mt-2">
-                    <div className="w-4 h-8 border-l-2 border-b-2 border-gray-300 mr-2"></div>
-                    <div className="bg-gray-50 p-2 rounded-md">
-                      <span className="text-gray-600">
+    <div className="space-y-4">
+      <Card className="bg-forest-500 border-meadow-500/20">
+        <CardHeader>
+          <CardTitle className="text-meadow-500 text-lg">
+            Segment Conditions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="pl-4">
+            {conditions.map((condition, conditionIndex) => (
+              <div key={conditionIndex} className="mb-4 last:mb-0">
+                <div className="flex items-center mb-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-meadow-500/20 text-meadow-500 mr-2"
+                  >
+                    {conditionIndex === 0
+                      ? "IF"
+                      : conditions[0].logicalOperator}
+                  </Badge>
+                  <div className="text-white font-semibold">
+                    Condition {conditionIndex + 1}
+                  </div>
+                </div>
+                <div className="pl-4 border-l-2 border-meadow-500/30">
+                  {condition.criteria.map((criterion, criterionIndex) => (
+                    <div
+                      key={criterionIndex}
+                      className="flex items-center mb-2 last:mb-0"
+                    >
+                      <ChevronRight
+                        className="text-meadow-500 mr-2"
+                        size={16}
+                      />
+                      <Badge
+                        variant="outline"
+                        className="border-meadow-500/50 text-meadow-500 mr-2"
+                      >
+                        {criterionIndex === 0 ? "IF" : "AND"}
+                      </Badge>
+                      <span className="text-white">
                         {formatCriterion(criterion)}
                       </span>
                     </div>
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className="mt-4 flex items-center">
-        <span className="text-indigo-700 font-medium mr-2">
-          Conditions are combined with:
-        </span>
-        <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
-          {conditions[0]?.logicalOperator.toUpperCase() || "AND"}
-        </span>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
@@ -209,435 +220,246 @@ interface ConditionEditorProps {
   eventNames: string[];
 }
 
-const ConditionEditor: React.FC<ConditionEditorProps> = ({
-  conditions,
-  setConditions,
-  entityProperties,
-  eventNames,
-}) => {
-  const addCondition = () => {
-    setConditions([
-      ...conditions,
+const ConditionEditor: React.FC<{
+  conditions: SegmentCondition[];
+  setConditions: (conditions: SegmentCondition[]) => void;
+  entityProperties: string[];
+  eventNames: string[];
+}> = ({ conditions, setConditions, entityProperties, eventNames }) => {
+  const defaultCondition: SegmentCondition = {
+    criteria: [
       {
-        criteria: [
-          {
-            type: SegmentCriterionType.PROPERTY,
-            field: "",
-            operator: SegmentOperator.EQUALS,
-            value: "",
-          },
-        ],
-        logicalOperator: LogicalOperator.AND,
+        type: SegmentCriterionType.PROPERTY,
+        field: "default_field",
+        operator: SegmentOperator.EQUALS,
+        value: "default_value",
       },
-    ]);
+    ],
+    logicalOperator: LogicalOperator.AND,
+  };
+
+  // If conditions array is empty, initialize it with the default condition
+  React.useEffect(() => {
+    if (conditions.length === 0) {
+      setConditions([defaultCondition]);
+    }
+  }, []);
+
+  const addCondition = () => {
+    setConditions([...conditions, defaultCondition]);
   };
 
   const removeCondition = (index: number) => {
-    const newConditions = [...conditions];
-    newConditions.splice(index, 1);
-    setConditions(newConditions);
+    setConditions(conditions.filter((_, i) => i !== index));
   };
 
-  const addCriterion = (conditionIndex: number) => {
-    const newConditions = [...conditions];
-    newConditions[conditionIndex].criteria.push({
-      type: SegmentCriterionType.PROPERTY,
-      field: "",
-      operator: SegmentOperator.EQUALS,
-      value: "",
-    });
-    setConditions(newConditions);
-  };
-
-  const removeCriterion = (conditionIndex: number, criterionIndex: number) => {
-    const newConditions = [...conditions];
-    newConditions[conditionIndex].criteria.splice(criterionIndex, 1);
-    setConditions(newConditions);
-  };
-
-  const updateCriterion = (
-    conditionIndex: number,
-    criterionIndex: number,
-    field: keyof SegmentCriterion,
-    value: any
+  const updateCondition = (
+    index: number,
+    updatedCondition: SegmentCondition
   ) => {
-    const newConditions = [...conditions];
-    (newConditions[conditionIndex].criteria[criterionIndex] as any)[field] =
-      value;
-    setConditions(newConditions);
+    setConditions(
+      conditions.map((c, i) => (i === index ? updatedCondition : c))
+    );
   };
 
-  const updateLogicalOperator = (value: LogicalOperator) => {
-    const newConditions = [...conditions];
-    newConditions.forEach((condition) => {
-      condition.logicalOperator = value;
-    });
-    setConditions(newConditions);
+  const updateLogicalOperator = (operator: LogicalOperator) => {
+    setConditions(conditions.map((c) => ({ ...c, logicalOperator: operator })));
   };
 
-  const PROPERTY_FIELDS = entityProperties.map((prop: string) => ({
-    value: prop,
-    label: prop.charAt(0).toUpperCase() + prop.slice(1),
-    type: SegmentCriterionType.PROPERTY,
-  }));
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-meadow-500">Conditions</h3>
+        <Select
+          onValueChange={updateLogicalOperator}
+          defaultValue={conditions[0]?.logicalOperator}
+        >
+          <SelectTrigger className="w-[180px] bg-forest-500 text-white border-meadow-500/50">
+            <SelectValue placeholder="Combine with..." />
+          </SelectTrigger>
+          <SelectContent className="bg-forest-500 text-white border-meadow-500/50">
+            <SelectItem value={LogicalOperator.AND}>AND</SelectItem>
+            <SelectItem value={LogicalOperator.OR}>OR</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <ScrollArea className="h-[300px] pr-4">
+        {conditions.map((condition, index) => (
+          <Card key={index} className="mb-4 bg-forest-500 border-meadow-500/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-meadow-500 text-sm font-medium">
+                Condition {index + 1}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeCondition(index)}
+                className="text-meadow-500 hover:text-meadow-500/80 hover:bg-forest-500/50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {condition.criteria.map((criterion, criterionIndex) => (
+                <CriterionEditor
+                  key={criterionIndex}
+                  criterion={criterion}
+                  onChange={(updatedCriterion) => {
+                    const updatedCriteria = [...condition.criteria];
+                    updatedCriteria[criterionIndex] = updatedCriterion;
+                    updateCondition(index, {
+                      ...condition,
+                      criteria: updatedCriteria,
+                    });
+                  }}
+                  onRemove={() => {
+                    const updatedCriteria = condition.criteria.filter(
+                      (_, i) => i !== criterionIndex
+                    );
+                    updateCondition(index, {
+                      ...condition,
+                      criteria: updatedCriteria,
+                    });
+                  }}
+                  entityProperties={entityProperties}
+                  eventNames={eventNames}
+                />
+              ))}
+            </CardContent>
+            <CardFooter>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const updatedCriteria = [
+                    ...condition.criteria,
+                    {
+                      type: SegmentCriterionType.PROPERTY,
+                      field: "",
+                      operator: SegmentOperator.EQUALS,
+                      value: "",
+                    },
+                  ];
+                  updateCondition(index, {
+                    ...condition,
+                    criteria: updatedCriteria,
+                  });
+                }}
+                className="w-full text-forest-500 bg-meadow-200 border-meadow-500/50 hover:bg-meadow-500/10"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Criterion
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </ScrollArea>
+      <Button
+        onClick={addCondition}
+        className="w-full bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
+      >
+        <PlusCircle className="mr-2 h-4 w-4" /> Add Condition
+      </Button>
+    </div>
+  );
+};
 
-  const EVENT_FIELDS = eventNames.map((name: string) => ({
-    value: name,
-    label: name,
-    type: SegmentCriterionType.EVENT,
-  }));
+const CriterionEditor: React.FC<{
+  criterion: SegmentCriterion;
+  onChange: (criterion: SegmentCriterion) => void;
+  onRemove: () => void;
+  entityProperties: string[];
+  eventNames: string[];
+}> = ({ criterion, onChange, onRemove, entityProperties, eventNames }) => {
+  const allFields = [
+    ...entityProperties.map((p) => ({
+      value: p,
+      label: p,
+      type: SegmentCriterionType.PROPERTY,
+    })),
+    ...eventNames.map((e) => ({
+      value: e,
+      label: e,
+      type: SegmentCriterionType.EVENT,
+    })),
+  ];
 
-  const ALL_FIELDS = [...PROPERTY_FIELDS, ...EVENT_FIELDS];
-
-  const PROPERTY_OPERATORS = [
+  const propertyOperators = [
     { value: SegmentOperator.EQUALS, label: "Equals" },
     { value: SegmentOperator.NOT_EQUALS, label: "Does not equal" },
     { value: SegmentOperator.CONTAINS, label: "Contains" },
     { value: SegmentOperator.NOT_CONTAINS, label: "Does not contain" },
     { value: SegmentOperator.GREATER_THAN, label: "Greater than" },
     { value: SegmentOperator.LESS_THAN, label: "Less than" },
-    { value: SegmentOperator.IN, label: "In" },
-    { value: SegmentOperator.NOT_IN, label: "Not in" },
   ];
 
-  const EVENT_OPERATORS = [
-    { value: SegmentOperator.HAS_DONE, label: "has been performed" },
-    { value: SegmentOperator.HAS_NOT_DONE, label: "has not been performed" },
-    {
-      value: SegmentOperator.HAS_DONE_TIMES,
-      label: "has been performed at least",
-    },
-    {
-      value: SegmentOperator.HAS_DONE_FIRST_TIME,
-      label: "was first performed",
-    },
-    { value: SegmentOperator.HAS_DONE_LAST_TIME, label: "was last performed" },
-    {
-      value: SegmentOperator.HAS_DONE_WITHIN,
-      label: "has been performed within the last",
-    },
-    {
-      value: SegmentOperator.HAS_NOT_DONE_WITHIN,
-      label: "has not been performed within the last",
-    },
+  const eventOperators = [
+    { value: SegmentOperator.HAS_DONE, label: "Has done" },
+    { value: SegmentOperator.HAS_NOT_DONE, label: "Has not done" },
+    { value: SegmentOperator.HAS_DONE_TIMES, label: "Has done at least" },
+    { value: SegmentOperator.HAS_DONE_WITHIN, label: "Has done within" },
   ];
-
-  const TIME_UNITS = [
-    { value: "minutes", label: "minutes" },
-    { value: "hours", label: "hours" },
-    { value: "days", label: "days" },
-  ];
-
-  const renderCriterionValue = (
-    criterion: SegmentCriterion,
-    conditionIndex: number,
-    criterionIndex: number
-  ) => {
-    if (criterion.type === SegmentCriterionType.EVENT) {
-      switch (criterion.operator) {
-        case SegmentOperator.HAS_DONE_TIMES:
-          return (
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                value={criterion.value as number}
-                onChange={(e) =>
-                  updateCriterion(
-                    conditionIndex,
-                    criterionIndex,
-                    "value",
-                    parseInt(e.target.value)
-                  )
-                }
-                className="w-20"
-              />
-              <span className="text-white">times</span>
-            </div>
-          );
-        case SegmentOperator.HAS_DONE_WITHIN:
-        case SegmentOperator.HAS_NOT_DONE_WITHIN:
-          return (
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                value={criterion.value as number}
-                onChange={(e) =>
-                  updateCriterion(
-                    conditionIndex,
-                    criterionIndex,
-                    "value",
-                    parseInt(e.target.value)
-                  )
-                }
-                className="w-20"
-              />
-              <CustomDropdown
-                options={TIME_UNITS}
-                value={criterion.timeUnit || "days"}
-                onValueChange={(value) =>
-                  updateCriterion(
-                    conditionIndex,
-                    criterionIndex,
-                    "timeUnit",
-                    value
-                  )
-                }
-                placeholder="Select time unit"
-                width="100px"
-              />
-            </div>
-          );
-        default:
-          return null;
-      }
-    } else {
-      return (
-        <Input
-          placeholder="Value"
-          value={criterion.value as string}
-          onChange={(e) =>
-            updateCriterion(
-              conditionIndex,
-              criterionIndex,
-              "value",
-              e.target.value
-            )
-          }
-          className="bg-neutral-800 text-white border-neutral-700"
-        />
-      );
-    }
-  };
-
-  const CombineConditionsSelector = () => (
-    <div className="my-8 flex flex-col items-center">
-      <Label className="text-lg font-semibold text-gray-700 mb-4">
-        Combine Conditions with:
-      </Label>
-      <div className="flex space-x-4">
-        <Button
-          onClick={() => updateLogicalOperator(LogicalOperator.AND)}
-          className={`w-32 h-16 flex items-center justify-center text-lg font-bold transition-all duration-200 ${
-            conditions[0]?.logicalOperator === LogicalOperator.AND
-              ? "bg-indigo-600 text-white shadow-lg scale-105"
-              : "bg-white text-indigo-600 border-2 border-indigo-600 hover:bg-indigo-50"
-          }`}
-        >
-          {/* <AndIcon className="mr-2 h-6 w-6" /> */}
-          AND
-        </Button>
-        <Button
-          onClick={() => updateLogicalOperator(LogicalOperator.OR)}
-          className={`w-32 h-16 flex items-center justify-center text-lg font-bold transition-all duration-200 ${
-            conditions[0]?.logicalOperator === LogicalOperator.OR
-              ? "bg-indigo-600 text-white shadow-lg scale-105"
-              : "bg-white text-indigo-600 border-2 border-indigo-600 hover:bg-indigo-50"
-          }`}
-        >
-          {/* <OrIcon className="mr-2 h-6 w-6" /> */}
-          OR
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center">
-            <Info className="mr-2 h-5 w-5" />
-            How to use the Condition Editor
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm opacity-90">
-            Create complex segment conditions by adding multiple conditions and
-            criteria. Each condition can have multiple criteria joined by AND.
-            Conditions are combined using the operator you select at the bottom.
-            Use the visual representation below to understand how your
-            conditions are structured.
-          </p>
-        </CardContent>
-      </Card>
-      <CombineConditionsSelector />
-      {conditions.map((condition, conditionIndex) => (
-        <Card key={conditionIndex} className="bg-neutral-800 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-indigo-700 text-sm font-medium">
-              Condition {conditionIndex + 1}
-            </CardTitle>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeCondition(conditionIndex)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Remove this condition</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {condition.criteria.map((criterion, criterionIndex) => (
-                <div key={criterionIndex}>
-                  {criterionIndex > 0 && (
-                    <div className="flex items-center my-2">
-                      <div className="flex-grow border-t border-gray-300"></div>
-                      <span className="px-2 text-gray-500 bg-white">AND</span>
-                      <div className="flex-grow border-t border-gray-300"></div>
-                    </div>
-                  )}
-                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
-                    <div className="w-full sm:w-1/3">
-                      <CustomDropdown
-                        options={ALL_FIELDS}
-                        value={criterion.field}
-                        onValueChange={(value) => {
-                          const selectedField = ALL_FIELDS.find(
-                            (f) => f.value === value
-                          );
-                          updateCriterion(
-                            conditionIndex,
-                            criterionIndex,
-                            "field",
-                            value
-                          );
-                          updateCriterion(
-                            conditionIndex,
-                            criterionIndex,
-                            "type",
-                            selectedField?.type || SegmentCriterionType.PROPERTY
-                          );
-                        }}
-                        placeholder="Select field"
-                      />
-                    </div>
+    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0 mb-4">
+      <Select
+        onValueChange={(value) => {
+          const selectedField = allFields.find((f) => f.value === value);
+          onChange({
+            ...criterion,
+            field: value,
+            type: selectedField?.type || SegmentCriterionType.PROPERTY,
+          });
+        }}
+        value={criterion.field}
+      >
+        <SelectTrigger className="w-full sm:w-1/3 bg-forest-500 text-white border-meadow-500/50">
+          <SelectValue placeholder="Select field" />
+        </SelectTrigger>
+        <SelectContent className="bg-forest-500 text-white border-meadow-500/50">
+          {allFields.map((field) => (
+            <SelectItem key={field.value} value={field.value}>
+              {field.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-                    {criterion.field && (
-                      <div className="w-full sm:w-1/3">
-                        <CustomDropdown
-                          options={
-                            criterion.type === SegmentCriterionType.EVENT
-                              ? EVENT_OPERATORS
-                              : PROPERTY_OPERATORS
-                          }
-                          value={criterion.operator}
-                          onValueChange={(value) =>
-                            updateCriterion(
-                              conditionIndex,
-                              criterionIndex,
-                              "operator",
-                              value as SegmentOperator
-                            )
-                          }
-                          placeholder="Select operator"
-                        />
-                      </div>
-                    )}
+      <Select
+        onValueChange={(value) =>
+          onChange({ ...criterion, operator: value as SegmentOperator })
+        }
+        value={criterion.operator}
+      >
+        <SelectTrigger className="w-full sm:w-1/3 bg-forest-500 text-white border-meadow-500/50">
+          <SelectValue placeholder="Select operator" />
+        </SelectTrigger>
+        <SelectContent className="bg-forest-500 text-white border-meadow-500/50">
+          {(criterion.type === SegmentCriterionType.EVENT
+            ? eventOperators
+            : propertyOperators
+          ).map((op) => (
+            <SelectItem key={op.value} value={op.value}>
+              {op.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-                    {criterion.field && criterion.operator && (
-                      <div className="w-full sm:w-1/3">
-                        {renderCriterionValue(
-                          criterion,
-                          conditionIndex,
-                          criterionIndex
-                        )}
-                      </div>
-                    )}
+      <Input
+        placeholder="Value"
+        value={criterion.value as string}
+        onChange={(e) => onChange({ ...criterion, value: e.target.value })}
+        className="w-full sm:w-1/3 bg-forest-500 text-white border-meadow-500/50"
+      />
 
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              removeCriterion(conditionIndex, criterionIndex)
-                            }
-                            className="text-neutral-300 hover:text-white"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Remove this criterion</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-              ))}
-
-              <div className="flex items-center justify-between">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addCriterion(conditionIndex)}
-                        className="text-indigo-600 border-indigo-600 hover:bg-indigo-50"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Add Criterion
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add a new criterion to this condition</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-
-      <div className="flex items-center justify-between space-x-4">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={addCondition}
-                className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50"
-              >
-                <Plus className="mr-2 h-4 w-4" /> Add Condition
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Add a new condition to your segment</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        {/* <div className="flex items-center space-x-2">
-          <Label className="text-gray-700 whitespace-nowrap">
-            Combine Conditions:
-          </Label>
-          <CustomDropdown
-            options={[
-              { value: LogicalOperator.AND, label: "AND" },
-              { value: LogicalOperator.OR, label: "OR" },
-            ]}
-            value={conditions[0]?.logicalOperator || LogicalOperator.AND}
-            onValueChange={(value) =>
-              updateLogicalOperator(value as LogicalOperator)
-            }
-            placeholder="Select operator"
-            width="100px"
-          />
-        </div> */}
-      </div>
-      <ConditionVisualizer conditions={conditions} />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        className="text-meadow-500 hover:text-meadow-500/80 hover:bg-forest-500/50"
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
@@ -808,7 +630,7 @@ const EmptyState: React.FC<{ onCreateSegment: () => void }> = ({
   onCreateSegment,
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center h-64 bg-neutral-900 rounded-lg border border-neutral-700 p-8">
+    <div className="flex flex-col items-center justify-center h-64 bg-forest-900 rounded-lg border border-neutral-700 p-8">
       <AlertCircle className="h-12 w-12 text-neutral-500 mb-4" />
       <h2 className="text-2xl font-bold text-white mb-2">No segments yet</h2>
       <p className="text-neutral-400 text-center mb-6">
@@ -816,11 +638,222 @@ const EmptyState: React.FC<{ onCreateSegment: () => void }> = ({
       </p>
       <Button
         onClick={onCreateSegment}
-        className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
+        className="bg-meadow-500 text-black hover:bg-meadow-500/90"
       >
         <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
       </Button>
     </div>
+  );
+};
+
+const defaultConditionSets = {
+  active_users: [
+    {
+      criteria: [
+        {
+          type: SegmentCriterionType.EVENT,
+          field: "app_opened",
+          operator: SegmentOperator.HAS_DONE_WITHIN,
+          value: "30",
+          timeUnit: "days" as const,
+        },
+      ],
+      logicalOperator: LogicalOperator.AND,
+    },
+  ],
+  high_value_customers: [
+    {
+      criteria: [
+        {
+          type: SegmentCriterionType.PROPERTY,
+          field: "total_purchases",
+          operator: SegmentOperator.GREATER_THAN,
+          value: "1000",
+        },
+        {
+          type: SegmentCriterionType.EVENT,
+          field: "purchase",
+          operator: SegmentOperator.HAS_DONE_WITHIN,
+          value: "90",
+          timeUnit: "days" as const,
+        },
+      ],
+      logicalOperator: LogicalOperator.AND,
+    },
+  ],
+  at_risk_users: [
+    {
+      criteria: [
+        {
+          type: SegmentCriterionType.EVENT,
+          field: "app_opened",
+          operator: SegmentOperator.HAS_NOT_DONE_WITHIN,
+          value: "30",
+          timeUnit: "days" as const,
+        },
+      ],
+      logicalOperator: LogicalOperator.AND,
+    },
+  ],
+};
+
+const TwoPanelSegmentCreator: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateSegment: (segment: CreateSegmentDTO) => void;
+  entityProperties: string[];
+  eventNames: string[];
+}> = ({ isOpen, onClose, onCreateSegment, entityProperties, eventNames }) => {
+  const [segmentName, setSegmentName] = useState("");
+  const [segmentDescription, setSegmentDescription] = useState("");
+  const [segmentTags, setSegmentTags] = useState("");
+  const [segmentPurpose, setSegmentPurpose] = useState("");
+  const [conditions, setConditions] = useState<SegmentCondition[]>([]);
+  const [selectedDefaultSet, setSelectedDefaultSet] = useState<string>("");
+
+  const handleCreateSegment = () => {
+    onCreateSegment({
+      name: segmentName,
+      description: segmentDescription,
+      // tags: segmentTags.split(",").map((tag) => tag.trim()),
+      // purpose: segmentPurpose,
+      conditions: conditions,
+    });
+    onClose();
+  };
+
+  const applyDefaultConditions = (setName: string) => {
+    setConditions(
+      defaultConditionSets[setName as keyof typeof defaultConditionSets]
+    );
+    setSelectedDefaultSet(setName);
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent
+        className="w-full sm:max-w-[1000px] p-0 bg-forest-500"
+        side="right"
+      >
+        <div className="flex h-full">
+          {/* Left Panel: Basic Information */}
+          <div className="w-1/3 border-r border-meadow-500/20 p-6 flex flex-col">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-meadow-500 text-2xl">
+                Create New Segment
+              </SheetTitle>
+              <SheetDescription className="text-white/70">
+                Define your segment details and conditions
+              </SheetDescription>
+            </SheetHeader>
+            <ScrollArea className="flex-grow">
+              <div className="space-y-4 pr-4">
+                <div>
+                  <Label htmlFor="segmentName" className="text-meadow-500">
+                    Segment Name
+                  </Label>
+                  <Input
+                    id="segmentName"
+                    value={segmentName}
+                    onChange={(e) => setSegmentName(e.target.value)}
+                    className="bg-forest-500 text-white border-meadow-500/50 focus:border-meadow-500"
+                    placeholder="Enter segment name"
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="segmentDescription"
+                    className="text-meadow-500"
+                  >
+                    Description
+                  </Label>
+                  <Textarea
+                    id="segmentDescription"
+                    value={segmentDescription}
+                    onChange={(e) => setSegmentDescription(e.target.value)}
+                    className="bg-forest-500 text-white border-meadow-500/50 focus:border-meadow-500"
+                    placeholder="Describe your segment"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="segmentTags" className="text-meadow-500">
+                    Tags
+                  </Label>
+                  <Input
+                    id="segmentTags"
+                    value={segmentTags}
+                    onChange={(e) => setSegmentTags(e.target.value)}
+                    className="bg-forest-500 text-white border-meadow-500/50 focus:border-meadow-500"
+                    placeholder="Enter tags, separated by commas"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="segmentPurpose" className="text-meadow-500">
+                    Purpose
+                  </Label>
+                  <Textarea
+                    id="segmentPurpose"
+                    value={segmentPurpose}
+                    onChange={(e) => setSegmentPurpose(e.target.value)}
+                    className="bg-forest-500 text-white border-meadow-500/50 focus:border-meadow-500"
+                    placeholder="What's the purpose of this segment?"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </ScrollArea>
+            <SheetFooter className="mt-6">
+              <Button
+                onClick={handleCreateSegment}
+                className="w-full bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
+              >
+                Create Segment
+              </Button>
+            </SheetFooter>
+          </div>
+
+          {/* Right Panel: Condition Editor and Visualizer */}
+          <div className="w-2/3 p-6 flex flex-col">
+            <h3 className="text-lg font-semibold text-meadow-500 mb-4">
+              Define Conditions
+            </h3>
+            <div className="flex items-center space-x-2 mb-4">
+              <Wand2 className="text-meadow-500" size={20} />
+              <Select
+                onValueChange={applyDefaultConditions}
+                value={selectedDefaultSet}
+              >
+                <SelectTrigger className="w-[200px] bg-forest-500 text-white border-meadow-500/50">
+                  <SelectValue placeholder="Choose template" />
+                </SelectTrigger>
+                <SelectContent className="bg-forest-500 text-white border-meadow-500/50">
+                  <SelectItem value="active_users">Active Users</SelectItem>
+                  <SelectItem value="high_value_customers">
+                    High Value Customers
+                  </SelectItem>
+                  <SelectItem value="at_risk_users">At Risk Users</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <ScrollArea className="flex-grow">
+              <div className="space-y-6 pr-4">
+                <ConditionEditor
+                  conditions={conditions}
+                  setConditions={setConditions}
+                  entityProperties={entityProperties}
+                  eventNames={eventNames}
+                />
+                <h3 className="text-lg font-semibold text-meadow-500 mt-8 mb-4">
+                  Condition Preview
+                </h3>
+                <ConditionVisualizer conditions={conditions} />
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -849,6 +882,7 @@ export default function SegmentManagement() {
       },
     ],
   });
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchSegments();
@@ -949,7 +983,7 @@ export default function SegmentManagement() {
   };
 
   return (
-    <div className="px-8 py-6 bg-black min-h-screen">
+    <div className="px-8 py-6 bg-forest-700 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white">Segments</h1>
@@ -964,7 +998,7 @@ export default function SegmentManagement() {
                 className="pl-10 pr-4 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-screaminGreen focus:border-transparent"
               />
             </div>
-            <Sheet
+            {/* <Sheet
               open={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
             >
@@ -1032,17 +1066,45 @@ export default function SegmentManagement() {
                   </Button>
                 </SheetFooter>
               </SheetContent>
-            </Sheet>
+            </Sheet> */}
+            {/* <SegmentCreationSheet
+              isOpen={isCreateSheetOpen}
+              onClose={() => setIsCreateSheetOpen(false)}
+              onCreateSegment={handleCreateSegment}
+              entityProperties={entityProperties}
+              eventNames={eventNames}
+            />
+
+            <Button
+              onClick={() => setIsCreateSheetOpen(true)}
+              className="bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
+            </Button> */}
+            <TwoPanelSegmentCreator
+              isOpen={isCreateSheetOpen}
+              onClose={() => setIsCreateSheetOpen(false)}
+              onCreateSegment={handleCreateSegment}
+              entityProperties={entityProperties}
+              eventNames={eventNames}
+            />
+
+            <Button
+              onClick={() => setIsCreateSheetOpen(true)}
+              className="bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
+            </Button>
           </div>
         </div>
         <AIPoweredSegmentCreation onSegmentCreated={handleCreateSegment} />
         {segments.length === 0 ? (
           <EmptyState onCreateSegment={() => setIsCreateDialogOpen(true)} />
         ) : (
-          <Card className="bg-neutral-900 border-neutral-700">
+          <Card className="bg-forest-600 border-neutral-700">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-neutral-800 border-neutral-700">
+                <TableRow className="hover:bg-forest-700 border-meadow-muted">
                   <TableHead className="text-white">Name</TableHead>
                   <TableHead className="text-white">Description</TableHead>
                   <TableHead className="text-white">Created</TableHead>
@@ -1054,7 +1116,7 @@ export default function SegmentManagement() {
                 {filteredSegments.map((segment) => (
                   <TableRow
                     key={segment.id}
-                    className="hover:bg-neutral-800 border-neutral-700"
+                    className="hover:bg-forest-700 border-meadow-muted"
                   >
                     <TableCell className="font-medium text-white">
                       {segment.name}
@@ -1201,7 +1263,7 @@ export default function SegmentManagement() {
             open={!!selectedSegment}
             onOpenChange={() => setSelectedSegment(null)}
           >
-            <SheetContent className="bg-neutral-900 border-l border-neutral-700 w-full sm:max-w-xl overflow-hidden flex flex-col">
+            <SheetContent className="bg-forest-500 border-l border-neutral-700 w-full sm:max-w-xl overflow-hidden flex flex-col">
               <SheetHeader>
                 <SheetTitle className="text-white">Edit Segment</SheetTitle>
               </SheetHeader>
