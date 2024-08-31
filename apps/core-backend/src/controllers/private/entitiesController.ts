@@ -185,46 +185,46 @@ export class EntityController {
     }
   }
 
-  @Post("event")
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
-  public async recordEvent(
-    @Body() body: RecordEventRequest,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
-  ): Promise<ApiResponse<EventData> | void> {
-    try {
-      const user = request.user as JWTAuthenticatedUser;
-      const organizationId = user.currentOrganizationId as string;
-      const event = await this.entityService.recordEvent(
-        organizationId,
-        body.entity_id,
-        {
-          name: body.name,
-          properties: body.properties,
-        }
-      );
-      return {
-        status: "success",
-        data: event,
-        message: "Event recorded successfully",
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        return badRequestResponse(400, {
-          status: "error",
-          data: null,
-          message: error.message,
-        });
-      }
-      return serverErrorResponse(500, {
-        status: "error",
-        data: null,
-        message: "An error occurred while recording the event",
-      });
-    }
-  }
+  // @Post("event")
+  // @Response<ApiResponse<null>>(400, "Bad Request")
+  // @Response<ApiResponse<null>>(500, "Internal Server Error")
+  // public async recordEvent(
+  //   @Body() body: RecordEventRequest,
+  //   @Request() request: AuthenticatedRequest,
+  //   @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+  //   @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  // ): Promise<ApiResponse<EventData> | void> {
+  //   try {
+  //     const user = request.user as JWTAuthenticatedUser;
+  //     const organizationId = user.currentOrganizationId as string;
+  //     const event = await this.entityService.recordEvent(
+  //       organizationId,
+  //       body.entity_id,
+  //       {
+  //         name: body.name,
+  //         properties: body.properties,
+  //       }
+  //     );
+  //     return {
+  //       status: "success",
+  //       data: event,
+  //       message: "Event recorded successfully",
+  //     };
+  //   } catch (error) {
+  //     if (error instanceof Error) {
+  //       return badRequestResponse(400, {
+  //         status: "error",
+  //         data: null,
+  //         message: error.message,
+  //       });
+  //     }
+  //     return serverErrorResponse(500, {
+  //       status: "error",
+  //       data: null,
+  //       message: "An error occurred while recording the event",
+  //     });
+  //   }
+  // }
 
   @Get("{entityId}/events")
   @Response<ApiResponse<null>>(404, "Not Found")

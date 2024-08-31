@@ -31,10 +31,6 @@ export class SegmentationService {
     this.clickhouse = clickhouseManager.getClient();
   }
 
-  private createSafeSegmentId(id: string): string {
-    return id.replace(/-/g, "_");
-  }
-
   async createSegment(
     organizationId: string,
     data: CreateSegmentDTO
@@ -55,58 +51,17 @@ export class SegmentationService {
         ) as SegmentCondition[],
       };
 
-      await this.createMaterializedView(typedSegment);
-
       logger.info("lifecycle", `Created segment ${segment.id}`, {
         organizationId,
       });
+
+      this.refreshSegmentMembership(organizationId, segment.id, typedSegment);
       return typedSegment;
     } catch (error) {
       logger.error("lifecycle", "Failed to create segment", error as Error, {
         organizationId,
       });
       throw new DatabaseError("Failed to create segment");
-    }
-  }
-
-  private async createMaterializedView(segment: Segment): Promise<void> {
-    const { query, params } = this.buildSegmentCondition(segment.conditions);
-
-    // Replace hyphens with underscores in the segment ID
-    const safeSegmentId = segment.id.replace(/-/g, "_");
-
-    const createViewQuery = `
-      CREATE MATERIALIZED VIEW IF NOT EXISTS segment_membership_${safeSegmentId}
-      ENGINE = MergeTree()
-      ORDER BY (org_id)
-      POPULATE
-      AS SELECT DISTINCT org_id, external_id, properties
-      FROM entities
-      WHERE org_id = {organizationId:String}
-      AND ${query}
-    `;
-
-    console.log("QUERY", createViewQuery);
-    try {
-      await this.clickhouse.query({
-        query: createViewQuery,
-        query_params: {
-          organizationId: segment.organizationId,
-          ...params,
-        },
-      });
-      logger.info(
-        "lifecycle",
-        `Created materialized view for segment ${segment.id}`
-      );
-    } catch (error) {
-      console.log("Error", error);
-      logger.error(
-        "lifecycle",
-        `Failed to create materialized view for segment ${segment.id}`,
-        error as Error
-      );
-      throw new DatabaseError("Failed to create materialized view for segment");
     }
   }
 
@@ -152,7 +107,6 @@ export class SegmentationService {
   ): Promise<{ [entityId: string]: Segment[] }> {
     // Fetch all segments for the organization
     const allSegments = await this.listSegments(organizationId);
-    const segmentMap = new Map(allSegments.map((s) => [s.id, s]));
 
     if (allSegments.length === 0) {
       return {};
@@ -160,27 +114,18 @@ export class SegmentationService {
 
     // Format entityIds for ClickHouse
     const formattedEntityIds = entityIds.map((id) => `'${id}'`).join(",");
-
     // Fetch all segment memberships for the given entity IDs in a single query
     const query = `
-      SELECT external_id as entity_id, segment_id
-      FROM (
-        ${allSegments
-          .map(
-            (s) => `
-              SELECT external_id, '${s.id}' as segment_id
-              FROM segment_membership_${this.createSafeSegmentId(s.id)}
-              WHERE external_id IN (${formattedEntityIds})
-              AND org_id = '${organizationId}'
-            `
-          )
-          .join(" UNION ALL ")}
-      )
+      SELECT entity_id, segment_id
+      FROM segment_memberships
+      WHERE entity_id IN (${formattedEntityIds})
+      AND org_id = {organizationId:String}
     `;
 
     try {
       const result = await this.clickhouse.query({
         query,
+        query_params: { organizationId },
         format: "JSONEachRow",
       });
 
@@ -191,17 +136,10 @@ export class SegmentationService {
         if (!entitySegments[entity_id]) {
           entitySegments[entity_id] = [];
         }
-        const segment = segmentMap.get(segment_id);
+
+        const segment = allSegments.find((s) => s.id === segment_id);
         if (segment) {
-          entitySegments[entity_id].push({
-            id: segment.id,
-            name: segment.name,
-            description: segment.description,
-            createdAt: segment.createdAt,
-            organizationId: segment.organizationId,
-            conditions: segment.conditions,
-            updatedAt: segment.updatedAt,
-          });
+          entitySegments[entity_id].push(segment);
         }
       }
 
@@ -246,7 +184,11 @@ export class SegmentationService {
         ) as SegmentCondition[],
       };
 
-      await this.updateMaterializedView(typedSegment);
+      await this.refreshSegmentMembership(
+        organizationId,
+        segmentId,
+        typedSegment
+      );
 
       logger.info("lifecycle", `Updated segment ${segmentId}`, {
         organizationId,
@@ -263,30 +205,47 @@ export class SegmentationService {
     }
   }
 
-  private async updateMaterializedView(segment: Segment): Promise<void> {
-    await this.deleteMaterializedView(segment.id);
-    await this.createMaterializedView(segment);
-  }
-
   async deleteSegment(
     segmentId: string,
     organizationId: string
   ): Promise<boolean> {
     try {
-      const result = await prisma.segment.deleteMany({
+      // Delete from PostgreSQL
+      const result = await prisma.segment.delete({
         where: {
           id: segmentId,
-          organizationId,
         },
       });
 
-      await this.deleteMaterializedView(segmentId);
+      // Delete from ClickHouse segment_memberships table
+      const deleteQuery = `
+        ALTER TABLE segment_memberships
+        DELETE WHERE segment_id = {segmentId:String}
+      `;
+
+      await this.clickhouse.query({
+        query: deleteQuery,
+        query_params: { segmentId },
+      });
 
       logger.info("lifecycle", `Deleted segment ${segmentId}`, {
         organizationId,
       });
-      return result.count > 0;
+      return true;
     } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        logger.warn(
+          "lifecycle",
+          `Segment ${segmentId} not found for deletion`,
+          {
+            organizationId,
+          }
+        );
+        return false;
+      }
       logger.error(
         "lifecycle",
         `Failed to delete segment ${segmentId}`,
@@ -294,24 +253,6 @@ export class SegmentationService {
         { organizationId }
       );
       throw new DatabaseError("Failed to delete segment");
-    }
-  }
-
-  private async deleteMaterializedView(segmentId: string): Promise<void> {
-    const query = `DROP VIEW IF EXISTS segment_membership_${this.createSafeSegmentId(segmentId)}`;
-    try {
-      await this.clickhouse.query({ query });
-      logger.info(
-        "lifecycle",
-        `Deleted materialized view for segment ${segmentId}`
-      );
-    } catch (error) {
-      logger.error(
-        "lifecycle",
-        `Failed to delete materialized view for segment ${segmentId}`,
-        error as Error
-      );
-      throw new DatabaseError("Failed to delete materialized view for segment");
     }
   }
 
@@ -354,13 +295,15 @@ export class SegmentationService {
     if (!segment) throw new NotFoundError("Segment not found");
 
     const query = `
-      SELECT entity_id
-      FROM segment_membership_${segmentId}
+      SELECT DISTINCT entity_id
+      FROM segment_memberships
+      WHERE segment_id = {segmentId:String} AND org_id = {organizationId:String}
     `;
 
     try {
       const result = await this.clickhouse.query({
         query,
+        query_params: { segmentId, organizationId },
         format: "JSONEachRow",
       });
 
@@ -373,102 +316,10 @@ export class SegmentationService {
       logger.error(
         "lifecycle",
         `Failed to get entities in segment ${segmentId}`,
-        error as Error,
+        error instanceof Error ? error : new Error(String(error)),
         { organizationId }
       );
       throw new DatabaseError("Failed to get entities in segment");
-    }
-  }
-
-  private buildSegmentCondition(conditions: SegmentCondition[]): {
-    query: string;
-    params: Record<string, any>;
-  } {
-    const params: Record<string, any> = {};
-    const conditionStrings = conditions.map((condition, conditionIndex) => {
-      const criteriaStrings = condition.criteria.map((c, criterionIndex) => {
-        const fieldParam = `field_${conditionIndex}_${criterionIndex}`;
-        const valueParam = `value_${conditionIndex}_${criterionIndex}`;
-        params[fieldParam] = c.field;
-        params[valueParam] = c.value;
-
-        if (c.type === SegmentCriterionType.EVENT) {
-          const eventNameParam = `event_${conditionIndex}_${criterionIndex}`;
-          params[eventNameParam] = c.field;
-
-          switch (c.operator) {
-            case SegmentOperator.HAS_DONE:
-              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String})`;
-            case SegmentOperator.HAS_NOT_DONE:
-              return `external_id NOT IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String})`;
-            case SegmentOperator.HAS_DONE_TIMES:
-              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String} GROUP BY entity_id HAVING COUNT(*) = {${valueParam}:Int64})`;
-            case SegmentOperator.HAS_DONE_FIRST_TIME:
-              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String} GROUP BY entity_id HAVING MIN(timestamp) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime})`;
-            case SegmentOperator.HAS_DONE_LAST_TIME:
-              return `external_id IN (SELECT entity_id FROM events WHERE name = {${eventNameParam}:String} GROUP BY entity_id HAVING MAX(timestamp) ${this.getOperatorSQL(SegmentOperator.EQUALS)} {${valueParam}:DateTime})`;
-            case SegmentOperator.HAS_DONE_WITHIN:
-            case SegmentOperator.HAS_NOT_DONE_WITHIN:
-              const withinOperator =
-                c.operator === SegmentOperator.HAS_DONE_WITHIN
-                  ? "IN"
-                  : "NOT IN";
-              const timeUnitParam = `timeUnit_${conditionIndex}_${criterionIndex}`;
-              params[timeUnitParam] = c.timeUnit || "days";
-              return `external_id ${withinOperator} (
-                SELECT entity_id 
-                FROM events 
-                WHERE name = {${eventNameParam}:String} 
-                AND timestamp > subtractSeconds(now(), toUInt32({${valueParam}:Int64} * ${this.getSecondsMultiplier(params[timeUnitParam])}))
-              )`;
-            default:
-              return `external_id IN (
-                SELECT entity_id FROM events
-                WHERE name = {${eventNameParam}:String}
-                AND JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}
-              )`;
-          }
-        } else if (c.type === SegmentCriterionType.PROPERTY) {
-          return `JSONExtractString(properties, {${fieldParam}:String}) ${this.getOperatorSQL(c.operator)} {${valueParam}:String}`;
-        } else {
-          throw new Error(`Unsupported criterion type: ${c.type}`);
-        }
-      });
-      return `(${criteriaStrings.join(" AND ")})`;
-    });
-
-    const conditionLogicalOp =
-      conditions.length > 0
-        ? conditions[0].logicalOperator
-        : LogicalOperator.AND;
-    const query = conditionStrings.join(` ${conditionLogicalOp} `);
-    return { query, params };
-  }
-
-  private getOperatorSQL(operator: SegmentOperator): string {
-    switch (operator) {
-      case SegmentOperator.EQUALS:
-        return "=";
-      case SegmentOperator.NOT_EQUALS:
-        return "!=";
-      case SegmentOperator.GREATER_THAN:
-        return ">";
-      case SegmentOperator.LESS_THAN:
-        return "<";
-      case SegmentOperator.CONTAINS:
-        return "LIKE";
-      case SegmentOperator.NOT_CONTAINS:
-        return "NOT LIKE";
-      case SegmentOperator.IN:
-        return "IN";
-      case SegmentOperator.NOT_IN:
-        return "NOT IN";
-      case SegmentOperator.BETWEEN:
-        return "BETWEEN";
-      case SegmentOperator.NOT_BETWEEN:
-        return "NOT BETWEEN";
-      default:
-        throw new Error(`Unsupported operator: ${operator}`);
     }
   }
 
@@ -530,7 +381,7 @@ export class SegmentationService {
     date.setDate(date.getDate() - daysAgo);
     const query = `
       SELECT COUNT(*) as count
-      FROM segment_membership_${segment.id}
+      FROM segment_membership
       WHERE created_at <= {date:DateTime}
     `;
 
@@ -601,40 +452,432 @@ export class SegmentationService {
     entityId: string,
     organizationId: string
   ): Promise<Segment[]> {
-    const allSegments = await this.listSegments(organizationId);
-    const entitySegments: Segment[] = [];
-
-    for (const segment of allSegments) {
+    try {
       const query = `
-        SELECT 1
-        FROM segment_membership_${segment.id}
-        WHERE entity_id = {entityId:String}
-        LIMIT 1
+        SELECT segment_id
+        FROM segment_memberships
+        WHERE entity_id = {entityId:String} AND org_id = {organizationId:String}
       `;
 
-      try {
-        const result = await this.clickhouse.query({
-          query,
-          query_params: { entityId },
-          format: "JSONEachRow",
-        });
+      const result = await this.clickhouse.query({
+        query,
+        query_params: { entityId, organizationId },
+        format: "JSONEachRow",
+      });
 
-        const data = await result.json();
-        if (data.length > 0) {
-          entitySegments.push(segment);
-        }
-      } catch (error) {
-        logger.error(
-          "lifecycle",
-          `Error checking if entity ${entityId} is in segment ${segment.id}`,
-          error as Error
+      const data = await result.json();
+      const segmentIds = data.map((row: any) => row.segment_id);
+
+      const segments = await prisma.segment.findMany({
+        where: {
+          id: { in: segmentIds },
+          organizationId,
+        },
+      });
+
+      const typedSegments: Segment[] = segments.map((segment) => ({
+        ...segment,
+        conditions: JSON.parse(
+          segment.conditions as string
+        ) as SegmentCondition[],
+      }));
+
+      logger.info("lifecycle", `Retrieved segments for entity ${entityId}`, {
+        organizationId,
+      });
+      return typedSegments;
+    } catch (error) {
+      logger.error(
+        "lifecycle",
+        `Failed to get segments for entity ${entityId}`,
+        error as Error,
+        { organizationId }
+      );
+      throw new DatabaseError("Failed to get segments for entity");
+    }
+  }
+
+  private async updateSegmentMembership(
+    segmentId: string,
+    entityId: string,
+    isMember: boolean,
+    organizationId: string
+  ): Promise<void> {
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/T/, " ")
+      .replace(/\..+/, "")
+      .slice(0, 19);
+
+    if (isMember) {
+      const insertData = {
+        segment_id: segmentId,
+        entity_id: entityId,
+        org_id: organizationId,
+        created_at: timestamp,
+      };
+
+      await this.clickhouse.insert({
+        table: "segment_memberships",
+        values: [insertData],
+        format: "JSONEachRow",
+      });
+    } else {
+      const deleteQuery = `
+        ALTER TABLE segment_memberships
+        DELETE WHERE segment_id = {segmentId:String} AND entity_id = {entityId:String} AND org_id = {organizationId:String}
+      `;
+
+      await this.clickhouse.query({
+        query: deleteQuery,
+        query_params: { segmentId, entityId, organizationId },
+      });
+    }
+  }
+
+  private compareValues(
+    value: any,
+    operator: SegmentOperator,
+    compareValue: any
+  ): boolean {
+    switch (operator) {
+      case SegmentOperator.EQUALS:
+        return value === compareValue;
+      case SegmentOperator.NOT_EQUALS:
+        return value !== compareValue;
+      case SegmentOperator.GREATER_THAN:
+        return value > compareValue;
+      case SegmentOperator.LESS_THAN:
+        return value < compareValue;
+      case SegmentOperator.CONTAINS:
+        return value.includes(compareValue);
+      case SegmentOperator.NOT_CONTAINS:
+        return !value.includes(compareValue);
+      case SegmentOperator.IN:
+        return compareValue.includes(value);
+      case SegmentOperator.NOT_IN:
+        return !compareValue.includes(value);
+      case SegmentOperator.BETWEEN:
+        return value >= compareValue[0] && value <= compareValue[1];
+      case SegmentOperator.NOT_BETWEEN:
+        return value < compareValue[0] || value > compareValue[1];
+      default:
+        return false;
+    }
+  }
+
+  private async evaluateEventCriterion(
+    criterion: SegmentCondition["criteria"][0],
+    entityId: string,
+    eventName?: string,
+    eventProperties?: Record<string, any>
+  ): Promise<boolean> {
+    if (
+      criterion.operator === SegmentOperator.HAS_DONE &&
+      eventName === criterion.field
+    ) {
+      return true;
+    }
+
+    let query = `
+      SELECT COUNT(*) as count
+      FROM events
+      WHERE entity_id = {entityId:String}
+        AND name = {eventName:String}
+    `;
+
+    if (criterion.operator === SegmentOperator.HAS_DONE_WITHIN) {
+      query += `
+        AND timestamp > subtractSeconds(now(), toUInt32({value:Int64} * ${this.getSecondsMultiplier(criterion.timeUnit || "days")}))
+      `;
+    }
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: {
+        entityId,
+        eventName: criterion.field,
+        value: criterion.value,
+      },
+      format: "JSONEachRow",
+    });
+
+    const data = (await result.json()) as { count: string }[];
+    if (data.length === 0 || typeof data[0].count !== "string") {
+      throw new Error("Unexpected query result format");
+    }
+
+    const count = parseInt(data[0].count, 10);
+
+    switch (criterion.operator) {
+      case SegmentOperator.HAS_DONE:
+      case SegmentOperator.HAS_DONE_WITHIN:
+        return count > 0;
+      case SegmentOperator.HAS_NOT_DONE:
+        return count === 0;
+      case SegmentOperator.HAS_DONE_TIMES:
+        return count === criterion.value;
+      default:
+        return false;
+    }
+  }
+
+  private async evaluatePropertyCriterion(
+    criterion: SegmentCondition["criteria"][0],
+    entityId: string
+  ): Promise<boolean> {
+    const query = `
+      SELECT JSONExtractString(properties, {field:String}) as value
+      FROM entities
+      WHERE id = {entityId:UUID}
+      LIMIT 1
+    `;
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: { field: criterion.field, entityId },
+      format: "JSONEachRow",
+    });
+
+    const data = (await result.json()) as Array<{ value: string }>;
+    if (data.length === 0) return false;
+
+    const value = data[0].value;
+    return this.compareValues(value, criterion.operator, criterion.value);
+  }
+
+  private async evaluateCriterion(
+    criterion: SegmentCondition["criteria"][0],
+    entityId: string,
+    eventName?: string,
+    eventProperties?: Record<string, any>
+  ): Promise<boolean> {
+    if (criterion.type === SegmentCriterionType.PROPERTY) {
+      return this.evaluatePropertyCriterion(criterion, entityId);
+    } else if (criterion.type === SegmentCriterionType.EVENT) {
+      return this.evaluateEventCriterion(
+        criterion,
+        entityId,
+        eventName,
+        eventProperties
+      );
+    }
+    return false;
+  }
+
+  private async evaluateSegmentConditions(
+    segment: Segment,
+    entityId: string,
+    eventName?: string,
+    eventProperties?: Record<string, any>
+  ): Promise<boolean> {
+    for (const condition of segment.conditions) {
+      const criteriaResults = await Promise.all(
+        condition.criteria.map((criterion) =>
+          this.evaluateCriterion(
+            criterion,
+            entityId,
+            eventName,
+            eventProperties
+          )
+        )
+      );
+
+      const conditionResult =
+        condition.logicalOperator === LogicalOperator.AND
+          ? criteriaResults.every((result) => result)
+          : criteriaResults.some((result) => result);
+
+      if (!conditionResult) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  async evaluateSegmentMembership(
+    organizationId: string,
+    entityId: string,
+    eventName?: string,
+    eventProperties?: Record<string, any>
+  ): Promise<string[]> {
+    const segments = await this.listSegments(organizationId);
+    const matchedSegments: string[] = [];
+
+    for (const segment of segments) {
+      if (
+        await this.evaluateSegmentConditions(
+          segment,
+          entityId,
+          eventName,
+          eventProperties
+        )
+      ) {
+        matchedSegments.push(segment.id);
+        await this.updateSegmentMembership(
+          segment.id,
+          entityId,
+          true,
+          organizationId
+        );
+      } else {
+        await this.updateSegmentMembership(
+          segment.id,
+          entityId,
+          false,
+          organizationId
         );
       }
     }
 
-    logger.info("lifecycle", `Retrieved segments for entity ${entityId}`, {
-      organizationId,
-    });
-    return entitySegments;
+    return matchedSegments;
+  }
+
+  async refreshSegmentMembership(
+    organizationId: string,
+    segmentId: string,
+    segment: Segment
+  ): Promise<boolean> {
+    try {
+      const entities = await this.getAllEntities(organizationId);
+      let updatedCount = 0;
+
+      for (const entityId of entities) {
+        const isInSegment = await this.evaluateSegmentConditions(
+          segment,
+          entityId
+        );
+
+        await this.updateSegmentMembership(
+          segmentId,
+          entityId,
+          isInSegment,
+          organizationId
+        );
+
+        if (isInSegment) {
+          updatedCount++;
+        }
+      }
+
+      logger.info(
+        "lifecycle",
+        `Refreshed segment membership for ${segmentId}`,
+        {
+          organizationId,
+          entitiesUpdated: updatedCount,
+          totalEntities: entities.length,
+        }
+      );
+
+      return true;
+    } catch (error) {
+      logger.error(
+        "lifecycle",
+        `Failed to refresh segment membership for ${segmentId}`,
+        error instanceof Error ? error : new Error(String(error)),
+        { organizationId }
+      );
+      throw new DatabaseError("Failed to refresh segment membership");
+    }
+  }
+
+  async refreshEntitySegmentMembership(
+    organizationId: string,
+    entityId: string
+  ): Promise<boolean> {
+    try {
+      const segments = await this.listSegments(organizationId);
+      let updatedCount = 0;
+
+      for (const segment of segments) {
+        const isInSegment = await this.evaluateSegmentConditions(
+          segment,
+          entityId
+        );
+
+        await this.updateSegmentMembership(
+          segment.id,
+          entityId,
+          isInSegment,
+          organizationId
+        );
+
+        if (isInSegment) {
+          updatedCount++;
+        }
+      }
+
+      logger.info(
+        "lifecycle",
+        `Refreshed segment membership for entity ${entityId}`,
+        {
+          organizationId,
+          entityId,
+          segmentsUpdated: updatedCount,
+          totalSegments: segments.length,
+        }
+      );
+
+      return true;
+    } catch (error) {
+      logger.error(
+        "lifecycle",
+        `Failed to refresh segment membership for entity ${entityId}`,
+        error instanceof Error ? error : new Error(String(error)),
+        { organizationId, entityId }
+      );
+      throw new DatabaseError("Failed to refresh entity segment membership");
+    }
+  }
+
+  private async getAllEntities(organizationId: string): Promise<string[]> {
+    try {
+      const query = `
+        SELECT id
+        FROM entities
+        WHERE org_id = {organizationId:String}
+      `;
+
+      const result = await this.clickhouse.query({
+        query,
+        query_params: { organizationId },
+        format: "JSONEachRow",
+      });
+
+      const data = (await result.json()) as Array<{ id: string }>;
+      const entityIds = data.map((row) => row.id);
+
+      logger.info("lifecycle", `Retrieved all entities for organization`, {
+        organizationId,
+        entityCount: entityIds.length,
+      });
+
+      return entityIds;
+    } catch (error) {
+      logger.error(
+        "lifecycle",
+        `Error fetching all entities for organization`,
+        error instanceof Error ? error : new Error(String(error)),
+        { organizationId }
+      );
+      throw new DatabaseError("Failed to fetch all entities");
+    }
+  }
+
+  public async segmentEvent(eventData: {
+    type: "ENTITY_CREATED" | "ENTITY_UPDATED" | "EVENT_OCCURRED";
+    organizationId: string;
+    entityId: string;
+    eventName?: string;
+    eventProperties?: Record<string, any>;
+  }) {
+    const matchedSegments = await this.evaluateSegmentMembership(
+      eventData.organizationId,
+      eventData.entityId,
+      eventData.eventName,
+      eventData.eventProperties
+    );
   }
 }
