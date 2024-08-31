@@ -3,36 +3,79 @@ import { ClickHouseClient } from "@clickhouse/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
 import { EventData } from "../models/events";
-
+import { EventQueueService } from "../lib/queue";
+import { v4 as uuidv4 } from "uuid";
 type QueryParamsType = Record<string, unknown>;
 
 export class EventService {
   private clickhouse: ClickHouseClient;
+  private eventQueueService: EventQueueService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
+    this.eventQueueService = EventQueueService.getInstance();
   }
 
   async recordEvent(
     organizationId: string,
-    eventData: Omit<EventData, "org_id" | "timestamp">
+    eventData: Omit<EventData, "org_id" | "timestamp" | "id" | "entity_id">
   ): Promise<EventData> {
     try {
-      const event: EventData = {
-        ...eventData,
-        org_id: organizationId,
-        timestamp: new Date().toISOString().slice(0, 19).replace("T", " "),
-        properties: eventData.properties,
-      };
-
-      await this.clickhouse.insert({
-        table: "events",
-        values: [event],
+      // First, get the entity's actual ID from the entities table
+      const entityQuery = `
+        SELECT id
+        FROM entities
+        WHERE org_id = {org_id:String} AND external_id = {external_id:String}
+        LIMIT 1
+      `;
+      const entityResult = await this.clickhouse.query({
+        query: entityQuery,
+        query_params: {
+          org_id: organizationId,
+          external_id: eventData.entity_external_id,
+        },
         format: "JSONEachRow",
       });
+      const entityData = (await entityResult.json()) as { id: string }[];
 
-      logger.info("events", `Event recorded for entity ${event.entity_id}`);
-      return event;
+      if (entityData.length > 0) {
+        const event: EventData = {
+          id: uuidv4(),
+          ...eventData,
+          org_id: organizationId,
+          entity_id: entityData[0].id,
+          entity_external_id: eventData.entity_external_id,
+          timestamp: new Date().toISOString().slice(0, 19).replace("T", " "),
+          properties: eventData.properties,
+        };
+
+        await this.clickhouse.insert({
+          table: "events",
+          values: [event],
+          format: "JSONEachRow",
+        });
+
+        logger.info("events", `Event recorded for entity ${event.entity_id}`);
+
+        this.eventQueueService.publish({
+          topic: "Events",
+          message: {
+            organizationId: organizationId,
+            entityId: event.entity_id,
+            eventName: event.name,
+            eventProperties: event.properties,
+          },
+        });
+
+        return event;
+      } else {
+        // If the entity is not found, throw an error
+        throw new AppError(
+          `Entity with external ID ${eventData.entity_external_id} not found`,
+          404,
+          "ENTITY_NOT_FOUND"
+        );
+      }
     } catch (error: any) {
       logger.error("events", `Error recording event`, error);
       throw new AppError("Failed to record event", 500, "EVENT_RECORD_ERROR");
@@ -41,21 +84,21 @@ export class EventService {
 
   async getEvents(
     organizationId: string,
-    entityId?: string,
+    entityExternalId?: string,
     limit: number = 100,
     offset: number = 0
   ): Promise<EventData[]> {
     try {
       let query = `
-        SELECT id, org_id, entity_id, name, properties, timestamp
+        SELECT id, org_id, entity_id, entity_external_id, name, properties, timestamp
         FROM events
         WHERE org_id = {org_id:String}
       `;
       const params: QueryParamsType = { org_id: organizationId };
 
-      if (entityId) {
-        query += ` AND entity_id = {entity_id:String}`;
-        params.entity_id = entityId;
+      if (entityExternalId) {
+        query += ` AND entity_external_id = {entity_external_id:String}`;
+        params.entity_external_id = entityExternalId;
       }
 
       query += `
@@ -158,50 +201,4 @@ export class EventService {
       );
     }
   }
-
-  // async getEventsByEntityId(
-  //   organizationId: string,
-  //   entityId: string,
-  //   limit: number = 0,
-  //   offset: number = 0
-  // ): Promise<EventData[]> {
-  //   try {
-  // const query = `
-  //   SELECT *
-  //   FROM events
-  //   WHERE org_id = {org_id:String}
-  //     AND entity_id = {entity_id:String}
-  //   ORDER BY timestamp DESC
-  //   LIMIT {limit:UInt32}
-  //   OFFSET {offset:UInt32}
-  // `;
-
-  //     const params: QueryParamsType = {
-  //       org_id: organizationId,
-  //       entity_id: entityId,
-  //       limit,
-  //       offset,
-  //     };
-
-  //     const result = await this.clickhouse.query({
-  //       query,
-  //       query_params: params,
-  //       format: "JSONEachRow",
-  //     });
-
-  // const events: EventData[] = await result.json();
-  // return events.map((event) => this.parseEventProperties(event));
-  //   } catch (error: any) {
-  //     logger.error(
-  //       "events",
-  //       `Error fetching events for entity ${entityId} in organization ${organizationId}`,
-  //       error
-  //     );
-  //     throw new AppError(
-  //       "Failed to fetch events for entity",
-  //       500,
-  //       "ENTITY_EVENTS_FETCH_ERROR"
-  //     );
-  //   }
-  // }
 }

@@ -285,6 +285,7 @@ const models: TsoaRoute.Models = {
             "id": {"dataType":"string"},
             "org_id": {"dataType":"string","required":true},
             "entity_id": {"dataType":"string","required":true},
+            "entity_external_id": {"dataType":"string","required":true},
             "name": {"dataType":"string","required":true},
             "properties": {"ref":"Record_string.any_","required":true},
             "timestamp": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"datetime"}],"required":true},
@@ -305,7 +306,7 @@ const models: TsoaRoute.Models = {
     "RecordEventRequest": {
         "dataType": "refObject",
         "properties": {
-            "entity_id": {"dataType":"string","required":true},
+            "entity_external_id": {"dataType":"string","required":true},
             "name": {"dataType":"string","required":true},
             "properties": {"ref":"Record_string.any_","required":true},
         },
@@ -1247,40 +1248,6 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'listEntities',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/api/internal/v1/entities/event',
-            authenticateMiddleware([{"jwt":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(EntityController)),
-            ...(fetchMiddlewares<RequestHandler>(EntityController.prototype.recordEvent)),
-
-            async function EntityController_recordEvent(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    body: {"in":"body","name":"body","required":true,"ref":"RecordEventRequest"},
-                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                    badRequestResponse: {"in":"res","name":"400","required":true,"ref":"ApiResponse_null_"},
-                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const controller = new EntityController();
-
-              await templateService.apiHandler({
-                methodName: 'recordEvent',
                 controller,
                 response,
                 next,

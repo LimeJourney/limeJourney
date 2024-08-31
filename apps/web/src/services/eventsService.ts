@@ -4,13 +4,14 @@ export interface EventData {
   id: string;
   org_id: string;
   entity_id: string;
+  entity_external_id: string;
   name: string;
   properties: Record<string, any>;
   timestamp: string;
 }
 
 export interface RecordEventRequest {
-  entity_id: string;
+  entity_external_id: string;
   name: string;
   properties: Record<string, any>;
 }
@@ -21,11 +22,11 @@ export const eventsService = {
   },
 
   async getEvents(
-    entityId?: string,
+    entityExternalId?: string,
     limit?: number,
     offset?: number
   ): Promise<EventData[]> {
-    const params = { entityId, limit, offset };
+    const params = { entityExternalId, limit, offset };
     return apiCall<EventData[]>("get", "/events", params);
   },
 

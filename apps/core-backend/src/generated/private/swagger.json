@@ -713,6 +713,9 @@
 					"entity_id": {
 						"type": "string"
 					},
+					"entity_external_id": {
+						"type": "string"
+					},
 					"name": {
 						"type": "string"
 					},
@@ -734,6 +737,7 @@
 				"required": [
 					"org_id",
 					"entity_id",
+					"entity_external_id",
 					"name",
 					"properties",
 					"timestamp"
@@ -771,7 +775,7 @@
 			},
 			"RecordEventRequest": {
 				"properties": {
-					"entity_id": {
+					"entity_external_id": {
 						"type": "string"
 					},
 					"name": {
@@ -782,7 +786,7 @@
 					}
 				},
 				"required": [
-					"entity_id",
+					"entity_external_id",
 					"name",
 					"properties"
 				],
@@ -2454,67 +2458,6 @@
 						}
 					}
 				]
-			}
-		},
-		"/entities/event": {
-			"post": {
-				"operationId": "RecordEvent",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"anyOf": [
-										{
-											"$ref": "#/components/schemas/ApiResponse_EventData_"
-										},
-										{}
-									]
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_null_"
-								}
-							}
-						}
-					},
-					"500": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_null_"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Entities"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RecordEventRequest"
-							}
-						}
-					}
-				}
 			}
 		},
 		"/entities/{entityId}/events": {

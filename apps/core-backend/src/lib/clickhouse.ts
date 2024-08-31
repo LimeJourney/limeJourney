@@ -57,11 +57,21 @@ class ClickHouseManager {
         id UUID DEFAULT generateUUIDv4(),
         org_id String,
         entity_id String,
+        entity_external_id String,
         name String,
         properties String,
         timestamp DateTime
       ) ENGINE = MergeTree()
       ORDER BY (org_id, entity_id, timestamp)
+    `,
+    segments: `
+      CREATE TABLE IF NOT EXISTS segment_memberships (
+        segment_id String,
+        entity_id String,
+        org_id String,
+        created_at DateTime
+      ) ENGINE = ReplacingMergeTree(created_at)
+      ORDER BY (org_id, segment_id, entity_id)
     `,
   };
 
@@ -70,6 +80,8 @@ class ClickHouseManager {
       this.executeQuery(this.schemas.entities, "Creating entities table..."),
     async () =>
       this.executeQuery(this.schemas.events, "Creating events table..."),
+    async () =>
+      this.executeQuery(this.schemas.segments, "Creating segments table..."),
   ];
 
   public async runMigrations(): Promise<void> {

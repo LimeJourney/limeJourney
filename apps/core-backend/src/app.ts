@@ -13,6 +13,7 @@ import { expressErrorMiddleware } from "@lime/errors";
 import { SwaggerController } from "./controllers/private/swaggerController";
 import * as SwaggerJson from "./generated/private/swagger.json";
 import { EventQueueService } from "./lib/queue";
+import { SegmentationService } from "./services/segmentationService";
 export class App {
   private app: Express;
   private server: Server | null = null;
@@ -28,10 +29,10 @@ export class App {
 
   private configureEventHandlers(): void {
     // const entityService = new EntityService();
-    // const segmentationService = new SegmentationService();
-    // this.eventQueueService.registerEventHandler("entity_events", async (message) => {
-    //   await entityService.processEvent(message);
-    // });
+    const segmentationService = new SegmentationService();
+    this.eventQueueService.registerEventHandler("Events", async (message) => {
+      await segmentationService.segmentEvent(message);
+    });
     // this.eventQueueService.registerEventHandler("segment_events", async (message) => {
     //   await segmentationService.processEvent(message);
     // });

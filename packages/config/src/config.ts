@@ -95,28 +95,8 @@ const config = {
     },
   },
 };
-
 // Parse and validate the configuration
 export const AppConfig = configSchema.parse(config);
 
 // Type for the configuration
 export type AppConfigType = z.infer<typeof configSchema>;
-
-const eventQueueConfig =
-  config.eventQueue.type === "kafka"
-    ? {
-        type: "kafka" as const,
-        options: {
-          brokers: config.eventQueue.options.brokers,
-          clientId: config.eventQueue.options.clientId,
-          groupId: config.eventQueue.options.groupId,
-          username: config.eventQueue.options.username,
-          password: config.eventQueue.options.password,
-          ssl: config.eventQueue.options.ssl,
-          bootstrapEndpoint: config.eventQueue.options.bootstrapEndpoint,
-          topic: config.eventQueue.options.topic,
-        },
-      }
-    : { type: "memory" as const };
-
-export { eventQueueConfig };

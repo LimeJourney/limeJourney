@@ -9,6 +9,8 @@ import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
 import { SegmentationService } from "./segmentationService";
 import { EventData } from "../models/events";
+import { EventQueueMessage, EventQueueService } from "../lib/queue";
+import { v4 as uuidv4 } from "uuid";
 
 export interface EntityData {
   id: string;
@@ -31,10 +33,12 @@ interface EntityWithSegments extends EntityData {
 export class EntityService {
   private clickhouse: ClickHouseClient;
   private segmentationService: SegmentationService;
+  private eventQueueService: EventQueueService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
     this.segmentationService = new SegmentationService();
+    this.eventQueueService = EventQueueService.getInstance();
   }
 
   private async executeInsert(
@@ -107,18 +111,22 @@ export class EntityService {
       const entityResult = await checkResult.json();
       const entityExists = entityResult.length > 0;
 
+      let entityId: string;
+      let mergedProperties: Record<string, any>;
+
       if (entityExists) {
+        entityId = entityResult[0].id;
         const existingProperties = JSON.parse(entityResult[0].properties);
 
         // Merge existing and new properties
-        const mergedProperties = {
+        mergedProperties = {
           ...existingProperties,
           ...properties,
         };
         // Update existing entity
         const updateQuery = `
           ALTER TABLE entities
-          UPDATE properties = {properties:String}
+          UPDATE properties = {properties:String}, updated_at = {updated_at:String}
           WHERE org_id = {org_id:String} AND external_id = {external_id:String}
         `;
 
@@ -133,11 +141,18 @@ export class EntityService {
           "Failed to update entity"
         );
       } else {
+        // Generate a new UUID for the entity
+        entityId = uuidv4();
+        mergedProperties = properties;
+
         // Insert new entity
         const insertData = {
+          id: entityId,
           org_id: organizationId,
           external_id: external_id || "",
-          properties: properties,
+          properties: JSON.stringify(properties),
+          created_at: timestamp,
+          updated_at: timestamp,
         };
 
         await this.executeInsert(
@@ -147,11 +162,21 @@ export class EntityService {
         );
       }
 
+      const message: EventQueueMessage = {
+        topic: "Events",
+        message: {
+          organizationId: organizationId,
+          entityId: entityId,
+          properties: mergedProperties,
+        },
+      };
+      this.eventQueueService.publish(message);
+
       return {
-        id: "",
+        id: entityId,
         org_id: organizationId,
-        external_id: data.external_id,
-        properties: data.properties,
+        external_id: external_id,
+        properties: mergedProperties,
         created_at: timestamp,
         updated_at: timestamp,
       };
@@ -257,9 +282,7 @@ export class EntityService {
       );
 
       // Fetch segments for all entities
-      const entityIds = parsedEntities.map(
-        (entity) => entity.external_id || ""
-      );
+      const entityIds = parsedEntities.map((entity) => entity.id || "");
       const entitySegments =
         await this.segmentationService.getSegmentsForMultipleEntities(
           entityIds,
@@ -270,7 +293,7 @@ export class EntityService {
       const entitiesWithSegments: EntityWithSegments[] = parsedEntities.map(
         (entity) => ({
           ...entity,
-          segments: entitySegments[entity.external_id!] || [],
+          segments: entitySegments[entity.id!] || [],
         })
       );
 
@@ -283,65 +306,65 @@ export class EntityService {
     }
   }
 
-  async recordEvent(
-    organizationId: string,
-    entityId: string,
-    eventData: Omit<EventData, "id" | "org_id" | "entity_id" | "timestamp">
-  ): Promise<EventData> {
-    if (!organizationId || !entityId) {
-      throw new ValidationError("Organization ID and Entity ID are required");
-    }
+  // async recordEvent(
+  //   organizationId: string,
+  //   entityId: string,
+  //   eventData: Omit<EventData, "id" | "org_id" | "entity_id" | "timestamp">
+  // ): Promise<EventData> {
+  //   if (!organizationId || !entityId) {
+  //     throw new ValidationError("Organization ID and Entity ID are required");
+  //   }
 
-    try {
-      const entity = await this.getEntity(organizationId, entityId);
-      const timestamp = new Date().toISOString();
+  //   try {
+  //     const entity = await this.getEntity(organizationId, entityId);
+  //     const timestamp = new Date().toISOString();
 
-      const query = `
-          INSERT INTO events (org_id, entity_id, name, properties, timestamp)
-          VALUES ({organizationId}, {entityId}, {name}, {properties}, {timestamp})
-        `;
+  //     const query = `
+  //         INSERT INTO events (org_id, entity_id, name, properties, timestamp)
+  //         VALUES ({organizationId}, {entityId}, {name}, {properties}, {timestamp})
+  //       `;
 
-      const params = {
-        organizationId,
-        entityId: entity.id,
-        name: eventData.name,
-        properties: JSON.stringify(eventData.properties),
-        timestamp,
-      };
+  //     const params = {
+  //       organizationId,
+  //       entityId: entity.id,
+  //       name: eventData.name,
+  //       properties: JSON.stringify(eventData.properties),
+  //       timestamp,
+  //     };
 
-      await this.executeQuery(query, params, "Failed to record event");
+  //     await this.executeQuery(query, params, "Failed to record event");
 
-      // Fetch the inserted event to get the generated ID
-      const fetchQuery = `
-        SELECT id, org_id, entity_id, name, properties, timestamp
-        FROM events
-        WHERE org_id = {organizationId} AND entity_id = {entityId} AND timestamp = {timestamp}
-        ORDER BY timestamp DESC
-        LIMIT 1
-      `;
+  //     // Fetch the inserted event to get the generated ID
+  //     const fetchQuery = `
+  //       SELECT id, org_id, entity_id, name, properties, timestamp
+  //       FROM events
+  //       WHERE org_id = {organizationId} AND entity_id = {entityId} AND timestamp = {timestamp}
+  //       ORDER BY timestamp DESC
+  //       LIMIT 1
+  //     `;
 
-      const result = await this.executeQuery(
-        fetchQuery,
-        params,
-        "Failed to fetch recorded event"
-      );
-      const insertedEvent = result.data[0];
+  //     const result = await this.executeQuery(
+  //       fetchQuery,
+  //       params,
+  //       "Failed to fetch recorded event"
+  //     );
+  //     const insertedEvent = result.data[0];
 
-      return {
-        id: insertedEvent.id,
-        org_id: insertedEvent.org_id,
-        entity_id: insertedEvent.entity_id,
-        name: insertedEvent.name,
-        properties: JSON.parse(insertedEvent.properties),
-        timestamp: insertedEvent.timestamp,
-      };
-    } catch (error) {
-      if (error instanceof NotFoundError || error instanceof DatabaseError) {
-        throw error;
-      }
-      throw new Error("Unexpected error occurred while recording event");
-    }
-  }
+  //     return {
+  //       id: insertedEvent.id,
+  //       org_id: insertedEvent.org_id,
+  //       entity_id: insertedEvent.entity_id,
+  //       name: insertedEvent.name,
+  //       properties: JSON.parse(insertedEvent.properties),
+  //       timestamp: insertedEvent.timestamp,
+  //     };
+  //   } catch (error) {
+  //     if (error instanceof NotFoundError || error instanceof DatabaseError) {
+  //       throw error;
+  //     }
+  //     throw new Error("Unexpected error occurred while recording event");
+  //   }
+  // }
 
   private parseEventProperties(event: EventData): EventData {
     return {

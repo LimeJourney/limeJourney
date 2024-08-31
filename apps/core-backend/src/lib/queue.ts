@@ -1,4 +1,4 @@
-import { Kafka, Producer, Consumer, KafkaMessage } from "kafkajs";
+import { Kafka, Producer, Consumer, KafkaMessage, logLevel } from "kafkajs";
 import { EventEmitter } from "events";
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
@@ -32,15 +32,17 @@ class KafkaEventQueue {
   constructor() {
     this.kafka = new Kafka({
       brokers: AppConfig.eventQueue.options.brokers,
-      clientId: AppConfig.eventQueue.options.clientId,
+      // clientId: AppConfig.eventQueue.options.clientId,
       ssl: AppConfig.eventQueue.options.ssl,
       sasl: AppConfig.eventQueue.options.username
         ? {
-            mechanism: "plain",
+            mechanism: "scram-sha-256",
             username: AppConfig.eventQueue.options.username,
             password: AppConfig.eventQueue.options.password,
           }
         : undefined,
+
+      logLevel: logLevel.ERROR,
     });
 
     this.producer = this.kafka.producer();
@@ -108,10 +110,25 @@ class KafkaEventQueue {
       try {
         const consumer = this.kafka.consumer({ groupId: `${topic}-group` });
         await consumer.connect();
-        await consumer.subscribe({ topic });
+        await consumer.subscribe({
+          topic: topic,
+          fromBeginning: true,
+        });
         await consumer.run({
           eachMessage: async ({ topic, partition, message }) => {
-            callback(message);
+            if (message.value) {
+              const messageString = message.value.toString();
+              console.log("Received message string:", messageString);
+
+              try {
+                const parsedMessage = JSON.parse(messageString);
+                console.log("Parsed message:", parsedMessage);
+                callback(parsedMessage);
+              } catch (error) {
+                console.error("Error parsing message:", error);
+                // Handle the error as needed
+              }
+            }
             logger.debug(
               "events",
               `Received message from Kafka topic: ${topic}`,
@@ -192,6 +209,7 @@ class EventQueueService {
   }
 
   async publish(message: EventQueueMessage): Promise<void> {
+    console.log("MESSAGEEEE---------", message);
     try {
       await this.queue.publish(message.topic, message.message);
       logger.info("events", `Message published to topic: ${message.topic}`, {

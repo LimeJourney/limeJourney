@@ -176,7 +176,7 @@ export default function EventsManagement() {
       // Set the first 3 properties as visible by default
       setVisibleProperties([
         "name",
-        "entity_id",
+        "entity_external_id",
         "timestamp",
         ...allPropsArray.slice(0, 3),
       ]);
@@ -218,7 +218,7 @@ export default function EventsManagement() {
     const searchLower = searchQuery.toLowerCase();
     return (
       event.name.toLowerCase().includes(searchLower) ||
-      event.entity_id.toLowerCase().includes(searchLower) ||
+      event.entity_external_id.toLowerCase().includes(searchLower) ||
       Object.values(event.properties).some((value) =>
         value.toString().toLowerCase().includes(searchLower)
       )
@@ -240,7 +240,7 @@ export default function EventsManagement() {
 
     try {
       const createdEvent = await eventsService.recordEvent({
-        entity_id: newEventData.entity_id!,
+        entity_external_id: newEventData.entity_external_id!,
         name: newEventData.name!,
         properties: allProperties,
       });
@@ -438,13 +438,14 @@ export default function EventsManagement() {
                   <Label htmlFor="entity_id">Entity ID</Label>
                   <Input
                     id="entity_id"
-                    value={newEventData.entity_id || ""}
-                    onChange={(e) =>
+                    value={newEventData.entity_external_id || ""}
+                    onChange={(e) => {
+                      console.log(e.target.value);
                       setNewEventData({
                         ...newEventData,
-                        entity_id: e.target.value,
-                      })
-                    }
+                        entity_external_id: e.target.value,
+                      });
+                    }}
                     className="bg-neutral-800 border-neutral-700 text-white mt-1"
                   />
                 </div>
