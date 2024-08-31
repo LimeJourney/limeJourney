@@ -31,10 +31,6 @@ export class SegmentationService {
     this.clickhouse = clickhouseManager.getClient();
   }
 
-  private createSafeSegmentId(id: string): string {
-    return id.replace(/-/g, "_");
-  }
-
   async createSegment(
     organizationId: string,
     data: CreateSegmentDTO
@@ -118,8 +114,6 @@ export class SegmentationService {
 
     // Format entityIds for ClickHouse
     const formattedEntityIds = entityIds.map((id) => `'${id}'`).join(",");
-
-    console.log("formattedEntityIds -------", formattedEntityIds);
     // Fetch all segment memberships for the given entity IDs in a single query
     const query = `
       SELECT entity_id, segment_id
@@ -136,20 +130,15 @@ export class SegmentationService {
       });
 
       const data = (await result.json()) as SegmentMembership[];
-
-      console.log("data for entities -------", data);
       // Group segments by entity ID
       const entitySegments: { [entityId: string]: Segment[] } = {};
       for (const { entity_id, segment_id } of data) {
         if (!entitySegments[entity_id]) {
           entitySegments[entity_id] = [];
         }
-        console.log("segment_id -------", segment_id);
 
         const segment = allSegments.find((s) => s.id === segment_id);
-        console.log("segment -------", segment);
         if (segment) {
-          console.log("Pushing segment -------", segment);
           entitySegments[entity_id].push(segment);
         }
       }
@@ -160,7 +149,6 @@ export class SegmentationService {
         segmentCount: allSegments.length,
       });
 
-      console.log("EntitySegments------", entitySegments);
       return entitySegments;
     } catch (error) {
       logger.error(
@@ -714,11 +702,6 @@ export class SegmentationService {
     eventName?: string,
     eventProperties?: Record<string, any>
   ): Promise<string[]> {
-    console.log("evaluateSegmentMembership ------------");
-    console.log("organizationId", organizationId);
-    console.log("entityId", entityId);
-    console.log("eventName", eventName);
-    console.log("eventProperties", eventProperties);
     const segments = await this.listSegments(organizationId);
     const matchedSegments: string[] = [];
 
@@ -748,8 +731,6 @@ export class SegmentationService {
       }
     }
 
-    console.log("matchedSegments -------", matchedSegments);
-
     return matchedSegments;
   }
 
@@ -759,13 +740,7 @@ export class SegmentationService {
     segment: Segment
   ): Promise<boolean> {
     try {
-      // const segment = await this.getSegment(segmentId, organizationId);
-      // if (!segment) {
-      //   throw new Error("Segment not found");
-      // }
-
       const entities = await this.getAllEntities(organizationId);
-      console.log("entities", entities);
       let updatedCount = 0;
 
       for (const entityId of entities) {
@@ -773,8 +748,6 @@ export class SegmentationService {
           segment,
           entityId
         );
-
-        console.log("isInSegment", isInSegment, entityId);
 
         await this.updateSegmentMembership(
           segmentId,
@@ -822,10 +795,6 @@ export class SegmentationService {
         const isInSegment = await this.evaluateSegmentConditions(
           segment,
           entityId
-        );
-
-        console.log(
-          `Entity ${entityId} in segment ${segment.id}: ${isInSegment}`
         );
 
         await this.updateSegmentMembership(
@@ -904,15 +873,11 @@ export class SegmentationService {
     eventName?: string;
     eventProperties?: Record<string, any>;
   }) {
-    console.log("segmentEvent ------------");
-    console.log("eventData", eventData);
     const matchedSegments = await this.evaluateSegmentMembership(
       eventData.organizationId,
       eventData.entityId,
       eventData.eventName,
       eventData.eventProperties
     );
-
-    console.log("matchedSegments", matchedSegments);
   }
 }
