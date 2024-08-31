@@ -76,6 +76,7 @@ import segmentationService, {
   LogicalOperator,
   CreateSegmentDTO,
   UpdateSegmentDTO,
+  TimeUnit,
 } from "@/services/segmentationService";
 import { entityService } from "@/services/entitiesService";
 import { eventsService } from "@/services/eventsService";
@@ -213,12 +214,144 @@ const ConditionVisualizer: React.FC<{ conditions: SegmentCondition[] }> = ({
   );
 };
 
-interface ConditionEditorProps {
-  conditions: SegmentCondition[];
-  setConditions: (conditions: SegmentCondition[]) => void;
+interface CriterionEditorProps {
+  criterion: SegmentCondition["criteria"][0];
+  onChange: (updatedCriterion: SegmentCondition["criteria"][0]) => void;
+  onRemove: () => void;
   entityProperties: string[];
   eventNames: string[];
 }
+
+const CriterionEditor: React.FC<CriterionEditorProps> = ({
+  criterion,
+  onChange,
+  onRemove,
+  entityProperties,
+  eventNames,
+}) => {
+  const allFields = [...entityProperties, ...eventNames];
+
+  const operatorsRequiringTimeUnit = [
+    SegmentOperator.HAS_DONE_WITHIN,
+    SegmentOperator.HAS_NOT_DONE_WITHIN,
+  ];
+
+  const operatorsRequiringNumber = [
+    SegmentOperator.GREATER_THAN,
+    SegmentOperator.LESS_THAN,
+    SegmentOperator.HAS_DONE_TIMES,
+  ];
+
+  const operatorsRequiringMultipleValues = [
+    SegmentOperator.IN,
+    SegmentOperator.NOT_IN,
+    SegmentOperator.BETWEEN,
+    SegmentOperator.NOT_BETWEEN,
+  ];
+
+  const needsTimeUnit = operatorsRequiringTimeUnit.includes(criterion.operator);
+  const needsNumber = operatorsRequiringNumber.includes(criterion.operator);
+  const needsMultipleValues = operatorsRequiringMultipleValues.includes(
+    criterion.operator
+  );
+
+  const handleFieldChange = (value: string) => {
+    const type = eventNames.includes(value)
+      ? SegmentCriterionType.EVENT
+      : SegmentCriterionType.PROPERTY;
+    onChange({ ...criterion, field: value, type });
+  };
+
+  return (
+    <div className="flex items-center space-x-2 mb-2">
+      <Select value={criterion.field} onValueChange={handleFieldChange}>
+        <SelectTrigger className="w-48 bg-forest-600 text-white border-meadow-500/50">
+          <SelectValue placeholder="Select field" />
+        </SelectTrigger>
+        <SelectContent className="bg-forest-600 text-white border-meadow-500/50">
+          {allFields.map((field) => (
+            <SelectItem key={field} value={field}>
+              {field}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={criterion.operator}
+        onValueChange={(value) =>
+          onChange({ ...criterion, operator: value as SegmentOperator })
+        }
+      >
+        <SelectTrigger className="w-48 bg-forest-600 text-white border-meadow-500/50">
+          <SelectValue placeholder="Select operator" />
+        </SelectTrigger>
+        <SelectContent className="bg-forest-600 text-white border-meadow-500/50">
+          {Object.values(SegmentOperator).map((op) => (
+            <SelectItem key={op} value={op}>
+              {op.replace(/_/g, " ").toLowerCase()}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {needsNumber ? (
+        <Input
+          type="number"
+          value={criterion.value}
+          onChange={(e) => onChange({ ...criterion, value: e.target.value })}
+          placeholder="Enter number"
+          className="w-32 bg-forest-600 text-white border-meadow-500/50"
+        />
+      ) : needsMultipleValues ? (
+        <Input
+          type="text"
+          value={criterion.value}
+          onChange={(e) => onChange({ ...criterion, value: e.target.value })}
+          placeholder="Comma-separated values"
+          className="w-48 bg-forest-600 text-white border-meadow-500/50"
+        />
+      ) : (
+        <Input
+          type="text"
+          value={criterion.value}
+          onChange={(e) => onChange({ ...criterion, value: e.target.value })}
+          placeholder="Value"
+          className="w-32 bg-forest-600 text-white border-meadow-500/50"
+        />
+      )}
+
+      {needsTimeUnit && (
+        <Select
+          value={criterion.timeUnit}
+          onValueChange={(value) =>
+            onChange({ ...criterion, timeUnit: value as TimeUnit })
+          }
+        >
+          <SelectTrigger className="w-20 h-8 text-xs bg-forest-600 text-white border-meadow-500/50">
+            <SelectValue placeholder="Unit" />
+          </SelectTrigger>
+          <SelectContent className="bg-forest-600 text-white border-meadow-500/50">
+            {Object.values(TimeUnit).map((unit) => (
+              <SelectItem key={unit} value={unit}>
+                {unit}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        className="text-meadow-500 hover:text-meadow-500/80 hover:bg-forest-500/50"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
 
 const ConditionEditor: React.FC<{
   conditions: SegmentCondition[];
@@ -226,6 +359,7 @@ const ConditionEditor: React.FC<{
   entityProperties: string[];
   eventNames: string[];
 }> = ({ conditions, setConditions, entityProperties, eventNames }) => {
+  // Default dummy condition
   const defaultCondition: SegmentCondition = {
     criteria: [
       {
@@ -345,7 +479,7 @@ const ConditionEditor: React.FC<{
                     criteria: updatedCriteria,
                   });
                 }}
-                className="w-full text-forest-500 bg-meadow-200 border-meadow-500/50 hover:bg-meadow-500/10"
+                className="w-full text-meadow-500 border-meadow-500/50 hover:bg-meadow-500/10"
               >
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Criterion
               </Button>
@@ -358,107 +492,6 @@ const ConditionEditor: React.FC<{
         className="w-full bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
       >
         <PlusCircle className="mr-2 h-4 w-4" /> Add Condition
-      </Button>
-    </div>
-  );
-};
-
-const CriterionEditor: React.FC<{
-  criterion: SegmentCriterion;
-  onChange: (criterion: SegmentCriterion) => void;
-  onRemove: () => void;
-  entityProperties: string[];
-  eventNames: string[];
-}> = ({ criterion, onChange, onRemove, entityProperties, eventNames }) => {
-  const allFields = [
-    ...entityProperties.map((p) => ({
-      value: p,
-      label: p,
-      type: SegmentCriterionType.PROPERTY,
-    })),
-    ...eventNames.map((e) => ({
-      value: e,
-      label: e,
-      type: SegmentCriterionType.EVENT,
-    })),
-  ];
-
-  const propertyOperators = [
-    { value: SegmentOperator.EQUALS, label: "Equals" },
-    { value: SegmentOperator.NOT_EQUALS, label: "Does not equal" },
-    { value: SegmentOperator.CONTAINS, label: "Contains" },
-    { value: SegmentOperator.NOT_CONTAINS, label: "Does not contain" },
-    { value: SegmentOperator.GREATER_THAN, label: "Greater than" },
-    { value: SegmentOperator.LESS_THAN, label: "Less than" },
-  ];
-
-  const eventOperators = [
-    { value: SegmentOperator.HAS_DONE, label: "Has done" },
-    { value: SegmentOperator.HAS_NOT_DONE, label: "Has not done" },
-    { value: SegmentOperator.HAS_DONE_TIMES, label: "Has done at least" },
-    { value: SegmentOperator.HAS_DONE_WITHIN, label: "Has done within" },
-  ];
-
-  return (
-    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0 mb-4">
-      <Select
-        onValueChange={(value) => {
-          const selectedField = allFields.find((f) => f.value === value);
-          onChange({
-            ...criterion,
-            field: value,
-            type: selectedField?.type || SegmentCriterionType.PROPERTY,
-          });
-        }}
-        value={criterion.field}
-      >
-        <SelectTrigger className="w-full sm:w-1/3 bg-forest-500 text-white border-meadow-500/50">
-          <SelectValue placeholder="Select field" />
-        </SelectTrigger>
-        <SelectContent className="bg-forest-500 text-white border-meadow-500/50">
-          {allFields.map((field) => (
-            <SelectItem key={field.value} value={field.value}>
-              {field.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        onValueChange={(value) =>
-          onChange({ ...criterion, operator: value as SegmentOperator })
-        }
-        value={criterion.operator}
-      >
-        <SelectTrigger className="w-full sm:w-1/3 bg-forest-500 text-white border-meadow-500/50">
-          <SelectValue placeholder="Select operator" />
-        </SelectTrigger>
-        <SelectContent className="bg-forest-500 text-white border-meadow-500/50">
-          {(criterion.type === SegmentCriterionType.EVENT
-            ? eventOperators
-            : propertyOperators
-          ).map((op) => (
-            <SelectItem key={op.value} value={op.value}>
-              {op.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Input
-        placeholder="Value"
-        value={criterion.value as string}
-        onChange={(e) => onChange({ ...criterion, value: e.target.value })}
-        className="w-full sm:w-1/3 bg-forest-500 text-white border-meadow-500/50"
-      />
-
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onRemove}
-        className="text-meadow-500 hover:text-meadow-500/80 hover:bg-forest-500/50"
-      >
-        <X className="h-4 w-4" />
       </Button>
     </div>
   );
@@ -655,7 +688,7 @@ const defaultConditionSets = {
           field: "app_opened",
           operator: SegmentOperator.HAS_DONE_WITHIN,
           value: "30",
-          timeUnit: "days" as const,
+          timeUnit: TimeUnit.DAYS,
         },
       ],
       logicalOperator: LogicalOperator.AND,
@@ -732,7 +765,7 @@ const TwoPanelSegmentCreator: React.FC<{
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
-        className="w-full sm:max-w-[1000px] p-0 bg-forest-500"
+        className="w-full sm:max-w-[1200px] p-0 bg-forest-500"
         side="right"
       >
         <div className="flex h-full">
@@ -998,89 +1031,6 @@ export default function SegmentManagement() {
                 className="pl-10 pr-4 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-screaminGreen focus:border-transparent"
               />
             </div>
-            {/* <Sheet
-              open={isCreateDialogOpen}
-              onOpenChange={setIsCreateDialogOpen}
-            >
-              <SheetTrigger asChild>
-                <Button className="bg-screaminGreen text-black hover:bg-screaminGreen/90">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="bg-neutral-900 border-l border-neutral-700 w-full sm:max-w-2xl overflow-hidden flex flex-col">
-                <SheetHeader>
-                  <SheetTitle className="text-white text-2xl">
-                    Create New Segment
-                  </SheetTitle>
-                </SheetHeader>
-                <ScrollArea className="flex-grow overflow-auto py-4">
-                  <div className="grid gap-6 pr-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-white">
-                        Name
-                      </Label>
-                      <Input
-                        id="name"
-                        value={newSegment.name}
-                        onChange={(e) =>
-                          setNewSegment({ ...newSegment, name: e.target.value })
-                        }
-                        className="bg-neutral-800 text-white border-neutral-700"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description" className="text-white">
-                        Description
-                      </Label>
-                      <Textarea
-                        id="description"
-                        value={newSegment.description}
-                        onChange={(e) =>
-                          setNewSegment({
-                            ...newSegment,
-                            description: e.target.value,
-                          })
-                        }
-                        className="bg-neutral-800 text-white border-neutral-700"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-white">Conditions</Label>
-                      <ConditionEditor
-                        conditions={newSegment.conditions}
-                        setConditions={(conditions) =>
-                          setNewSegment({ ...newSegment, conditions })
-                        }
-                        entityProperties={entityProperties}
-                        eventNames={eventNames}
-                      />
-                    </div>
-                  </div>
-                </ScrollArea>
-                <SheetFooter className="mt-4">
-                  <Button
-                    onClick={() => handleCreateSegment(newSegment)}
-                    className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
-                  >
-                    Create Segment
-                  </Button>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet> */}
-            {/* <SegmentCreationSheet
-              isOpen={isCreateSheetOpen}
-              onClose={() => setIsCreateSheetOpen(false)}
-              onCreateSegment={handleCreateSegment}
-              entityProperties={entityProperties}
-              eventNames={eventNames}
-            />
-
-            <Button
-              onClick={() => setIsCreateSheetOpen(true)}
-              className="bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
-            >
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
-            </Button> */}
             <TwoPanelSegmentCreator
               isOpen={isCreateSheetOpen}
               onClose={() => setIsCreateSheetOpen(false)}
@@ -1136,7 +1086,7 @@ export default function SegmentManagement() {
                           variant="ghost"
                           size="icon"
                           onClick={() => setSelectedSegment(segment)}
-                          className="text-neutral-300 hover:text-white"
+                          className="text-neutral-300 hover:text-black hover:bg-meadow-700"
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -1145,7 +1095,7 @@ export default function SegmentManagement() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-neutral-300 hover:text-white"
+                              className="text-neutral-300 hover:text-black hover:bg-meadow-700"
                               onClick={() => setSegmentToDelete(segment)}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -1188,7 +1138,7 @@ export default function SegmentManagement() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-neutral-300 hover:text-white"
+                              className="text-neutral-300 hover:text-black hover:bg-meadow-700"
                             >
                               <ChevronRight className="h-4 w-4" />
                             </Button>

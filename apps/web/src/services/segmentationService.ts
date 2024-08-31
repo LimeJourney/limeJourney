@@ -5,6 +5,15 @@ export enum SegmentCriterionType {
   EVENT = "event",
 }
 
+export enum TimeUnit {
+  SECONDS = "seconds",
+  MINUTES = "minutes",
+  HOURS = "hours",
+  DAYS = "days",
+  WEEKS = "weeks",
+  MONTHS = "months",
+}
+
 export enum SegmentOperator {
   EQUALS = "equals",
   NOT_EQUALS = "not_equals",
@@ -35,7 +44,7 @@ export interface SegmentCriterion {
   field: string;
   operator: SegmentOperator;
   value: string | number | boolean;
-  timeUnit?: "minutes" | "hours" | "days";
+  timeUnit?: TimeUnit;
 }
 
 export interface SegmentCondition {
