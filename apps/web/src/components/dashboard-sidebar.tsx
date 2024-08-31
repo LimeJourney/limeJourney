@@ -81,6 +81,12 @@ const navItems: NavItem[] = [
     icon: StarIcon,
     href: "/dashboard/events",
   },
+  {
+    id: "channels",
+    title: "Channels",
+    icon: Inbox,
+    href: "/dashboard/channels",
+  },
   { id: "inbox", title: "Inbox", icon: Inbox, href: "/dashboard/inbox" },
   { id: "drafts", title: "Drafts", icon: File, href: "/dashboard/drafts" },
   { id: "sent", title: "Sent", icon: Send, href: "/dashboard/sent" },

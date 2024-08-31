@@ -479,7 +479,7 @@ const ConditionEditor: React.FC<{
                     criteria: updatedCriteria,
                   });
                 }}
-                className="w-full text-meadow-500 border-meadow-500/50 hover:bg-meadow-500/10"
+                className="w-full text-meadow-500 bg-meadow-500/10 border-meadow-500/50 hover:bg-meadow-700/10"
               >
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Criterion
               </Button>
@@ -708,7 +708,7 @@ const defaultConditionSets = {
           field: "purchase",
           operator: SegmentOperator.HAS_DONE_WITHIN,
           value: "90",
-          timeUnit: "days" as const,
+          timeUnit: TimeUnit.DAYS,
         },
       ],
       logicalOperator: LogicalOperator.AND,
@@ -722,7 +722,7 @@ const defaultConditionSets = {
           field: "app_opened",
           operator: SegmentOperator.HAS_NOT_DONE_WITHIN,
           value: "30",
-          timeUnit: "days" as const,
+          timeUnit: TimeUnit.DAYS,
         },
       ],
       logicalOperator: LogicalOperator.AND,
@@ -733,10 +733,20 @@ const defaultConditionSets = {
 const TwoPanelSegmentCreator: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onCreateSegment: (segment: CreateSegmentDTO) => void;
+  onCreateOrUpdateSegment: (
+    segment: CreateSegmentDTO | UpdateSegmentDTO
+  ) => void;
   entityProperties: string[];
   eventNames: string[];
-}> = ({ isOpen, onClose, onCreateSegment, entityProperties, eventNames }) => {
+  editingSegment: Segment | null;
+}> = ({
+  isOpen,
+  onClose,
+  onCreateOrUpdateSegment,
+  entityProperties,
+  eventNames,
+  editingSegment,
+}) => {
   const [segmentName, setSegmentName] = useState("");
   const [segmentDescription, setSegmentDescription] = useState("");
   const [segmentTags, setSegmentTags] = useState("");
@@ -744,15 +754,43 @@ const TwoPanelSegmentCreator: React.FC<{
   const [conditions, setConditions] = useState<SegmentCondition[]>([]);
   const [selectedDefaultSet, setSelectedDefaultSet] = useState<string>("");
 
-  const handleCreateSegment = () => {
-    onCreateSegment({
+  useEffect(() => {
+    if (editingSegment) {
+      setSegmentName(editingSegment.name);
+      setSegmentDescription(editingSegment.description);
+      // setSegmentTags(editingSegment.tags?.join(", ") || "");
+      // setSegmentPurpose(editingSegment.purpose || "");
+      setConditions(editingSegment.conditions);
+    } else {
+      resetForm();
+    }
+  }, [editingSegment]);
+
+  const resetForm = () => {
+    setSegmentName("");
+    setSegmentDescription("");
+    setSegmentTags("");
+    setSegmentPurpose("");
+    setConditions([]);
+    setSelectedDefaultSet("");
+  };
+
+  const handleCreateOrUpdateSegment = () => {
+    const segmentData = {
       name: segmentName,
       description: segmentDescription,
-      // tags: segmentTags.split(",").map((tag) => tag.trim()),
-      // purpose: segmentPurpose,
+      tags: segmentTags.split(",").map((tag) => tag.trim()),
+      purpose: segmentPurpose,
       conditions: conditions,
-    });
+    };
+
+    if (editingSegment) {
+      onCreateOrUpdateSegment({ ...editingSegment, ...segmentData });
+    } else {
+      onCreateOrUpdateSegment(segmentData as CreateSegmentDTO);
+    }
     onClose();
+    resetForm();
   };
 
   const applyDefaultConditions = (setName: string) => {
@@ -773,7 +811,7 @@ const TwoPanelSegmentCreator: React.FC<{
           <div className="w-1/3 border-r border-meadow-500/20 p-6 flex flex-col">
             <SheetHeader className="mb-6">
               <SheetTitle className="text-meadow-500 text-2xl">
-                Create New Segment
+                {editingSegment ? "Edit Segment" : "Create New Segment"}
               </SheetTitle>
               <SheetDescription className="text-white/70">
                 Define your segment details and conditions
@@ -838,10 +876,10 @@ const TwoPanelSegmentCreator: React.FC<{
             </ScrollArea>
             <SheetFooter className="mt-6">
               <Button
-                onClick={handleCreateSegment}
+                onClick={handleCreateOrUpdateSegment}
                 className="w-full bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
               >
-                Create Segment
+                {editingSegment ? "Update Segment" : "Create Segment"}
               </Button>
             </SheetFooter>
           </div>
@@ -890,6 +928,80 @@ const TwoPanelSegmentCreator: React.FC<{
   );
 };
 
+const SegmentDetailsView: React.FC<{
+  segment: Segment;
+  onClose: () => void;
+  onEdit: () => void;
+}> = ({ segment, onClose, onEdit }) => {
+  return (
+    <Sheet open={true} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-[600px] bg-forest-500 text-white border-l border-meadow-500/20">
+        <SheetHeader>
+          <SheetTitle className="text-2xl font-bold text-meadow-500">
+            {segment.name}
+          </SheetTitle>
+        </SheetHeader>
+        <ScrollArea className="mt-6 h-[calc(100vh-180px)]">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
+                Description
+              </h3>
+              <p className="text-neutral-300">{segment.description}</p>
+            </div>
+            {/* <div>
+              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {segment.tags?.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="bg-meadow-500/20 text-meadow-500">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">Purpose</h3>
+              <p className="text-neutral-300">{segment.purpose}</p>
+            </div> */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
+                Conditions
+              </h3>
+              <ConditionVisualizer conditions={segment.conditions} />
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-semibold mb-1 text-screaminGreen">
+                  Created
+                </h3>
+                <p className="text-neutral-300 text-sm">
+                  {new Date(segment.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-1 text-screaminGreen">
+                  Updated
+                </h3>
+                <p className="text-neutral-300 text-sm">
+                  {new Date(segment.updatedAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+        <SheetFooter className="mt-6">
+          <Button
+            onClick={onEdit}
+            className="w-full bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
+          >
+            Edit Segment
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
 export default function SegmentManagement() {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -916,7 +1028,8 @@ export default function SegmentManagement() {
     ],
   });
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
-
+  const [editingSegment, setEditingSegment] = useState<Segment | null>(null);
+  const [viewingSegment, setViewingSegment] = useState<Segment | null>(null);
   useEffect(() => {
     fetchSegments();
     fetchEntityProperties();
@@ -1015,6 +1128,31 @@ export default function SegmentManagement() {
     }
   };
 
+  const handleCreateOrUpdateSegment = async (
+    segmentData: CreateSegmentDTO | UpdateSegmentDTO
+  ) => {
+    try {
+      if ("id" in segmentData) {
+        const updatedSegment = await segmentationService.updateSegment(
+          segmentData.id,
+          segmentData
+        );
+        setSegments(
+          segments.map((s) => (s.id === updatedSegment.id ? updatedSegment : s))
+        );
+      } else {
+        const createdSegment = await segmentationService.createSegment(
+          segmentData as CreateSegmentDTO
+        );
+        setSegments([...segments, createdSegment]);
+      }
+      setIsCreateSheetOpen(false);
+      setEditingSegment(null);
+    } catch (error) {
+      console.error("Failed to create/update segment:", error);
+    }
+  };
+
   return (
     <div className="px-8 py-6 bg-forest-700 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -1032,11 +1170,15 @@ export default function SegmentManagement() {
               />
             </div>
             <TwoPanelSegmentCreator
-              isOpen={isCreateSheetOpen}
-              onClose={() => setIsCreateSheetOpen(false)}
-              onCreateSegment={handleCreateSegment}
+              isOpen={isCreateSheetOpen || !!editingSegment}
+              onClose={() => {
+                setIsCreateSheetOpen(false);
+                setEditingSegment(null);
+              }}
+              onCreateOrUpdateSegment={handleCreateOrUpdateSegment}
               entityProperties={entityProperties}
               eventNames={eventNames}
+              editingSegment={editingSegment}
             />
 
             <Button
@@ -1085,7 +1227,7 @@ export default function SegmentManagement() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => setSelectedSegment(segment)}
+                          onClick={() => setEditingSegment(segment)}
                           className="text-neutral-300 hover:text-black hover:bg-meadow-700"
                         >
                           <Edit2 className="h-4 w-4" />
@@ -1133,72 +1275,14 @@ export default function SegmentManagement() {
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
-                        <Sheet>
-                          <SheetTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-neutral-300 hover:text-black hover:bg-meadow-700"
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                          </SheetTrigger>
-                          <SheetContent className="bg-neutral-900 text-white border-l border-neutral-700">
-                            <SheetHeader>
-                              <SheetTitle className="text-white text-2xl font-bold">
-                                Segment Details
-                              </SheetTitle>
-                            </SheetHeader>
-                            <div className="mt-6 space-y-6">
-                              <div>
-                                <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
-                                  Name
-                                </h3>
-                                <p className="text-neutral-300">
-                                  {segment.name}
-                                </p>
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
-                                  Description
-                                </h3>
-                                <p className="text-neutral-300">
-                                  {segment.description}
-                                </p>
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
-                                  Conditions
-                                </h3>
-                                <ConditionVisualizer
-                                  conditions={segment.conditions}
-                                />
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
-                                    Created
-                                  </h3>
-                                  <p className="text-neutral-300">
-                                    {new Date(
-                                      segment.createdAt
-                                    ).toLocaleString()}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h3 className="text-lg font-semibold mb-2 text-screaminGreen">
-                                    Updated
-                                  </h3>
-                                  <p className="text-neutral-300">
-                                    {new Date(
-                                      segment.updatedAt
-                                    ).toLocaleString()}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </SheetContent>
-                        </Sheet>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setViewingSegment(segment)}
+                          className="text-neutral-300 hover:text-black hover:bg-meadow-700"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -1208,7 +1292,7 @@ export default function SegmentManagement() {
           </Card>
         )}
 
-        {selectedSegment && (
+        {/* {selectedSegment && (
           <Sheet
             open={!!selectedSegment}
             onOpenChange={() => setSelectedSegment(null)}
@@ -1274,6 +1358,17 @@ export default function SegmentManagement() {
               </SheetFooter>
             </SheetContent>
           </Sheet>
+        )} */}
+
+        {viewingSegment && (
+          <SegmentDetailsView
+            segment={viewingSegment}
+            onClose={() => setViewingSegment(null)}
+            onEdit={() => {
+              setEditingSegment(viewingSegment);
+              setViewingSegment(null);
+            }}
+          />
         )}
       </div>
     </div>
