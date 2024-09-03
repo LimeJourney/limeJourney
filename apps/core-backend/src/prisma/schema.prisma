@@ -54,6 +54,7 @@ model Organization {
   currentUsers     User[]    @relation("CurrentOrganization")
   apiKeys          ApiKey[] 
   segments Segment[]
+  messagingProfiles MessagingProfile[]
 }
 
 model ApiKey {
@@ -104,6 +105,35 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model MessagingIntegration {
+  id            String    @id @default(uuid())
+  name          String
+  type          String    // e.g., "email", "sms", "push"
+  providerName  String    // e.g., "AWS SES", "SendGrid", "Twilio", "Firebase FCM"
+  requiredFields Json     // Store the required fields as a JSON object
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  profiles      MessagingProfile[]
+}
+
+model MessagingProfile {
+  id                    String    @id @default(uuid())
+  name                  String
+  organizationId        String
+  organization          Organization @relation(fields: [organizationId], references: [id])
+  integrationId         String
+  integration           MessagingIntegration @relation(fields: [integrationId], references: [id])
+  credentials           Json      // Store the credentials as an encrypted JSON object
+  status                String    // e.g., "active", "inactive", "configuring"
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([integrationId])
+  @@unique([id, organizationId])
+}
+
 
 enum UserRole {
   ADMIN
