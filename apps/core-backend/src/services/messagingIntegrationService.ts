@@ -3,8 +3,14 @@ import { AppError } from "@lime/errors";
 
 const prisma = new PrismaClient();
 
+// Define a new type for the subset of fields returned by getAvailableIntegrations
+type AvailableIntegration = Pick<
+  MessagingIntegration,
+  "id" | "name" | "type" | "providerName" | "requiredFields"
+>;
+
 export class MessagingIntegrationService {
-  async getAvailableIntegrations(): Promise<MessagingIntegration[]> {
+  async getAvailableIntegrations(): Promise<AvailableIntegration[]> {
     try {
       return await prisma.messagingIntegration.findMany({
         select: {
@@ -52,7 +58,7 @@ export class MessagingIntegrationService {
 
   async updateIntegration(
     id: string,
-    data: Partial<Omit<MessagingIntegration, "id" | "createdAt" | "updatedAt">>
+    data: Prisma.MessagingIntegrationUpdateInput
   ): Promise<MessagingIntegration> {
     try {
       return await prisma.messagingIntegration.update({

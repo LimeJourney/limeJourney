@@ -10,9 +10,9 @@ import {
   Path,
   Response,
 } from "tsoa";
-import { MessagingIntegrationService } from "../services/messagingIntegrationService";
-import { ApiResponse } from "../models/apiResponse";
-import { MessagingIntegration } from "@prisma/client";
+import { MessagingIntegrationService } from "../../services/messagingIntegrationService";
+import { ApiResponse } from "../../models/apiResponse";
+import { MessagingIntegration, Prisma } from "@prisma/client";
 
 @Route("admin/messaging-integrations")
 @Tags("Admin Messaging")
@@ -27,7 +27,7 @@ export class AdminMessagingController {
   @Post()
   @Response<ApiResponse<MessagingIntegration>>(201, "Created")
   public async createIntegration(
-    @Body() body: Omit<MessagingIntegration, "id" | "createdAt" | "updatedAt">
+    @Body() body: Prisma.MessagingIntegrationCreateInput
   ): Promise<ApiResponse<MessagingIntegration>> {
     const integration = await this.integrationService.createIntegration(body);
     return {
@@ -52,7 +52,7 @@ export class AdminMessagingController {
   @Response<ApiResponse<MessagingIntegration>>(200, "OK")
   public async updateIntegration(
     @Path() id: string,
-    @Body() body: Partial<MessagingIntegration>
+    @Body() body: Prisma.MessagingIntegrationUpdateInput
   ): Promise<ApiResponse<MessagingIntegration>> {
     const integration = await this.integrationService.updateIntegration(
       id,
