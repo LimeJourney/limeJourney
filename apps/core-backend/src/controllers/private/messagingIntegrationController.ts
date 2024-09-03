@@ -14,6 +14,21 @@ import { MessagingIntegrationService } from "../../services/messagingIntegration
 import { ApiResponse } from "../../models/apiResponse";
 import { MessagingIntegration, Prisma } from "@prisma/client";
 
+// Define interfaces for create and update inputs
+interface CreateMessagingIntegrationInput {
+  name: string;
+  type: string;
+  providerName: string;
+  requiredFields: string[];
+}
+
+interface UpdateMessagingIntegrationInput {
+  name?: string;
+  type?: string;
+  providerName?: string;
+  requiredFields?: string[];
+}
+
 @Route("admin/messaging-integrations")
 @Tags("Admin Messaging")
 @Security("jwt")
@@ -27,9 +42,11 @@ export class AdminMessagingController {
   @Post()
   @Response<ApiResponse<MessagingIntegration>>(201, "Created")
   public async createIntegration(
-    @Body() body: Prisma.MessagingIntegrationCreateInput
+    @Body() body: CreateMessagingIntegrationInput
   ): Promise<ApiResponse<MessagingIntegration>> {
-    const integration = await this.integrationService.createIntegration(body);
+    const integration = await this.integrationService.createIntegration(
+      body as Prisma.MessagingIntegrationCreateInput
+    );
     return {
       status: "success",
       data: integration,
@@ -52,11 +69,11 @@ export class AdminMessagingController {
   @Response<ApiResponse<MessagingIntegration>>(200, "OK")
   public async updateIntegration(
     @Path() id: string,
-    @Body() body: Prisma.MessagingIntegrationUpdateInput
+    @Body() body: UpdateMessagingIntegrationInput
   ): Promise<ApiResponse<MessagingIntegration>> {
     const integration = await this.integrationService.updateIntegration(
       id,
-      body
+      body as Prisma.MessagingIntegrationUpdateInput
     );
     return {
       status: "success",
