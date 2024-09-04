@@ -10,7 +10,10 @@ import {
   Path,
   Response,
 } from "tsoa";
-import { MessagingIntegrationService } from "../../services/messagingIntegrationService";
+import {
+  IntegrationFields,
+  MessagingIntegrationService,
+} from "../../services/messagingIntegrationService";
 import { ApiResponse } from "../../models/apiResponse";
 import { MessagingIntegration, Prisma } from "@prisma/client";
 
@@ -20,6 +23,7 @@ interface CreateMessagingIntegrationInput {
   type: string;
   providerName: string;
   requiredFields: string[];
+  confidentialFields: string[];
 }
 
 interface UpdateMessagingIntegrationInput {
@@ -44,9 +48,11 @@ export class AdminMessagingController {
   public async createIntegration(
     @Body() body: CreateMessagingIntegrationInput
   ): Promise<ApiResponse<MessagingIntegration>> {
-    const integration = await this.integrationService.createIntegration(
-      body as Prisma.MessagingIntegrationCreateInput
-    );
+    const integration = await this.integrationService.createIntegration({
+      ...body,
+      requiredFields: body.requiredFields,
+      confidentialFields: body.confidentialFields,
+    });
     return {
       status: "success",
       data: integration,
@@ -71,9 +77,19 @@ export class AdminMessagingController {
     @Path() id: string,
     @Body() body: UpdateMessagingIntegrationInput
   ): Promise<ApiResponse<MessagingIntegration>> {
+    const updateData: Partial<
+      Omit<
+        CreateMessagingIntegrationInput,
+        "requiredFields" | "confidentialFields"
+      > &
+        Partial<IntegrationFields>
+    > = {
+      ...body,
+      requiredFields: body.requiredFields,
+    };
     const integration = await this.integrationService.updateIntegration(
       id,
-      body as Prisma.MessagingIntegrationUpdateInput
+      updateData
     );
     return {
       status: "success",

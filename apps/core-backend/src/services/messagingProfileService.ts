@@ -1,4 +1,9 @@
-import { PrismaClient, MessagingProfile, Prisma } from "@prisma/client";
+import {
+  PrismaClient,
+  MessagingProfile,
+  Prisma,
+  MessagingIntegration,
+} from "@prisma/client";
 import { AppError } from "@lime/errors";
 import * as crypto from "crypto";
 
@@ -8,7 +13,11 @@ export class MessagingProfileService {
   private encryptionKey: Buffer;
 
   constructor() {
-    this.encryptionKey = Buffer.from(process.env.ENCRYPTION_KEY || "", "hex");
+    this.encryptionKey = Buffer.from(
+      process.env.ENCRYPTION_KEY ||
+        "5ebe2294ecd0e0f08eab7690d2a6ee69f9e5da618d6fea9f7c3d04c0cb180fc1",
+      "hex"
+    );
   }
 
   private encryptValue(value: string): string {
@@ -33,18 +42,20 @@ export class MessagingProfileService {
   }
 
   private encryptCredentials(
-    credentials: Record<string, string>
+    credentials: Record<string, string>,
+    confidentialFields: string[]
   ): Prisma.JsonObject {
     return Object.fromEntries(
       Object.entries(credentials).map(([key, value]) => [
         key,
-        this.encryptValue(value),
+        confidentialFields.includes(key) ? this.encryptValue(value) : value,
       ])
     );
   }
 
   private decryptCredentials(
-    encryptedCredentials: Prisma.JsonValue
+    encryptedCredentials: Prisma.JsonValue,
+    confidentialFields: string[]
   ): Record<string, string> {
     if (
       typeof encryptedCredentials !== "object" ||
@@ -55,7 +66,9 @@ export class MessagingProfileService {
     return Object.fromEntries(
       Object.entries(encryptedCredentials).map(([key, value]) => [
         key,
-        this.decryptValue(value as string),
+        confidentialFields.includes(key)
+          ? this.decryptValue(value as string)
+          : (value as string),
       ])
     );
   }
@@ -78,7 +91,12 @@ export class MessagingProfileService {
         );
       }
 
-      const requiredFields = integration.requiredFields as string[];
+      const requiredFields = JSON.parse(
+        integration.requiredFields as string
+      ) as string[];
+      const confidentialFields = JSON.parse(
+        integration.confidentialFields as string
+      ) as string[];
       const providedFields = Object.keys(data.credentials);
 
       const missingFields = requiredFields.filter(
@@ -92,20 +110,25 @@ export class MessagingProfileService {
         );
       }
 
-      const encryptedCredentials = this.encryptCredentials(data.credentials);
+      const encryptedCredentials = this.encryptCredentials(
+        data.credentials,
+        confidentialFields
+      );
 
       const profile = await prisma.messagingProfile.create({
         data: {
           ...data,
           credentials: encryptedCredentials,
         },
+        include: { integration: true },
       });
 
       return {
         ...profile,
-        credentials: this.decryptCredentials(profile.credentials),
+        credentials: "",
       };
     } catch (error) {
+      console.log(error);
       if (error instanceof AppError) throw error;
       throw new AppError(
         "Failed to create messaging profile",
@@ -124,7 +147,15 @@ export class MessagingProfileService {
 
       return profiles.map((profile) => ({
         ...profile,
-        credentials: this.decryptCredentials(profile.credentials),
+        integration: {
+          ...profile.integration,
+          confidentialFields: JSON.parse(
+            profile.integration.confidentialFields as string
+          ),
+          requiredFields: JSON.parse(
+            profile.integration.requiredFields as string
+          ),
+        },
       }));
     } catch (error) {
       throw new AppError(
@@ -149,7 +180,7 @@ export class MessagingProfileService {
 
       return {
         ...profile,
-        credentials: this.decryptCredentials(profile.credentials),
+        credentials: "",
       };
     } catch (error) {
       throw new AppError(
@@ -168,22 +199,47 @@ export class MessagingProfileService {
     }
   ): Promise<MessagingProfile> {
     try {
+      const existingProfile = await prisma.messagingProfile.findUnique({
+        where: { id_organizationId: { id, organizationId } },
+        include: { integration: true },
+      });
+
+      if (!existingProfile) {
+        throw new AppError("Profile not found", 404, "PROFILE_NOT_FOUND");
+      }
+
+      const confidentialFields = JSON.parse(
+        existingProfile.integration.confidentialFields as string
+      );
       const updateData: Prisma.MessagingProfileUpdateInput = { ...data };
 
       if (data.credentials) {
-        updateData.credentials = this.encryptCredentials(data.credentials);
+        const existingCredentials = this.decryptCredentials(
+          existingProfile.credentials,
+          confidentialFields
+        );
+        const updatedCredentials = {
+          ...existingCredentials,
+          ...(data.credentials || {}),
+        };
+        updateData.credentials = this.encryptCredentials(
+          updatedCredentials,
+          confidentialFields
+        );
       }
 
       const updatedProfile = await prisma.messagingProfile.update({
         where: { id_organizationId: { id, organizationId } },
         data: updateData,
+        include: { integration: true },
       });
 
       return {
         ...updatedProfile,
-        credentials: this.decryptCredentials(updatedProfile.credentials),
+        credentials: "",
       };
     } catch (error) {
+      if (error instanceof AppError) throw error;
       throw new AppError(
         "Failed to update messaging profile",
         500,

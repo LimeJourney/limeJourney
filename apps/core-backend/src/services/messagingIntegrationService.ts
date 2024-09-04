@@ -3,24 +3,40 @@ import { AppError } from "@lime/errors";
 
 const prisma = new PrismaClient();
 
-// Define a new type for the subset of fields returned by getAvailableIntegrations
 type AvailableIntegration = Pick<
   MessagingIntegration,
-  "id" | "name" | "type" | "providerName" | "requiredFields"
->;
+  "id" | "name" | "type" | "providerName"
+> & {
+  requiredFields: string[];
+  confidentialFields: string[];
+};
+
+export interface IntegrationFields {
+  requiredFields: string[];
+  confidentialFields: string[];
+}
 
 export class MessagingIntegrationService {
   async getAvailableIntegrations(): Promise<AvailableIntegration[]> {
     try {
-      return await prisma.messagingIntegration.findMany({
+      const integrations = await prisma.messagingIntegration.findMany({
         select: {
           id: true,
           name: true,
           type: true,
           providerName: true,
           requiredFields: true,
+          confidentialFields: true,
         },
       });
+
+      return integrations.map((integration) => ({
+        ...integration,
+        requiredFields: JSON.parse(integration.requiredFields as string),
+        confidentialFields: JSON.parse(
+          integration.confidentialFields as string
+        ),
+      }));
     } catch (error) {
       throw new AppError(
         "Failed to fetch available integrations",
@@ -31,10 +47,27 @@ export class MessagingIntegrationService {
   }
 
   async createIntegration(
-    data: Prisma.MessagingIntegrationCreateInput
+    data: Omit<
+      Prisma.MessagingIntegrationCreateInput,
+      "requiredFields" | "confidentialFields"
+    > &
+      IntegrationFields
   ): Promise<MessagingIntegration> {
     try {
-      return await prisma.messagingIntegration.create({ data });
+      const { requiredFields, confidentialFields, ...rest } = data;
+      const createdIntegration = await prisma.messagingIntegration.create({
+        data: {
+          ...rest,
+          requiredFields: JSON.stringify(requiredFields),
+          confidentialFields: JSON.stringify(confidentialFields),
+        },
+      });
+
+      return {
+        ...createdIntegration,
+        requiredFields: requiredFields,
+        confidentialFields: confidentialFields,
+      } as MessagingIntegration;
     } catch (error) {
       throw new AppError(
         "Failed to create messaging integration",
@@ -46,7 +79,14 @@ export class MessagingIntegrationService {
 
   async getIntegrations(): Promise<MessagingIntegration[]> {
     try {
-      return await prisma.messagingIntegration.findMany();
+      const integrations = await prisma.messagingIntegration.findMany();
+      return integrations.map((integration) => ({
+        ...integration,
+        requiredFields: JSON.parse(integration.requiredFields as string),
+        confidentialFields: JSON.parse(
+          integration.confidentialFields as string
+        ),
+      }));
     } catch (error) {
       throw new AppError(
         "Failed to fetch messaging integrations",
@@ -58,13 +98,36 @@ export class MessagingIntegrationService {
 
   async updateIntegration(
     id: string,
-    data: Prisma.MessagingIntegrationUpdateInput
+    data: Partial<
+      Omit<
+        Prisma.MessagingIntegrationUpdateInput,
+        "requiredFields" | "confidentialFields"
+      > &
+        Partial<IntegrationFields>
+    >
   ): Promise<MessagingIntegration> {
     try {
-      return await prisma.messagingIntegration.update({
+      const { requiredFields, confidentialFields, ...rest } = data;
+      const updateData: Prisma.MessagingIntegrationUpdateInput = {
+        ...rest,
+      };
+      if (requiredFields) {
+        updateData.requiredFields = JSON.stringify(requiredFields);
+      }
+      if (confidentialFields) {
+        updateData.confidentialFields = JSON.stringify(confidentialFields);
+      }
+      const updatedIntegration = await prisma.messagingIntegration.update({
         where: { id },
-        data,
+        data: updateData,
       });
+      return {
+        ...updatedIntegration,
+        requiredFields: JSON.parse(updatedIntegration.requiredFields as string),
+        confidentialFields: JSON.parse(
+          updatedIntegration.confidentialFields as string
+        ),
+      };
     } catch (error) {
       throw new AppError(
         "Failed to update messaging integration",

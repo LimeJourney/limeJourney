@@ -335,6 +335,26 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"intersection","subSchemas":[{"ref":"Omit_MessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId_"},{"dataType":"nestedObjectLiteral","nestedProperties":{"credentials":{"ref":"Record_string.string_","required":true}}}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DefaultSelection_Prisma._36_MessagingIntegrationPayload_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"confidentialFields":{"ref":"Prisma.JsonValue","required":true},"requiredFields":{"ref":"Prisma.JsonValue","required":true},"providerName":{"dataType":"string","required":true},"type":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MessagingIntegration": {
+        "dataType": "refAlias",
+        "type": {"ref":"DefaultSelection_Prisma._36_MessagingIntegrationPayload_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_MessagingIntegration-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"array","array":{"dataType":"refAlias","ref":"MessagingIntegration"}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApiResponse_MessagingProfile-Array_": {
         "dataType": "refObject",
         "properties": {
@@ -348,16 +368,6 @@ const models: TsoaRoute.Models = {
     "Partial_CreateMessagingProfileInput_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string"},"status":{"dataType":"string"},"integrationId":{"dataType":"string"},"credentials":{"dataType":"intersection","subSchemas":[{"ref":"Prisma.JsonValue"},{"ref":"Record_string.string_"}]}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DefaultSelection_Prisma._36_MessagingIntegrationPayload_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"requiredFields":{"ref":"Prisma.JsonValue","required":true},"providerName":{"dataType":"string","required":true},"type":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MessagingIntegration": {
-        "dataType": "refAlias",
-        "type": {"ref":"DefaultSelection_Prisma._36_MessagingIntegrationPayload_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApiResponse_MessagingIntegration_": {
@@ -377,16 +387,7 @@ const models: TsoaRoute.Models = {
             "type": {"dataType":"string","required":true},
             "providerName": {"dataType":"string","required":true},
             "requiredFields": {"dataType":"array","array":{"dataType":"string"},"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_MessagingIntegration-Array_": {
-        "dataType": "refObject",
-        "properties": {
-            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
-            "data": {"dataType":"union","subSchemas":[{"dataType":"array","array":{"dataType":"refAlias","ref":"MessagingIntegration"}},{"dataType":"enum","enums":[null]}],"required":true},
-            "message": {"dataType":"string"},
+            "confidentialFields": {"dataType":"array","array":{"dataType":"string"},"required":true},
         },
         "additionalProperties": false,
     },
@@ -1138,6 +1139,36 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'createProfile',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/messaging-profiles/integrations',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MessagingProfileController)),
+            ...(fetchMiddlewares<RequestHandler>(MessagingProfileController.prototype.getIntegrations)),
+
+            async function MessagingProfileController_getIntegrations(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new MessagingProfileController();
+
+              await templateService.apiHandler({
+                methodName: 'getIntegrations',
                 controller,
                 response,
                 next,

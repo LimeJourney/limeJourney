@@ -859,6 +859,78 @@
 					}
 				]
 			},
+			"DefaultSelection_Prisma._36_MessagingIntegrationPayload_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"confidentialFields": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
+					"requiredFields": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
+					"providerName": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"confidentialFields",
+					"requiredFields",
+					"providerName",
+					"type",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"MessagingIntegration": {
+				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessagingIntegrationPayload_",
+				"description": "Model MessagingIntegration"
+			},
+			"ApiResponse_MessagingIntegration-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/MessagingIntegration"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ApiResponse_MessagingProfile-Array_": {
 				"properties": {
 					"status": {
@@ -911,47 +983,6 @@
 				"type": "object",
 				"description": "Make all properties in T optional"
 			},
-			"DefaultSelection_Prisma._36_MessagingIntegrationPayload_": {
-				"properties": {
-					"updatedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"createdAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"requiredFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
-					},
-					"providerName": {
-						"type": "string"
-					},
-					"type": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"updatedAt",
-					"createdAt",
-					"requiredFields",
-					"providerName",
-					"type",
-					"name",
-					"id"
-				],
-				"type": "object"
-			},
-			"MessagingIntegration": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessagingIntegrationPayload_",
-				"description": "Model MessagingIntegration"
-			},
 			"ApiResponse_MessagingIntegration_": {
 				"properties": {
 					"status": {
@@ -996,40 +1027,20 @@
 							"type": "string"
 						},
 						"type": "array"
+					},
+					"confidentialFields": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					}
 				},
 				"required": [
 					"name",
 					"type",
 					"providerName",
-					"requiredFields"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_MessagingIntegration-Array_": {
-				"properties": {
-					"status": {
-						"type": "string",
-						"enum": [
-							"success",
-							"error"
-						]
-					},
-					"data": {
-						"items": {
-							"$ref": "#/components/schemas/MessagingIntegration"
-						},
-						"type": "array",
-						"nullable": true
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"data"
+					"requiredFields",
+					"confidentialFields"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -2419,6 +2430,32 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_MessagingProfile-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Messaging Profiles"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/messaging-profiles/integrations": {
+			"get": {
+				"operationId": "GetIntegrations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_MessagingIntegration-Array_"
 								}
 							}
 						}

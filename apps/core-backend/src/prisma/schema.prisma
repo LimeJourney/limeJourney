@@ -107,14 +107,15 @@ model RefreshToken {
 }
 
 model MessagingIntegration {
-  id            String    @id @default(uuid())
-  name          String
-  type          String    // e.g., "email", "sms", "push"
-  providerName  String    // e.g., "AWS SES", "SendGrid", "Twilio", "Firebase FCM"
-  requiredFields Json     // Store the required fields as a JSON object
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  profiles      MessagingProfile[]
+  id                    String    @id @default(uuid())
+  name                  String
+  type                  String    // e.g., "email", "sms", "push"
+  providerName          String    // e.g., "AWS SES", "SendGrid", "Twilio", "Firebase FCM"
+  requiredFields        Json      // Store the required fields as a JSON object
+  confidentialFields    Json      // Store the confidential fields as a JSON object
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  profiles              MessagingProfile[]
 }
 
 model MessagingProfile {

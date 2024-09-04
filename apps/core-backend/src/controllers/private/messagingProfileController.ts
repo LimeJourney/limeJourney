@@ -13,8 +13,9 @@ import {
 } from "tsoa";
 import { MessagingProfileService } from "../../services/messagingProfileService";
 import { ApiResponse } from "../../models/apiResponse";
-import { MessagingProfile, Prisma } from "@prisma/client";
+import { MessagingIntegration, MessagingProfile, Prisma } from "@prisma/client";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
+import { MessagingIntegrationService } from "../../services/messagingIntegrationService";
 
 type CreateMessagingProfileInput = Omit<
   MessagingProfile,
@@ -28,9 +29,10 @@ type CreateMessagingProfileInput = Omit<
 @Security("jwt")
 export class MessagingProfileController {
   private profileService: MessagingProfileService;
-
+  private integrationService: MessagingIntegrationService;
   constructor() {
     this.profileService = new MessagingProfileService();
+    this.integrationService = new MessagingIntegrationService();
   }
 
   @Post()
@@ -52,6 +54,19 @@ export class MessagingProfileController {
     };
   }
 
+  @Get("integrations")
+  @Response<ApiResponse<MessagingIntegration[]>>(200, "OK")
+  public async getIntegrations(): Promise<ApiResponse<MessagingIntegration[]>> {
+    console.log("getIntegrations");
+    const integrations = await this.integrationService.getIntegrations();
+    console.log("integrations", integrations);
+    return {
+      status: "success",
+      data: integrations,
+      message: "Messaging integrations retrieved successfully",
+    };
+  }
+
   @Get()
   @Response<ApiResponse<MessagingProfile[]>>(200, "OK")
   public async getProfiles(
@@ -59,6 +74,7 @@ export class MessagingProfileController {
   ): Promise<ApiResponse<MessagingProfile[]>> {
     const user = request.user as JWTAuthenticatedUser;
     const organizationId = user.currentOrganizationId as string;
+
     const profiles = await this.profileService.getProfiles(organizationId);
     return {
       status: "success",
@@ -73,6 +89,7 @@ export class MessagingProfileController {
     @Path() id: string,
     @Request() request: AuthenticatedRequest
   ): Promise<ApiResponse<MessagingProfile>> {
+    console.log("getProfileById");
     const user = request.user as JWTAuthenticatedUser;
     const organizationId = user.currentOrganizationId as string;
     const profile = await this.profileService.getProfileById(
