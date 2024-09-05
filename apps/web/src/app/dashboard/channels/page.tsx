@@ -67,6 +67,78 @@ import {
   UpdateMessagingProfileInput,
 } from "../../../services/messagingProfileService";
 
+const CredentialInputs: React.FC<{
+  integration: MessagingIntegration;
+  requiredFields: Record<string, string>;
+  credentials: Record<string, string>;
+  onRequiredFieldChange: (field: string, value: string) => void;
+  onCredentialChange: (field: string, value: string) => void;
+}> = ({
+  integration,
+  requiredFields,
+  credentials,
+  onRequiredFieldChange,
+  onCredentialChange,
+}) => {
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  const handleTogglePassword = (field: string) => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  return (
+    <div className="space-y-4">
+      {integration.requiredFields.map((field) => (
+        <div key={field} className="space-y-2">
+          <Label htmlFor={field} className="text-meadow-100">
+            {field}
+          </Label>
+          <Input
+            id={field}
+            value={requiredFields[field] || ""}
+            onChange={(e) => onRequiredFieldChange(field, e.target.value)}
+            className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
+          />
+        </div>
+      ))}
+      {integration.confidentialFields.map((field) => (
+        <div key={field} className="space-y-2">
+          <Label htmlFor={field} className="text-meadow-100">
+            {field}
+          </Label>
+          <div className="relative">
+            <Input
+              id={field}
+              type={showPasswords[field] ? "text" : "password"}
+              value={credentials[field] || ""}
+              onChange={(e) => onCredentialChange(field, e.target.value)}
+              className="pr-10 bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 text-meadow-300 hover:text-meadow-100"
+              onClick={() => handleTogglePassword(field)}
+            >
+              {showPasswords[field] ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const MessagingProfilesManagement: React.FC = () => {
   const [profiles, setProfiles] = useState<MessagingProfile[]>([]);
   const [integrations, setIntegrations] = useState<MessagingIntegration[]>([]);
@@ -271,79 +343,6 @@ const MessagingProfilesManagement: React.FC = () => {
     );
   };
 
-  const CredentialInputs: React.FC<{
-    integration: MessagingIntegration;
-    requiredFields: Record<string, string>;
-    credentials: Record<string, string>;
-    onRequiredFieldChange: (field: string, value: string) => void;
-    onCredentialChange: (field: string, value: string) => void;
-  }> = ({
-    integration,
-    requiredFields,
-    credentials,
-    onRequiredFieldChange,
-    onCredentialChange,
-  }) => {
-    const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
-      {}
-    );
-
-    const handleTogglePassword = (field: string) => {
-      setShowPasswords((prev) => ({
-        ...prev,
-        [field]: !prev[field],
-      }));
-    };
-
-    return (
-      <>
-        {/* {integration.requiredFields} */}
-        {integration.requiredFields.map((field) => (
-          <div key={field} className="space-y-2">
-            <Label htmlFor={field} className="text-meadow-100">
-              {field}
-            </Label>
-            <Input
-              id={field}
-              value={requiredFields[field] || ""}
-              onChange={(e) => onRequiredFieldChange(field, e.target.value)}
-              className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
-            />
-          </div>
-        ))}
-        {integration.confidentialFields.map((field) => (
-          <div key={field} className="space-y-2">
-            <Label htmlFor={field} className="text-meadow-100">
-              {field}
-            </Label>
-            <div className="relative">
-              <Input
-                id={field}
-                type={showPasswords[field] ? "text" : "password"}
-                value={credentials[field] || ""}
-                onChange={(e) => onCredentialChange(field, e.target.value)}
-                className="pr-10 bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 text-meadow-300 hover:text-meadow-100"
-                onClick={() => handleTogglePassword(field)}
-              >
-                {showPasswords[field] ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        ))}
-      </>
-    );
-  };
-
   const ProfileLogs: React.FC<{ profile: MessagingProfile }> = ({
     profile,
   }) => {
@@ -425,21 +424,40 @@ const MessagingProfilesManagement: React.FC = () => {
     profile,
   }) => {
     return (
-      <div className="space-y-4">
-        {profile.integration.requiredFields.map((field) => (
-          <div key={field} className="flex justify-between items-center">
-            <span className="text-meadow-300">{field}:</span>
-            <span className="text-meadow-100">
-              {profile.requiredFields[field]}
-            </span>
-          </div>
-        ))}
-        {profile.integration.confidentialFields.map((field) => (
-          <div key={field} className="flex justify-between items-center">
-            <span className="text-meadow-300">{field}:</span>
-            <span className="text-meadow-100">********</span>
-          </div>
-        ))}
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-meadow-300 mb-3">
+            Required Fields
+          </h3>
+          {profile.integration.requiredFields.map((field) => (
+            <div
+              key={field}
+              className="flex justify-between items-center py-2 border-b border-meadow-500/20"
+            >
+              <span className="text-meadow-300 font-medium">{field}:</span>
+              <span className="text-meadow-100">
+                {profile.requiredFields[field] || "N/A"}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-meadow-300 mb-3">
+            Confidential Fields
+          </h3>
+          {profile.integration.confidentialFields.map((field) => (
+            <div
+              key={field}
+              className="flex justify-between items-center py-2 border-b border-meadow-500/20"
+            >
+              <span className="text-meadow-300 font-medium">{field}:</span>
+              <span className="text-meadow-100 flex items-center">
+                <Lock className="h-4 w-4 mr-2 text-meadow-500" />
+                ********
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -612,12 +630,12 @@ const MessagingProfilesManagement: React.FC = () => {
                         >
                           <div className="flex h-full">
                             {/* Left Panel: Profile Information */}
-                            <div className="w-1/3 border-r border-meadow-500/20 p-6 flex flex-col">
+                            <div className="w-1/2 border-r border-meadow-500/20 p-6 flex flex-col">
                               <SheetHeader className="mb-6">
                                 <SheetTitle className="text-meadow-500 text-2xl">
                                   {profile.name}
                                 </SheetTitle>
-                                <SheetDescription className="text-white/70">
+                                <SheetDescription className="text-meadow-100/70">
                                   Messaging profile details and statistics
                                 </SheetDescription>
                               </SheetHeader>
@@ -702,7 +720,7 @@ const MessagingProfilesManagement: React.FC = () => {
                             </div>
 
                             {/* Right Panel: Logs */}
-                            <div className="w-2/3 p-6 flex flex-col">
+                            <div className="w-1/2 p-6 flex flex-col">
                               <h3 className="text-xl font-semibold text-meadow-500 mb-4">
                                 Recent Logs
                               </h3>
