@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -13,7 +13,6 @@ import {
   Lock,
   BarChart,
   HelpCircle,
-  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,134 +57,209 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { toast } from "@/components/ui/use-toast";
+import {
+  messagingProfileService,
+  MessagingProfile,
+  MessagingIntegration,
+  MessageLog,
+  CreateMessagingProfileInput,
+  UpdateMessagingProfileInput,
+} from "../../../services/messagingProfileService";
 
-// Mock data for messaging providers
-const messagingProviders = [
-  {
-    id: "aws_ses",
-    name: "AWS SES",
-    type: "email",
-    credentials: [
-      { name: "accessKeyId", label: "Access Key ID", type: "text" },
-      { name: "secretAccessKey", label: "Secret Access Key", type: "password" },
-      { name: "region", label: "AWS Region", type: "text" },
-    ],
-  },
-  {
-    id: "sendgrid",
-    name: "SendGrid",
-    type: "email",
-    credentials: [{ name: "apiKey", label: "API Key", type: "password" }],
-  },
-  {
-    id: "twilio",
-    name: "Twilio",
-    type: "sms",
-    credentials: [
-      { name: "accountSid", label: "Account SID", type: "text" },
-      { name: "authToken", label: "Auth Token", type: "password" },
-      { name: "phoneNumber", label: "Twilio Phone Number", type: "text" },
-    ],
-  },
-  {
-    id: "firebase_fcm",
-    name: "Firebase FCM",
-    type: "push",
-    credentials: [
-      { name: "projectId", label: "Project ID", type: "text" },
-      { name: "privateKey", label: "Private Key", type: "password" },
-      { name: "clientEmail", label: "Client Email", type: "text" },
-    ],
-  },
-];
-
-// Mock data for messaging profiles
-const initialProfiles = [
-  {
-    id: "1",
-    name: "Transactional Emails",
-    provider: "aws_ses",
-    status: "active",
-    credentials: {},
-  },
-  {
-    id: "2",
-    name: "Marketing Emails",
-    provider: "sendgrid",
-    status: "active",
-    credentials: {},
-  },
-  {
-    id: "3",
-    name: "SMS Notifications",
-    provider: "twilio",
-    status: "inactive",
-    credentials: {},
-  },
-  {
-    id: "4",
-    name: "Push Notifications",
-    provider: "firebase_fcm",
-    status: "configuring",
-    credentials: {},
-  },
-];
-
-const MessagingProfilesManagement = () => {
-  const [profiles, setProfiles] = useState(initialProfiles);
+const MessagingProfilesManagement: React.FC = () => {
+  const [profiles, setProfiles] = useState<MessagingProfile[]>([]);
+  const [integrations, setIntegrations] = useState<MessagingIntegration[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddProfileOpen, setIsAddProfileOpen] = useState(false);
-  const [newProfile, setNewProfile] = useState({
+  const [newProfile, setNewProfile] = useState<CreateMessagingProfileInput>({
     name: "",
-    provider: "",
+    integrationId: "",
+    requiredFields: {},
     credentials: {},
+    status: "configuring",
   });
-  const [editingProfile, setEditingProfile] = useState(null);
+  const [editingProfile, setEditingProfile] = useState<MessagingProfile | null>(
+    null
+  );
   const [logSearchQuery, setLogSearchQuery] = useState("");
   const [logFilter, setLogFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [profilesData, integrationsData] = await Promise.all([
+          messagingProfileService.getProfiles(),
+          messagingProfileService.getIntegrations(),
+        ]);
+        setProfiles(profilesData);
+        setIntegrations(integrationsData);
+      } catch (err) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching data",
+          description:
+            "There was a problem retrieving profiles and integrations.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filteredProfiles = profiles.filter(
     (profile) =>
       profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      messagingProviders
-        .find((p) => p.id === profile.provider)
-        ?.name.toLowerCase()
-        .includes(searchQuery.toLowerCase())
+      profile.integration.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddProfile = () => {
-    const profileToAdd = {
-      ...newProfile,
-      id: (profiles.length + 1).toString(),
-      status: "configuring",
-    };
-    setProfiles([...profiles, profileToAdd]);
-    setIsAddProfileOpen(false);
-    setNewProfile({ name: "", provider: "", credentials: {} });
+  const validateProfile = (
+    profile: CreateMessagingProfileInput | UpdateMessagingProfileInput
+  ): string[] => {
+    const errors: string[] = [];
+    const integration = integrations.find(
+      (i) => i.id === profile.integrationId
+    );
+
+    if (!integration) {
+      errors.push("Invalid integration selected");
+      return errors;
+    }
+
+    if (!profile.name) {
+      errors.push("Profile name is required");
+    }
+
+    integration.requiredFields.forEach((field) => {
+      if (!profile.requiredFields[field]) {
+        errors.push(`${field} is required`);
+      }
+    });
+
+    integration.confidentialFields.forEach((field) => {
+      if (!profile.credentials[field]) {
+        errors.push(`${field} is required`);
+      }
+    });
+
+    return errors;
   };
 
-  const handleEditProfile = (profile) => {
+  const handleAddProfile = async () => {
+    const errors = validateProfile(newProfile);
+    if (errors.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: errors.join(", "),
+      });
+      return;
+    }
+
+    try {
+      const profileToAdd =
+        await messagingProfileService.createProfile(newProfile);
+      setProfiles([...profiles, profileToAdd]);
+      setIsAddProfileOpen(false);
+      setNewProfile({
+        name: "",
+        integrationId: "",
+        requiredFields: {},
+        credentials: {},
+        status: "configuring",
+      });
+      toast({
+        title: "Profile Added",
+        description: "New messaging profile has been created successfully.",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error adding profile",
+        description: "There was a problem creating the new profile.",
+      });
+    }
+  };
+
+  const handleEditProfile = (profile: MessagingProfile) => {
     setEditingProfile(profile);
   };
 
-  const handleUpdateProfile = () => {
-    setProfiles(
-      profiles.map((p) => (p.id === editingProfile.id ? editingProfile : p))
-    );
-    setEditingProfile(null);
+  const handleUpdateProfile = async () => {
+    if (!editingProfile) return;
+
+    const errors = validateProfile(editingProfile);
+    if (errors.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: errors.join(", "),
+      });
+      return;
+    }
+
+    try {
+      const toUpdate: UpdateMessagingProfileInput = {
+        name: editingProfile.name,
+        integrationId: editingProfile.integrationId,
+        requiredFields: editingProfile.requiredFields,
+        credentials: editingProfile.credentials,
+        status: editingProfile.status,
+      };
+      const updatedProfile = await messagingProfileService.updateProfile(
+        editingProfile.id,
+        toUpdate
+      );
+      setProfiles(
+        profiles.map((p) => (p.id === updatedProfile.id ? updatedProfile : p))
+      );
+      setEditingProfile(null);
+      toast({
+        title: "Profile Updated",
+        description: "Messaging profile has been updated successfully.",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description: "There was a problem updating the profile.",
+      });
+    }
   };
 
-  const handleDeleteProfile = (profileId) => {
-    setProfiles(profiles.filter((p) => p.id !== profileId));
+  const handleDeleteProfile = async () => {
+    if (!profileToDelete) return;
+
+    try {
+      await messagingProfileService.deleteProfile(profileToDelete);
+      setProfiles(profiles.filter((p) => p.id !== profileToDelete));
+      setIsDeleteConfirmOpen(false);
+      setProfileToDelete(null);
+      toast({
+        title: "Profile Deleted",
+        description: "Messaging profile has been deleted successfully.",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error deleting profile",
+        description: "There was a problem deleting the profile.",
+      });
+    }
   };
 
-  const StatusIndicator = ({ status }) => {
+  const StatusIndicator: React.FC<{ status: string }> = ({ status }) => {
     const statusConfig = {
       active: { color: "bg-meadow-500", icon: CheckCircle },
       inactive: { color: "bg-red-500", icon: XCircle },
       configuring: { color: "bg-yellow-500", icon: AlertTriangle },
     };
-    const { color, icon: Icon } = statusConfig[status];
+    const { color, icon: Icon } =
+      statusConfig[status as keyof typeof statusConfig];
 
     return (
       <div className="flex items-center space-x-2">
@@ -197,89 +271,110 @@ const MessagingProfilesManagement = () => {
     );
   };
 
-  const CredentialInputs = ({ provider, credentials, onChange }) => {
-    const [showPasswords, setShowPasswords] = useState({});
+  const CredentialInputs: React.FC<{
+    integration: MessagingIntegration;
+    requiredFields: Record<string, string>;
+    credentials: Record<string, string>;
+    onRequiredFieldChange: (field: string, value: string) => void;
+    onCredentialChange: (field: string, value: string) => void;
+  }> = ({
+    integration,
+    requiredFields,
+    credentials,
+    onRequiredFieldChange,
+    onCredentialChange,
+  }) => {
+    const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
+      {}
+    );
 
-    const handleTogglePassword = (credentialName) => {
+    const handleTogglePassword = (field: string) => {
       setShowPasswords((prev) => ({
         ...prev,
-        [credentialName]: !prev[credentialName],
+        [field]: !prev[field],
       }));
     };
 
     return (
       <>
-        {messagingProviders
-          .find((p) => p.id === provider)
-          ?.credentials.map((cred) => (
-            <div key={cred.name} className="space-y-2">
-              <Label htmlFor={cred.name} className="text-meadow-100">
-                {cred.label}
-              </Label>
-              <div className="relative">
-                <Input
-                  id={cred.name}
-                  type={
-                    cred.type === "password" && !showPasswords[cred.name]
-                      ? "password"
-                      : "text"
-                  }
-                  value={credentials[cred.name] || ""}
-                  onChange={(e) =>
-                    onChange({ ...credentials, [cred.name]: e.target.value })
-                  }
-                  className="pr-10 bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
-                />
-                {cred.type === "password" && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 text-meadow-300 hover:text-meadow-100"
-                    onClick={() => handleTogglePassword(cred.name)}
-                  >
-                    {showPasswords[cred.name] ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
+        {/* {integration.requiredFields} */}
+        {integration.requiredFields.map((field) => (
+          <div key={field} className="space-y-2">
+            <Label htmlFor={field} className="text-meadow-100">
+              {field}
+            </Label>
+            <Input
+              id={field}
+              value={requiredFields[field] || ""}
+              onChange={(e) => onRequiredFieldChange(field, e.target.value)}
+              className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
+            />
+          </div>
+        ))}
+        {integration.confidentialFields.map((field) => (
+          <div key={field} className="space-y-2">
+            <Label htmlFor={field} className="text-meadow-100">
+              {field}
+            </Label>
+            <div className="relative">
+              <Input
+                id={field}
+                type={showPasswords[field] ? "text" : "password"}
+                value={credentials[field] || ""}
+                onChange={(e) => onCredentialChange(field, e.target.value)}
+                className="pr-10 bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 text-meadow-300 hover:text-meadow-100"
+                onClick={() => handleTogglePassword(field)}
+              >
+                {showPasswords[field] ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
                 )}
-              </div>
+              </Button>
             </div>
-          ))}
+          </div>
+        ))}
       </>
     );
   };
 
-  const ProfileLogs = ({ profile }) => {
-    // Mock data for logs
-    const logs = [
-      {
-        id: 1,
-        timestamp: "2024-09-01 10:30:15",
-        event: "Message sent",
-        status: "success",
-      },
-      {
-        id: 2,
-        timestamp: "2024-09-01 11:45:22",
-        event: "Profile updated",
-        status: "info",
-      },
-      {
-        id: 3,
-        timestamp: "2024-09-01 14:20:08",
-        event: "Failed to send message",
-        status: "error",
-      },
-    ];
+  const ProfileLogs: React.FC<{ profile: MessagingProfile }> = ({
+    profile,
+  }) => {
+    const [logs, setLogs] = useState<MessageLog[]>([]);
+    const [logsLoading, setLogsLoading] = useState(true);
+    const [logsError, setLogsError] = useState<string | null>(null);
+
+    useEffect(() => {
+      const fetchLogs = async () => {
+        try {
+          const fetchedLogs = await messagingProfileService.getProfileLogs(
+            profile.id
+          );
+          setLogs(fetchedLogs);
+        } catch (err) {
+          setLogsError("Failed to fetch logs. Please try again.");
+        } finally {
+          setLogsLoading(false);
+        }
+      };
+      fetchLogs();
+    }, [profile.id]);
 
     const filteredLogs = logs.filter(
       (log) =>
         log.event.toLowerCase().includes(logSearchQuery.toLowerCase()) &&
         (logFilter === "all" || log.status === logFilter)
     );
+
+    if (logsLoading) return <div>Loading logs...</div>;
+    if (logsError) return <div>Error: {logsError}</div>;
 
     return (
       <ScrollArea className="h-[400px]">
@@ -295,7 +390,7 @@ const MessagingProfilesManagement = () => {
             {filteredLogs.map((log) => (
               <TableRow key={log.id} className="border-meadow-500">
                 <TableCell className="text-meadow-300">
-                  {log.timestamp}
+                  {new Date(log.createdAt).toLocaleString()}
                 </TableCell>
                 <TableCell className="text-meadow-100">{log.event}</TableCell>
                 <TableCell>
@@ -326,6 +421,33 @@ const MessagingProfilesManagement = () => {
     );
   };
 
+  const ProfileCredentialsDisplay: React.FC<{ profile: MessagingProfile }> = ({
+    profile,
+  }) => {
+    return (
+      <div className="space-y-4">
+        {profile.integration.requiredFields.map((field) => (
+          <div key={field} className="flex justify-between items-center">
+            <span className="text-meadow-300">{field}:</span>
+            <span className="text-meadow-100">
+              {profile.requiredFields[field]}
+            </span>
+          </div>
+        ))}
+        {profile.integration.confidentialFields.map((field) => (
+          <div key={field} className="flex justify-between items-center">
+            <span className="text-meadow-300">{field}:</span>
+            <span className="text-meadow-100">********</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="bg-forest-700 min-h-screen text-meadow-100">
       <header className="bg-forest-800 shadow-md">
@@ -355,42 +477,66 @@ const MessagingProfilesManagement = () => {
                       id="name"
                       value={newProfile.name}
                       onChange={(e) =>
-                        setNewProfile({ ...newProfile, name: e.target.value })
+                        setNewProfile((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
                       }
                       className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="provider" className="text-meadow-100">
-                      Provider
+                    <Label htmlFor="integrationId" className="text-meadow-100">
+                      Integration
                     </Label>
                     <Select
                       onValueChange={(value) =>
-                        setNewProfile({
-                          ...newProfile,
-                          provider: value,
+                        setNewProfile((prev) => ({
+                          ...prev,
+                          integrationId: value,
+                          requiredFields: {},
                           credentials: {},
-                        })
+                        }))
                       }
                     >
                       <SelectTrigger className="bg-forest-500 text-meadow-100 border-meadow-500">
-                        <SelectValue placeholder="Select provider" />
+                        <SelectValue placeholder="Select integration" />
                       </SelectTrigger>
                       <SelectContent className="bg-forest-600 text-meadow-100 border-meadow-500">
-                        {messagingProviders.map((provider) => (
-                          <SelectItem key={provider.id} value={provider.id}>
-                            {provider.name}
+                        {integrations.map((integration) => (
+                          <SelectItem
+                            key={integration.id}
+                            value={integration.id}
+                          >
+                            {integration.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  {newProfile.provider && (
+                  {newProfile.integrationId && (
                     <CredentialInputs
-                      provider={newProfile.provider}
+                      integration={
+                        integrations.find(
+                          (i) => i.id === newProfile.integrationId
+                        )!
+                      }
+                      requiredFields={newProfile.requiredFields}
                       credentials={newProfile.credentials}
-                      onChange={(credentials) =>
-                        setNewProfile({ ...newProfile, credentials })
+                      onRequiredFieldChange={(field, value) =>
+                        setNewProfile((prev) => ({
+                          ...prev,
+                          requiredFields: {
+                            ...prev.requiredFields,
+                            [field]: value,
+                          },
+                        }))
+                      }
+                      onCredentialChange={(field, value) =>
+                        setNewProfile((prev) => ({
+                          ...prev,
+                          credentials: { ...prev.credentials, [field]: value },
+                        }))
                       }
                     />
                   )}
@@ -428,7 +574,7 @@ const MessagingProfilesManagement = () => {
             <TableHeader>
               <TableRow className="border-meadow-500 hover:bg-forest-500">
                 <TableHead className="text-meadow-100">Name</TableHead>
-                <TableHead className="text-meadow-100">Provider</TableHead>
+                <TableHead className="text-meadow-100">Integration</TableHead>
                 <TableHead className="text-meadow-100">Status</TableHead>
                 <TableHead className="text-meadow-100">Actions</TableHead>
               </TableRow>
@@ -443,10 +589,7 @@ const MessagingProfilesManagement = () => {
                     {profile.name}
                   </TableCell>
                   <TableCell className="text-meadow-300">
-                    {
-                      messagingProviders.find((p) => p.id === profile.provider)
-                        ?.name
-                    }
+                    {profile.integration.name}
                   </TableCell>
                   <TableCell>
                     <StatusIndicator status={profile.status} />
@@ -483,16 +626,12 @@ const MessagingProfilesManagement = () => {
                                   <Card className="bg-forest-600 border-meadow-500/20">
                                     <CardHeader>
                                       <CardTitle className="text-meadow-300">
-                                        Provider
+                                        Integration
                                       </CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                       <p className="text-meadow-100">
-                                        {
-                                          messagingProviders.find(
-                                            (p) => p.id === profile.provider
-                                          )?.name
-                                        }
+                                        {profile.integration.name}
                                       </p>
                                     </CardContent>
                                   </Card>
@@ -513,14 +652,13 @@ const MessagingProfilesManagement = () => {
                                   <Card className="bg-forest-600 border-meadow-500/20">
                                     <CardHeader>
                                       <CardTitle className="text-meadow-300">
-                                        Credentials
+                                        Credentials and Fields
                                       </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                      <p className="flex items-center text-meadow-100">
-                                        <Lock className="h-4 w-4 mr-2" />
-                                        Securely encrypted and stored
-                                      </p>
+                                      <ProfileCredentialsDisplay
+                                        profile={profile}
+                                      />
                                     </CardContent>
                                   </Card>
 
@@ -600,9 +738,7 @@ const MessagingProfilesManagement = () => {
                               </div>
                               <Card className="bg-forest-600 border-meadow-500/20 flex-grow">
                                 <CardContent className="p-0">
-                                  <ScrollArea className="h-[500px]">
-                                    <ProfileLogs profile={profile} />
-                                  </ScrollArea>
+                                  <ProfileLogs profile={profile} />
                                 </CardContent>
                               </Card>
                             </div>
@@ -620,7 +756,10 @@ const MessagingProfilesManagement = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteProfile(profile.id)}
+                        onClick={() => {
+                          setProfileToDelete(profile.id);
+                          setIsDeleteConfirmOpen(true);
+                        }}
                         className="text-meadow-300 hover:text-meadow-100 hover:bg-forest-500"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -648,9 +787,10 @@ const MessagingProfilesManagement = () => {
         )}
       </main>
 
+      {/* Edit Profile Dialog */}
       <Dialog
         open={!!editingProfile}
-        onOpenChange={() => setEditingProfile(null)}
+        onOpenChange={(open) => !open && setEditingProfile(null)}
       >
         <DialogContent className="bg-forest-600 border-meadow-500">
           <DialogHeader>
@@ -668,45 +808,33 @@ const MessagingProfilesManagement = () => {
                   id="edit-name"
                   value={editingProfile.name}
                   onChange={(e) =>
-                    setEditingProfile({
-                      ...editingProfile,
+                    setEditingProfile((prev) => ({
+                      ...prev!,
                       name: e.target.value,
-                    })
+                    }))
                   }
                   className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-provider" className="text-meadow-100">
-                  Provider
-                </Label>
-                <Select
-                  onValueChange={(value) =>
-                    setEditingProfile({
-                      ...editingProfile,
-                      provider: value,
-                      credentials: {},
-                    })
-                  }
-                  defaultValue={editingProfile.provider}
-                >
-                  <SelectTrigger className="bg-forest-500 text-meadow-100 border-meadow-500">
-                    <SelectValue placeholder="Select provider" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-forest-600 text-meadow-100 border-meadow-500">
-                    {messagingProviders.map((provider) => (
-                      <SelectItem key={provider.id} value={provider.id}>
-                        {provider.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <CredentialInputs
-                provider={editingProfile.provider}
+                integration={
+                  integrations.find(
+                    (i) => i.id === editingProfile.integrationId
+                  )!
+                }
+                requiredFields={editingProfile.requiredFields}
                 credentials={editingProfile.credentials}
-                onChange={(credentials) =>
-                  setEditingProfile({ ...editingProfile, credentials })
+                onRequiredFieldChange={(field, value) =>
+                  setEditingProfile((prev) => ({
+                    ...prev!,
+                    requiredFields: { ...prev!.requiredFields, [field]: value },
+                  }))
+                }
+                onCredentialChange={(field, value) =>
+                  setEditingProfile((prev) => ({
+                    ...prev!,
+                    credentials: { ...prev!.credentials, [field]: value },
+                  }))
                 }
               />
               <div className="space-y-2">
@@ -715,7 +843,7 @@ const MessagingProfilesManagement = () => {
                 </Label>
                 <Select
                   onValueChange={(value) =>
-                    setEditingProfile({ ...editingProfile, status: value })
+                    setEditingProfile((prev) => ({ ...prev!, status: value }))
                   }
                   defaultValue={editingProfile.status}
                 >
@@ -742,6 +870,36 @@ const MessagingProfilesManagement = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <DialogContent className="bg-forest-600 border-meadow-500">
+          <DialogHeader>
+            <DialogTitle className="text-meadow-100">
+              Confirm Deletion
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-meadow-100">
+            Are you sure you want to delete this messaging profile? This action
+            cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              className="bg-forest-500 text-meadow-100 hover:bg-forest-400"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteProfile}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Help Tooltip */}
       <div className="fixed bottom-4 right-4">
         <TooltipProvider>
           <Tooltip>

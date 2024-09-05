@@ -748,6 +748,9 @@
 					"credentials": {
 						"$ref": "#/components/schemas/Prisma.JsonValue"
 					},
+					"requiredFields": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
 					"integrationId": {
 						"type": "string"
 					},
@@ -766,6 +769,7 @@
 					"createdAt",
 					"status",
 					"credentials",
+					"requiredFields",
 					"integrationId",
 					"organizationId",
 					"name",
@@ -816,6 +820,9 @@
 					"integrationId": {
 						"type": "string"
 					},
+					"requiredFields": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
 					"credentials": {
 						"$ref": "#/components/schemas/Prisma.JsonValue"
 					}
@@ -824,6 +831,7 @@
 					"name",
 					"status",
 					"integrationId",
+					"requiredFields",
 					"credentials"
 				],
 				"type": "object",
@@ -848,11 +856,15 @@
 					},
 					{
 						"properties": {
+							"requiredFields": {
+								"$ref": "#/components/schemas/Record_string.string_"
+							},
 							"credentials": {
 								"$ref": "#/components/schemas/Record_string.string_"
 							}
 						},
 						"required": [
+							"requiredFields",
 							"credentials"
 						],
 						"type": "object"
@@ -969,6 +981,16 @@
 					"integrationId": {
 						"type": "string"
 					},
+					"requiredFields": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Prisma.JsonValue"
+							},
+							{
+								"$ref": "#/components/schemas/Record_string.string_"
+							}
+						]
+					},
 					"credentials": {
 						"allOf": [
 							{
@@ -982,6 +1004,92 @@
 				},
 				"type": "object",
 				"description": "Make all properties in T optional"
+			},
+			"DefaultSelection_Prisma._36_MessageLogPayload_": {
+				"properties": {
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"metadata": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
+					"status": {
+						"type": "string"
+					},
+					"event": {
+						"type": "string"
+					},
+					"messagingProfileId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"createdAt",
+					"metadata",
+					"status",
+					"event",
+					"messagingProfileId",
+					"id"
+				],
+				"type": "object"
+			},
+			"MessageLog": {
+				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessageLogPayload_",
+				"description": "Model MessageLog"
+			},
+			"ApiResponse_MessageLog-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/MessageLog"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_any_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"ApiResponse_MessagingIntegration_": {
 				"properties": {
@@ -2588,6 +2696,112 @@
 					{
 						"in": "path",
 						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/messaging-profiles/{id}/logs": {
+			"get": {
+				"operationId": "GetProfileLogs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_MessageLog-Array_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Messaging Profiles"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 100,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"default": 0,
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/messaging-profiles/{id}/analytics": {
+			"get": {
+				"operationId": "GetProfileAnalytics",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_any_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Messaging Profiles"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDate",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "endDate",
 						"required": true,
 						"schema": {
 							"type": "string"

@@ -297,7 +297,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DefaultSelection_Prisma._36_MessagingProfilePayload_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"status":{"dataType":"string","required":true},"credentials":{"ref":"Prisma.JsonValue","required":true},"integrationId":{"dataType":"string","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"status":{"dataType":"string","required":true},"credentials":{"ref":"Prisma.JsonValue","required":true},"requiredFields":{"ref":"Prisma.JsonValue","required":true},"integrationId":{"dataType":"string","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "MessagingProfile": {
@@ -317,7 +317,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_MessagingProfile.Exclude_keyofMessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId__": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string","required":true},"status":{"dataType":"string","required":true},"integrationId":{"dataType":"string","required":true},"credentials":{"ref":"Prisma.JsonValue","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string","required":true},"status":{"dataType":"string","required":true},"integrationId":{"dataType":"string","required":true},"requiredFields":{"ref":"Prisma.JsonValue","required":true},"credentials":{"ref":"Prisma.JsonValue","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Omit_MessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId_": {
@@ -332,7 +332,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateMessagingProfileInput": {
         "dataType": "refAlias",
-        "type": {"dataType":"intersection","subSchemas":[{"ref":"Omit_MessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId_"},{"dataType":"nestedObjectLiteral","nestedProperties":{"credentials":{"ref":"Record_string.string_","required":true}}}],"validators":{}},
+        "type": {"dataType":"intersection","subSchemas":[{"ref":"Omit_MessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId_"},{"dataType":"nestedObjectLiteral","nestedProperties":{"requiredFields":{"ref":"Record_string.string_","required":true},"credentials":{"ref":"Record_string.string_","required":true}}}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "DefaultSelection_Prisma._36_MessagingIntegrationPayload_": {
@@ -367,7 +367,37 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Partial_CreateMessagingProfileInput_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string"},"status":{"dataType":"string"},"integrationId":{"dataType":"string"},"credentials":{"dataType":"intersection","subSchemas":[{"ref":"Prisma.JsonValue"},{"ref":"Record_string.string_"}]}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string"},"status":{"dataType":"string"},"integrationId":{"dataType":"string"},"requiredFields":{"dataType":"intersection","subSchemas":[{"ref":"Prisma.JsonValue"},{"ref":"Record_string.string_"}]},"credentials":{"dataType":"intersection","subSchemas":[{"ref":"Prisma.JsonValue"},{"ref":"Record_string.string_"}]}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DefaultSelection_Prisma._36_MessageLogPayload_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"createdAt":{"dataType":"datetime","required":true},"metadata":{"ref":"Prisma.JsonValue","required":true},"status":{"dataType":"string","required":true},"event":{"dataType":"string","required":true},"messagingProfileId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "MessageLog": {
+        "dataType": "refAlias",
+        "type": {"ref":"DefaultSelection_Prisma._36_MessageLogPayload_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_MessageLog-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"array","array":{"dataType":"refAlias","ref":"MessageLog"}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_any_": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"any"},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApiResponse_MessagingIntegration_": {
@@ -1297,6 +1327,74 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteProfile',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/messaging-profiles/:id/logs',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MessagingProfileController)),
+            ...(fetchMiddlewares<RequestHandler>(MessagingProfileController.prototype.getProfileLogs)),
+
+            async function MessagingProfileController_getProfileLogs(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                    limit: {"default":100,"in":"query","name":"limit","dataType":"double"},
+                    offset: {"default":0,"in":"query","name":"offset","dataType":"double"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new MessagingProfileController();
+
+              await templateService.apiHandler({
+                methodName: 'getProfileLogs',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/messaging-profiles/:id/analytics',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(MessagingProfileController)),
+            ...(fetchMiddlewares<RequestHandler>(MessagingProfileController.prototype.getProfileAnalytics)),
+
+            async function MessagingProfileController_getProfileAnalytics(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                    startDate: {"in":"query","name":"startDate","required":true,"dataType":"string"},
+                    endDate: {"in":"query","name":"endDate","required":true,"dataType":"string"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new MessagingProfileController();
+
+              await templateService.apiHandler({
+                methodName: 'getProfileAnalytics',
                 controller,
                 response,
                 next,

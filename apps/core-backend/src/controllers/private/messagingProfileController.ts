@@ -1,27 +1,34 @@
-import {
-  Body,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Route,
-  Security,
-  Tags,
-  Path,
-  Request,
-  Response,
-} from "tsoa";
 import { MessagingProfileService } from "../../services/messagingProfileService";
 import { ApiResponse } from "../../models/apiResponse";
 import { MessagingIntegration, MessagingProfile, Prisma } from "@prisma/client";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { MessagingIntegrationService } from "../../services/messagingIntegrationService";
+import { MessageLogService } from "../../services/messageLogService";
+import { MessageLog } from "@prisma/client";
+import {
+  Body,
+  Get,
+  Path,
+  Post,
+  Query,
+  Route,
+  Security,
+  Tags,
+  Request,
+  Response,
+  Put,
+  Delete,
+  SuccessResponse,
+  TsoaResponse,
+  Res,
+} from "tsoa";
 
 type CreateMessagingProfileInput = Omit<
   MessagingProfile,
   "id" | "createdAt" | "updatedAt" | "organizationId"
 > & {
   credentials: Record<string, string>;
+  requiredFields: Record<string, string>;
 };
 
 @Route("messaging-profiles")
@@ -30,9 +37,11 @@ type CreateMessagingProfileInput = Omit<
 export class MessagingProfileController {
   private profileService: MessagingProfileService;
   private integrationService: MessagingIntegrationService;
+  private logService: MessageLogService;
   constructor() {
     this.profileService = new MessagingProfileService();
     this.integrationService = new MessagingIntegrationService();
+    this.logService = new MessageLogService();
   }
 
   @Post()
@@ -137,6 +146,48 @@ export class MessagingProfileController {
       status: "success",
       data: null,
       message: "Messaging profile deleted successfully",
+    };
+  }
+
+  @Get("{id}/logs")
+  @Response<ApiResponse<MessageLog[]>>(200, "OK")
+  public async getProfileLogs(
+    @Path() id: string,
+    @Query() limit: number = 100,
+    @Query() offset: number = 0,
+    @Request() request: AuthenticatedRequest
+  ): Promise<ApiResponse<MessageLog[]>> {
+    const user = request.user as JWTAuthenticatedUser;
+    const organizationId = user.currentOrganizationId as string;
+    await this.profileService.getProfileById(id, organizationId); // Ensure profile exists and user has access
+    const logs = await this.logService.getLogsByProfileId(id, limit, offset);
+    return {
+      status: "success",
+      data: logs,
+      message: "Message logs retrieved successfully",
+    };
+  }
+
+  @Get("{id}/analytics")
+  @Response<ApiResponse<any>>(200, "OK")
+  public async getProfileAnalytics(
+    @Path() id: string,
+    @Query() startDate: string,
+    @Query() endDate: string,
+    @Request() request: AuthenticatedRequest
+  ): Promise<ApiResponse<any>> {
+    const user = request.user as JWTAuthenticatedUser;
+    const organizationId = user.currentOrganizationId as string;
+    await this.profileService.getProfileById(id, organizationId); // Ensure profile exists and user has access
+    const analytics = await this.logService.getAnalytics(
+      id,
+      new Date(startDate),
+      new Date(endDate)
+    );
+    return {
+      status: "success",
+      data: analytics,
+      message: "Analytics retrieved successfully",
     };
   }
 }

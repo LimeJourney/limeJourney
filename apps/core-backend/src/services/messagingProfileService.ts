@@ -75,6 +75,7 @@ export class MessagingProfileService {
 
   async createProfile(
     data: Omit<MessagingProfile, "id" | "createdAt" | "updatedAt"> & {
+      requiredFields: Record<string, string>;
       credentials: Record<string, string>;
     }
   ): Promise<MessagingProfile> {
@@ -91,22 +92,42 @@ export class MessagingProfileService {
         );
       }
 
-      const requiredFields = JSON.parse(
+      const integrationRequiredFields = JSON.parse(
         integration.requiredFields as string
       ) as string[];
       const confidentialFields = JSON.parse(
         integration.confidentialFields as string
       ) as string[];
-      const providedFields = Object.keys(data.credentials);
 
-      const missingFields = requiredFields.filter(
-        (field) => !providedFields.includes(field)
+      // Combine all required fields
+      const allRequiredFields = [
+        ...new Set([...integrationRequiredFields, ...confidentialFields]),
+      ];
+
+      // Check if all required fields are provided
+      const missingFields = allRequiredFields.filter(
+        (field) =>
+          !(field in data.requiredFields) && !(field in data.credentials)
       );
+
       if (missingFields.length > 0) {
         throw new AppError(
           `Missing required fields: ${missingFields.join(", ")}`,
           400,
           "MISSING_REQUIRED_FIELDS"
+        );
+      }
+
+      // Ensure confidential fields are in credentials, not in requiredFields
+      const misplacedConfidentialFields = confidentialFields.filter(
+        (field) => field in data.requiredFields
+      );
+
+      if (misplacedConfidentialFields.length > 0) {
+        throw new AppError(
+          `Confidential fields found in requiredFields: ${misplacedConfidentialFields.join(", ")}. Please move them to credentials.`,
+          400,
+          "MISPLACED_CONFIDENTIAL_FIELDS"
         );
       }
 
@@ -118,6 +139,7 @@ export class MessagingProfileService {
       const profile = await prisma.messagingProfile.create({
         data: {
           ...data,
+          requiredFields: data.requiredFields,
           credentials: encryptedCredentials,
         },
         include: { integration: true },
@@ -125,10 +147,9 @@ export class MessagingProfileService {
 
       return {
         ...profile,
-        credentials: "",
+        credentials: {},
       };
     } catch (error) {
-      console.log(error);
       if (error instanceof AppError) throw error;
       throw new AppError(
         "Failed to create messaging profile",
@@ -156,6 +177,7 @@ export class MessagingProfileService {
             profile.integration.requiredFields as string
           ),
         },
+        credentials: {},
       }));
     } catch (error) {
       throw new AppError(
@@ -180,7 +202,7 @@ export class MessagingProfileService {
 
       return {
         ...profile,
-        credentials: "",
+        credentials: {},
       };
     } catch (error) {
       throw new AppError(
@@ -194,7 +216,13 @@ export class MessagingProfileService {
   async updateProfile(
     id: string,
     organizationId: string,
-    data: Partial<Omit<MessagingProfile, "id" | "createdAt" | "updatedAt">> & {
+    data: Partial<
+      Omit<
+        MessagingProfile,
+        "id" | "createdAt" | "updatedAt" | "requiredFields" | "credentials"
+      >
+    > & {
+      requiredFields?: Record<string, string>;
       credentials?: Record<string, string>;
     }
   ): Promise<MessagingProfile> {
@@ -210,17 +238,26 @@ export class MessagingProfileService {
 
       const confidentialFields = JSON.parse(
         existingProfile.integration.confidentialFields as string
-      );
+      ) as string[];
       const updateData: Prisma.MessagingProfileUpdateInput = { ...data };
+
+      if (data.requiredFields) {
+        const existingRequiredFields =
+          (existingProfile.requiredFields as Record<string, string>) || {};
+        updateData.requiredFields = {
+          ...existingRequiredFields,
+          ...data.requiredFields,
+        };
+      }
 
       if (data.credentials) {
         const existingCredentials = this.decryptCredentials(
-          existingProfile.credentials,
+          existingProfile.credentials as Prisma.JsonObject,
           confidentialFields
         );
         const updatedCredentials = {
           ...existingCredentials,
-          ...(data.credentials || {}),
+          ...data.credentials,
         };
         updateData.credentials = this.encryptCredentials(
           updatedCredentials,
@@ -236,7 +273,7 @@ export class MessagingProfileService {
 
       return {
         ...updatedProfile,
-        credentials: "",
+        credentials: {},
       };
     } catch (error) {
       if (error instanceof AppError) throw error;

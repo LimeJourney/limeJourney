@@ -1,61 +1,56 @@
 import { apiCall } from "./baseService";
 
-// Types for Messaging Integration
+// Define types based on your Prisma schema
 export interface MessagingIntegration {
   id: string;
   name: string;
   type: string;
   providerName: string;
-  requiredFields: string[];
-  confidentialFields: string[];
+  requiredFields: Record<string, any>;
+  confidentialFields: Record<string, any>;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateMessagingIntegrationRequest {
-  name: string;
-  type: string;
-  providerName: string;
-  requiredFields: string[];
-  confidentialFields: string[];
-}
-
-export interface UpdateMessagingIntegrationRequest {
-  name?: string;
-  type?: string;
-  providerName?: string;
-  requiredFields?: string[];
-  confidentialFields?: string[];
-}
-
-// Types for Messaging Profile
 export interface MessagingProfile {
   id: string;
   name: string;
   organizationId: string;
   integrationId: string;
-  credentials: Record<string, string>;
+  integration: MessagingIntegration;
+  requiredFields: Record<string, any>;
+  credentials: Record<string, any>;
   status: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateMessagingProfileRequest {
+export interface MessageLog {
+  id: string;
+  messagingProfileId: string;
+  event: string;
+  status: string;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+}
+
+export interface CreateMessagingProfileInput {
   name: string;
   integrationId: string;
+  requiredFields: Record<string, string>;
   credentials: Record<string, string>;
   status: string;
 }
 
-export interface UpdateMessagingProfileRequest {
+export interface UpdateMessagingProfileInput {
   name?: string;
+  integrationId?: string;
+  requiredFields?: Record<string, string>;
   credentials?: Record<string, string>;
   status?: string;
 }
 
-// Messaging Service
-export const messagingService = {
-  // Messaging Integration methods
+export const messagingProfileService = {
   async getIntegrations(): Promise<MessagingIntegration[]> {
     return apiCall<MessagingIntegration[]>(
       "get",
@@ -63,27 +58,23 @@ export const messagingService = {
     );
   },
 
-  async getProfiles(
-    limit?: number,
-    offset?: number
-  ): Promise<MessagingProfile[]> {
-    const params = { limit, offset };
-    return apiCall<MessagingProfile[]>("get", "/messaging-profiles", params);
-  },
-
-  async createProfile(
-    data: CreateMessagingProfileRequest
-  ): Promise<MessagingProfile> {
-    return apiCall<MessagingProfile>("post", "/messaging-profiles", data);
+  async getProfiles(): Promise<MessagingProfile[]> {
+    return apiCall<MessagingProfile[]>("get", "/messaging-profiles");
   },
 
   async getProfileById(id: string): Promise<MessagingProfile> {
     return apiCall<MessagingProfile>("get", `/messaging-profiles/${id}`);
   },
 
+  async createProfile(
+    data: CreateMessagingProfileInput
+  ): Promise<MessagingProfile> {
+    return apiCall<MessagingProfile>("post", "/messaging-profiles", data);
+  },
+
   async updateProfile(
     id: string,
-    data: UpdateMessagingProfileRequest
+    data: UpdateMessagingProfileInput
   ): Promise<MessagingProfile> {
     return apiCall<MessagingProfile>("put", `/messaging-profiles/${id}`, data);
   },
@@ -92,11 +83,25 @@ export const messagingService = {
     return apiCall<void>("delete", `/messaging-profiles/${id}`);
   },
 
-  // Additional method for getting available integrations (if needed)
-  async getAvailableIntegrations(): Promise<MessagingIntegration[]> {
-    return apiCall<MessagingIntegration[]>(
+  async getProfileLogs(
+    id: string,
+    limit: number = 100,
+    offset: number = 0
+  ): Promise<MessageLog[]> {
+    const params = { limit, offset };
+    return apiCall<MessageLog[]>(
       "get",
-      "/messaging-profiles/available-integrations"
+      `/messaging-profiles/${id}/logs`,
+      params
     );
+  },
+
+  async getProfileAnalytics(
+    id: string,
+    startDate: string,
+    endDate: string
+  ): Promise<any> {
+    const params = { startDate, endDate };
+    return apiCall<any>("get", `/messaging-profiles/${id}/analytics`, params);
   },
 };

@@ -125,14 +125,28 @@ model MessagingProfile {
   organization          Organization @relation(fields: [organizationId], references: [id])
   integrationId         String
   integration           MessagingIntegration @relation(fields: [integrationId], references: [id])
+  requiredFields        Json @default("{}")
   credentials           Json      // Store the credentials as an encrypted JSON object
   status                String    // e.g., "active", "inactive", "configuring"
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  logs                  MessageLog[]
 
   @@index([organizationId])
   @@index([integrationId])
   @@unique([id, organizationId])
+}
+
+model MessageLog {
+  id                String    @id @default(uuid())
+  messagingProfileId String
+  messagingProfile  MessagingProfile @relation(fields: [messagingProfileId], references: [id])
+  event             String    // e.g., "sent", "delivered", "failed"
+  status            String    // e.g., "success", "error"
+  metadata          Json?     // Additional information about the event
+  createdAt         DateTime  @default(now())
+
+  @@index([messagingProfileId])
 }
 
 
