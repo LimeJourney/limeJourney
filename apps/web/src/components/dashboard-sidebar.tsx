@@ -93,6 +93,12 @@ const navItems: NavItem[] = [
     icon: File,
     href: "/dashboard/journeys",
   },
+  {
+    id: "templates",
+    title: "Templates",
+    icon: File,
+    href: "/dashboard/templates",
+  },
   { id: "inbox", title: "Inbox", icon: Inbox, href: "/dashboard/inbox" },
   { id: "drafts", title: "Drafts", icon: File, href: "/dashboard/drafts" },
   { id: "sent", title: "Sent", icon: Send, href: "/dashboard/sent" },
