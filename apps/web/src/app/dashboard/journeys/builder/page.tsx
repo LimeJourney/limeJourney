@@ -46,16 +46,254 @@ import {
   Save,
   Clock,
   Zap,
+  MessageCircle,
+  Bell,
+  Shuffle,
+  UsersIcon,
+  CalendarIcon,
+  InfoIcon,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useJourneyContext } from "@/app/contexts/journeyContext";
+import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const InfoTooltip = ({ content }) => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <InfoIcon className="h-4 w-4 ml-2 text-meadow-400 cursor-help" />
+      </TooltipTrigger>
+      <TooltipContent className="bg-forest-700 text-white p-2 max-w-xs">
+        <p>{content}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
+const TriggerNodeForm = ({ node, updateNodeData }) => {
+  const [triggerType, setTriggerType] = useState(
+    node.data.triggerType || "event"
+  );
+  const [segmentAction, setSegmentAction] = useState(
+    node.data.segmentAction || "joins"
+  );
+
+  useEffect(() => {
+    updateNodeData("triggerType", triggerType);
+  }, [triggerType]);
+
+  useEffect(() => {
+    updateNodeData("segmentAction", segmentAction);
+  }, [segmentAction]);
+
+  const handleUpdateNodeData = (key, value) => {
+    updateNodeData(key, value);
+  };
+
+  return (
+    <Card className="w-full bg-forest-9050 text-white shadow-lg border border-meadow-700">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-meadow-300">
+          Configure Trigger
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-meadow-400 mb-4">
+          Select the type of trigger and configure its details to start your
+          journey.
+        </p>
+        <Tabs
+          value={triggerType}
+          onValueChange={setTriggerType}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2 bg-forest-800">
+            <TabsTrigger
+              value="event"
+              className="data-[state=active]:bg-meadow-700"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Event
+            </TabsTrigger>
+            <TabsTrigger
+              value="segment"
+              className="data-[state=active]:bg-meadow-700"
+            >
+              <UsersIcon className="mr-2 h-4 w-4" />
+              Segment
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="event" className="mt-4">
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="event"
+                  className="text-meadow-300 mb-2 block flex items-center"
+                >
+                  Select Event
+                  <InfoTooltip content="Choose the event that will trigger this journey." />
+                </Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleUpdateNodeData("event", value)
+                  }
+                  value={node.data.event}
+                >
+                  <SelectTrigger
+                    id="event"
+                    className="w-full bg-forest-900 border-forest-700 focus:ring-meadow-500 text-white"
+                  >
+                    <SelectValue placeholder="Choose an event" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-forest-900 border-forest-700">
+                    <SelectItem
+                      value="pageView"
+                      className="text-white hover:bg-forest-800"
+                    >
+                      Page View
+                    </SelectItem>
+                    <SelectItem
+                      value="purchase"
+                      className="text-white hover:bg-forest-800"
+                    >
+                      Purchase
+                    </SelectItem>
+                    <SelectItem
+                      value="signup"
+                      className="text-white hover:bg-forest-800"
+                    >
+                      Sign Up
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label
+                  htmlFor="eventProperty"
+                  className="text-meadow-300 mb-2 block flex items-center"
+                >
+                  Event Property (optional)
+                  <InfoTooltip content="Specify a property of the event to further refine your trigger condition." />
+                </Label>
+                <Input
+                  id="eventProperty"
+                  placeholder="e.g., total_value"
+                  value={node.data.eventProperty || ""}
+                  onChange={(e) =>
+                    handleUpdateNodeData("eventProperty", e.target.value)
+                  }
+                  className="bg-forest-900 border-forest-700 focus:ring-meadow-500 text-white placeholder-meadow-600"
+                />
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="segment" className="mt-4">
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="segment"
+                  className="text-meadow-300 mb-2 block flex items-center"
+                >
+                  Select Segment
+                  <InfoTooltip content="Choose the user segment that this trigger will apply to." />
+                </Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleUpdateNodeData("segment", value)
+                  }
+                  value={node.data.segment}
+                >
+                  <SelectTrigger
+                    id="segment"
+                    className="w-full bg-forest-900 border-forest-700 focus:ring-meadow-500 text-white"
+                  >
+                    <SelectValue placeholder="Choose a segment" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-forest-900 border-forest-700">
+                    <SelectItem
+                      value="newUsers"
+                      className="text-white hover:bg-forest-800"
+                    >
+                      New Users
+                    </SelectItem>
+                    <SelectItem
+                      value="activeUsers"
+                      className="text-white hover:bg-forest-800"
+                    >
+                      Active Users
+                    </SelectItem>
+                    <SelectItem
+                      value="inactiveUsers"
+                      className="text-white hover:bg-forest-800"
+                    >
+                      Inactive Users
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-meadow-300 mb-2 block flex items-center">
+                  Trigger When
+                  <InfoTooltip content="Specify whether the journey should start when a user joins or leaves the selected segment." />
+                </Label>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSegmentAction("joins")}
+                    className={`flex-1 ${
+                      segmentAction === "joins"
+                        ? "bg-meadow-700 text-black border-meadow-500"
+                        : "bg-forest-900 text-meadow-300 hover:bg-meadow-800 hover:text-black"
+                    }`}
+                  >
+                    Joins Segment
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSegmentAction("leaves")}
+                    className={`flex-1 ${
+                      segmentAction === "leaves"
+                        ? "bg-meadow-700 text-black border-meadow-500"
+                        : "bg-forest-900 text-meadow-300 hover:bg-meadow-800 hover:text-black"
+                    }`}
+                  >
+                    Leaves Segment
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};
 
 const NodeWrapper = ({ children, icon: Icon, label, type }) => {
   const bgColor =
     {
       trigger: "bg-meadow-100",
       email: "bg-meadow-200",
+      sms: "bg-meadow-300",
+      pushNotification: "bg-meadow-400",
       split: "bg-meadow-300",
+      abTest: "bg-meadow-400",
       exit: "bg-meadow-400",
       wait: "bg-meadow-200",
       action: "bg-meadow-300",
@@ -81,16 +319,14 @@ const TriggerNode = ({ data }) => {
   return (
     <NodeWrapper icon={Play} label={data.label} type="trigger">
       <div className="text-forest-700 text-sm font-medium mb-2">
-        {data.description || "Journey Start"}
+        {data.triggerType === "segment"
+          ? `Segment: ${data.segment} (${data.segmentAction})`
+          : `Event: ${data.event}`}
       </div>
       <div className="flex items-center justify-between text-forest-600 text-xs">
         <div className="flex items-center">
           <Info size={12} className="mr-1" />
-          <span>Triggers: {data.triggerCount || 0}</span>
-        </div>
-        <div className="flex items-center">
-          <Clock size={12} className="mr-1" />
-          <span>{data.frequency || "Not set"}</span>
+          <span>Type: {data.triggerType}</span>
         </div>
       </div>
       <Handle
@@ -119,6 +355,62 @@ const EmailNode = ({ data }) => {
         <div className="flex items-center text-forest-600 text-xs">
           <Zap size={12} className="mr-1" />
           <span>{data.automationType || "Manual"}</span>
+        </div>
+      </div>
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-3 h-3 top-0 bg-meadow-500"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-3 h-3 bottom-0 bg-meadow-500"
+      />
+    </NodeWrapper>
+  );
+};
+
+const SMSNode = ({ data }) => {
+  return (
+    <NodeWrapper icon={MessageCircle} label={data.label} type="sms">
+      <div className="space-y-2">
+        <div className="flex items-center text-forest-700 text-sm">
+          <MessageSquare size={14} className="mr-2" />
+          <span className="truncate">{data.message || "Set message..."}</span>
+        </div>
+        <div className="flex items-center text-forest-700 text-sm">
+          <User size={14} className="mr-2" />
+          <span className="truncate">
+            {data.recipient || "Set recipient..."}
+          </span>
+        </div>
+      </div>
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-3 h-3 top-0 bg-meadow-500"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-3 h-3 bottom-0 bg-meadow-500"
+      />
+    </NodeWrapper>
+  );
+};
+
+const PushNotificationNode = ({ data }) => {
+  return (
+    <NodeWrapper icon={Bell} label={data.label} type="pushNotification">
+      <div className="space-y-2">
+        <div className="flex items-center text-forest-700 text-sm">
+          <MessageSquare size={14} className="mr-2" />
+          <span className="truncate">{data.title || "Set title..."}</span>
+        </div>
+        <div className="flex items-center text-forest-700 text-sm">
+          <Info size={14} className="mr-2" />
+          <span className="truncate">{data.body || "Set body..."}</span>
         </div>
       </div>
       <Handle
@@ -167,6 +459,43 @@ const SplitNode = ({ data }) => {
         position={Position.Bottom}
         id="no"
         className="w-3 h-3 -bottom-1 -right-1 bg-red-500"
+      />
+    </NodeWrapper>
+  );
+};
+
+const ABTestNode = ({ data }) => {
+  return (
+    <NodeWrapper icon={Shuffle} label={data.label} type="abTest">
+      <div className="text-forest-700 text-sm mb-3">
+        A/B Test: {data.testName || "Set test name..."}
+      </div>
+      <div className="flex justify-between">
+        <div className="flex items-center text-green-600 text-xs">
+          <CheckCircle size={12} className="mr-1" />
+          <span>A: {data.variantA || "Variant A"}</span>
+        </div>
+        <div className="flex items-center text-blue-600 text-xs">
+          <CheckCircle size={12} className="mr-1" />
+          <span>B: {data.variantB || "Variant B"}</span>
+        </div>
+      </div>
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-3 h-3 top-0 bg-meadow-500"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="a"
+        className="w-3 h-3 -bottom-1 -left-1 bg-green-500"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="b"
+        className="w-3 h-3 -bottom-1 -right-1 bg-blue-500"
       />
     </NodeWrapper>
   );
@@ -238,20 +567,62 @@ const ActionNode = ({ data }) => {
 const nodeTypes = {
   triggerNode: TriggerNode,
   emailNode: EmailNode,
+  smsNode: SMSNode,
+  pushNotificationNode: PushNotificationNode,
   splitNode: SplitNode,
+  abTestNode: ABTestNode,
   exitNode: ExitNode,
   waitNode: WaitNode,
   actionNode: ActionNode,
 };
 
-const sidebarNodeTypes = [
-  { type: "emailNode", label: "Email", icon: Mail },
-  { type: "splitNode", label: "Split", icon: GitBranch },
-  { type: "waitNode", label: "Wait", icon: Clock },
-  { type: "actionNode", label: "Action", icon: Zap },
-];
-
 const Sidebar = ({ onDragStart }) => {
+  const { toast } = useToast();
+  const sidebarSections = [
+    {
+      title: "Action",
+      nodes: [
+        { type: "emailNode", label: "Email", icon: Mail, disabled: false },
+        { type: "smsNode", label: "SMS", icon: MessageCircle, disabled: false },
+        {
+          type: "pushNotificationNode",
+          label: "Push Notification",
+          icon: Bell,
+          disabled: false,
+        },
+      ],
+    },
+    {
+      title: "Control",
+      nodes: [
+        { type: "waitNode", label: "Wait", icon: Clock, disabled: false },
+        {
+          type: "abTestNode",
+          label: "A/B Test",
+          icon: Shuffle,
+          disabled: true,
+        },
+      ],
+    },
+    {
+      title: "Other",
+      nodes: [{ type: "exitNode", label: "Exit", icon: Flag, disabled: true }],
+    },
+  ];
+
+  const handleDragStart = (event, nodeType) => {
+    if (nodeType === "abTestNode") {
+      event.preventDefault();
+      toast({
+        variant: "destructive",
+        title: "Feature not available",
+        description: "A/B Test node is coming soon!",
+      });
+    } else {
+      onDragStart(event, nodeType);
+    }
+  };
+
   return (
     <motion.aside
       initial={{ x: -300 }}
@@ -261,29 +632,48 @@ const Sidebar = ({ onDragStart }) => {
       style={{ width: "250px", maxHeight: "calc(100vh - 8rem)" }}
     >
       <h2 className="text-xl font-bold mb-4 text-meadow-500">Node Types</h2>
-      <div className="space-y-2">
-        {sidebarNodeTypes.map((node) => (
-          <TooltipProvider key={node.type}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center space-x-2 bg-meadow-500 text-forest-800 p-3 rounded cursor-move transition-all duration-300 hover:bg-meadow-400"
-                  onDragStart={(event) => onDragStart(event, node.type)}
-                  draggable
-                >
-                  <node.icon size={20} />
-                  <span className="font-medium">{node.label}</span>
-                </motion.div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Drag to add {node.label} node</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+      <ScrollArea className="pr-4" style={{ maxHeight: "calc(100vh - 12rem)" }}>
+        {sidebarSections.map((section, index) => (
+          <div key={index} className="mb-6">
+            <h3 className="text-lg font-semibold mb-2 text-meadow-400">
+              {section.title}
+            </h3>
+            <div className="space-y-2">
+              {section.nodes.map((node) => (
+                <TooltipProvider key={node.type}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        whileHover={{ scale: node.disabled ? 1 : 1.05 }}
+                        whileTap={{ scale: node.disabled ? 1 : 0.95 }}
+                        className={`flex items-center space-x-2 bg-meadow-500 text-forest-800 p-3 rounded transition-all duration-300 ${
+                          node.disabled
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-meadow-400 cursor-move"
+                        }`}
+                        onDragStart={(event) =>
+                          handleDragStart(event, node.type)
+                        }
+                        draggable={!node.disabled}
+                      >
+                        <node.icon size={20} />
+                        <span className="font-medium">{node.label}</span>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {node.disabled
+                          ? "Coming soon"
+                          : `Drag to add ${node.label} node`}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </div>
+          </div>
         ))}
-      </div>
+      </ScrollArea>
     </motion.aside>
   );
 };
@@ -300,9 +690,152 @@ const NodeProperties = ({ node, setNodes, onClose }) => {
     );
   };
 
+  const renderNodeSpecificProperties = () => {
+    switch (node.type) {
+      case "emailNode":
+        return (
+          <>
+            <div>
+              <Label htmlFor="subject" className="text-meadow-500">
+                Subject
+              </Label>
+              <Input
+                id="subject"
+                value={node.data.subject || ""}
+                onChange={(e) => updateNodeData("subject", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="recipient" className="text-meadow-500">
+                Recipient
+              </Label>
+              <Input
+                id="recipient"
+                value={node.data.recipient || ""}
+                onChange={(e) => updateNodeData("recipient", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="content" className="text-meadow-500">
+                Email Content
+              </Label>
+              <Textarea
+                id="content"
+                value={node.data.content || ""}
+                onChange={(e) => updateNodeData("content", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+                rows={5}
+              />
+            </div>
+          </>
+        );
+      case "smsNode":
+        return (
+          <>
+            <div>
+              <Label htmlFor="message" className="text-meadow-500">
+                Message
+              </Label>
+              <Textarea
+                id="message"
+                value={node.data.message || ""}
+                onChange={(e) => updateNodeData("message", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="recipient" className="text-meadow-500">
+                Recipient
+              </Label>
+              <Input
+                id="recipient"
+                value={node.data.recipient || ""}
+                onChange={(e) => updateNodeData("recipient", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+          </>
+        );
+      case "pushNotificationNode":
+        return (
+          <>
+            <div>
+              <Label htmlFor="title" className="text-meadow-500">
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={node.data.title || ""}
+                onChange={(e) => updateNodeData("title", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="body" className="text-meadow-500">
+                Body
+              </Label>
+              <Textarea
+                id="body"
+                value={node.data.body || ""}
+                onChange={(e) => updateNodeData("body", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+                rows={3}
+              />
+            </div>
+          </>
+        );
+      case "abTestNode":
+        return (
+          <>
+            <div>
+              <Label htmlFor="testName" className="text-meadow-500">
+                Test Name
+              </Label>
+              <Input
+                id="testName"
+                value={node.data.testName || ""}
+                onChange={(e) => updateNodeData("testName", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="variantA" className="text-meadow-500">
+                Variant A
+              </Label>
+              <Input
+                id="variantA"
+                value={node.data.variantA || ""}
+                onChange={(e) => updateNodeData("variantA", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="variantB" className="text-meadow-500">
+                Variant B
+              </Label>
+              <Input
+                id="variantB"
+                value={node.data.variantB || ""}
+                onChange={(e) => updateNodeData("variantB", e.target.value)}
+                className="bg-forest-600 text-white border-meadow-500/50"
+              />
+            </div>
+          </>
+        );
+      case "triggerNode":
+        return <TriggerNodeForm node={node} updateNodeData={updateNodeData} />;
+      // Add cases for other node types as needed
+      default:
+        return null;
+    }
+  };
+
   return (
     <Sheet open={true} onOpenChange={onClose}>
-      <SheetContent className="w-[400px] bg-forest-500 text-white border-l border-meadow-500/20">
+      <SheetContent className="w-full sm:max-w-[400px] bg-forest-500 text-white border-l border-meadow-500/20">
         <SheetHeader>
           <SheetTitle className="text-2xl font-bold text-meadow-500">
             Edit {node.type.replace("Node", "")}
@@ -324,47 +857,7 @@ const NodeProperties = ({ node, setNodes, onClose }) => {
                 className="bg-forest-600 text-white border-meadow-500/50"
               />
             </div>
-            {node.type === "emailNode" && (
-              <>
-                <div>
-                  <Label htmlFor="subject" className="text-meadow-500">
-                    Subject
-                  </Label>
-                  <Input
-                    id="subject"
-                    value={node.data.subject || ""}
-                    onChange={(e) => updateNodeData("subject", e.target.value)}
-                    className="bg-forest-600 text-white border-meadow-500/50"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="recipient" className="text-meadow-500">
-                    Recipient
-                  </Label>
-                  <Input
-                    id="recipient"
-                    value={node.data.recipient || ""}
-                    onChange={(e) =>
-                      updateNodeData("recipient", e.target.value)
-                    }
-                    className="bg-forest-600 text-white border-meadow-500/50"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="content" className="text-meadow-500">
-                    Email Content
-                  </Label>
-                  <Textarea
-                    id="content"
-                    value={node.data.content || ""}
-                    onChange={(e) => updateNodeData("content", e.target.value)}
-                    className="bg-forest-600 text-white border-meadow-500/50"
-                    rows={5}
-                  />
-                </div>
-              </>
-            )}
-            {/* Add more node-specific properties here */}
+            {renderNodeSpecificProperties()}
           </div>
         </ScrollArea>
       </SheetContent>
@@ -381,7 +874,7 @@ const FlowWithProvider = () => {
   const [journeyMode, setJourneyMode] = useState("Editing");
 
   const reactFlowInstance = useReactFlow();
-
+  const { toast } = useToast();
   const MIN_NODE_SPACING = 250; // Minimum vertical spacing between nodes
 
   const updateNodePositions = useCallback((newNodes) => {
@@ -461,6 +954,16 @@ const FlowWithProvider = () => {
       event.preventDefault();
 
       const type = event.dataTransfer.getData("application/reactflow");
+
+      if (type === "abTestNode") {
+        toast({
+          variant: "destructive",
+          title: "Feature not available",
+          description: "A/B Test node is coming soon!",
+        });
+        return;
+      }
+
       const position = reactFlowInstance.project({
         x: event.clientX,
         y: event.clientY,
@@ -475,7 +978,7 @@ const FlowWithProvider = () => {
       setNodes((nds) => {
         const updatedNodes = updateNodePositions([...nds, newNode]);
         setEdges(updateEdges(updatedNodes));
-        return updatedNodes;
+        return updateNodePositions(updatedNodes);
       });
     },
     [reactFlowInstance, setNodes, setEdges, updateNodePositions, updateEdges]
@@ -492,42 +995,6 @@ const FlowWithProvider = () => {
   const onNodeClick = (event, node) => {
     setSelectedNode(node);
   };
-
-  const onAddNode = useCallback(
-    (edgeId) => {
-      const edge = edges.find((e) => e.id === edgeId);
-      if (!edge) return;
-
-      const newNode = {
-        id: `emailNode-${Date.now()}`,
-        type: "emailNode",
-        position: { x: 0, y: 0 },
-        data: { label: "New Email" },
-      };
-
-      setNodes((nds) => {
-        const updatedNodes = [...nds, newNode];
-        return updateNodePositions(updatedNodes);
-      });
-
-      setEdges((eds) => {
-        const newEdgeToTarget = {
-          id: `${newNode.id}-${edge.target}`,
-          source: newNode.id,
-          target: edge.target,
-          type: "smoothstep",
-        };
-        const updatedEdge = {
-          ...edge,
-          target: newNode.id,
-        };
-        return eds
-          .map((e) => (e.id === edge.id ? updatedEdge : e))
-          .concat(newEdgeToTarget);
-      });
-    },
-    [edges, setNodes, setEdges, updateNodePositions]
-  );
 
   const { newJourneyDetails, setNewJourneyDetails } = useJourneyContext();
   const [journeyDetails, setJourneyDetails] = useState(newJourneyDetails);
@@ -612,7 +1079,6 @@ const FlowWithProvider = () => {
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         >
           <Controls />
-          {/* <MiniMap style={{ backgroundColor: "hsl(188, 69%, 14%)" }} /> */}
           <Background color="#e2e8f0" gap={20} />
           <Sidebar onDragStart={onDragStart} />
         </ReactFlow>
