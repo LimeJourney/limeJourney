@@ -24,6 +24,7 @@ model User {
   role              UserRole  @default(MEMBER)
   currentOrganizationId String?
   currentOrganization Organization? @relation("CurrentOrganization", fields: [currentOrganizationId], references: [id])
+  journeyEvents    JourneyEvent[]
 }
 
 model Segment {
@@ -55,6 +56,7 @@ model Organization {
   apiKeys          ApiKey[] 
   segments Segment[]
   messagingProfiles MessagingProfile[]
+  journeys         Journey[]
 }
 
 model ApiKey {
@@ -166,4 +168,76 @@ enum SubscriptionStatus {
   INACTIVE
   PAST_DUE
   CANCELLED
+}
+
+model Journey {
+  id               String           @id @default(uuid())
+  name             String
+  organizationId   String
+  organization     Organization     @relation(fields: [organizationId], references: [id])
+  definition       Json
+  status           JourneyStatus    @default(DRAFT)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  journeyEvents    JourneyEvent[]
+  analytics        JourneyAnalytics?
+  runMultipleTimes Boolean          @default(false)
+
+  @@index([organizationId])
+}
+
+model JourneyEvent {
+  id               String           @id @default(uuid())
+  journeyId        String
+  journey          Journey          @relation(fields: [journeyId], references: [id])
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  nodeId           String
+  type             EventType
+  status           EventStatus
+  data             Json?
+  timestamp        DateTime         @default(now())
+
+  @@index([journeyId])
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model JourneyAnalytics {
+  id               String           @id @default(uuid())
+  journeyId        String           @unique
+  journey          Journey          @relation(fields: [journeyId], references: [id])
+  totalParticipants Int             @default(0)
+  completionCount  Int              @default(0)
+  averageCompletionTime Float?
+  stepConversionRates Json?
+  updatedAt        DateTime         @updatedAt
+
+  @@index([journeyId])
+}
+
+enum JourneyStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum EventType {
+  JOURNEY_STARTED
+  JOURNEY_COMPLETED
+  JOURNEY_EXITED
+  EMAIL_SENT
+  SMS_SENT
+  PUSH_NOTIFICATION_SENT
+  WAIT_STARTED
+  WAIT_COMPLETED
+  SPLIT_EVALUATED
+  ACTION_PERFORMED
+}
+
+enum EventStatus {
+  SUCCESS
+  FAILURE
+  PENDING
 }
