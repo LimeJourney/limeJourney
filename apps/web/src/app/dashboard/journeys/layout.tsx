@@ -1,20 +1,9 @@
-import React from "react";
+import { JourneyProvider } from "@/app/contexts/journeyContext";
 
-interface LayoutProps {
+export default function JourneysLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
-
-export default function Layout({ children }: LayoutProps) {
-  return (
-    <div
-      style={{
-        backgroundColor: "white",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {children}
-    </div>
-  );
+}) {
+  return <JourneyProvider>{children}</JourneyProvider>;
 }

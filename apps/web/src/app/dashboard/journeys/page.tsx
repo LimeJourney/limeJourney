@@ -73,37 +73,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
+import { Switch } from "@/components/ui/switch";
+import { useJourneyContext } from "@/app/contexts/journeyContext";
 
 // Mock data for journeys (updated with trigger type)
-const journeys = [
-  {
-    id: 1,
-    name: "Welcome Series",
-    status: "active",
-    trigger: { type: "event", name: "Sign Up" },
-    steps: 5,
-    audience: 10000,
-    completionRate: 75,
-  },
-  {
-    id: 2,
-    name: "Re-engagement Campaign",
-    status: "paused",
-    trigger: { type: "segment", name: "Inactive Users" },
-    steps: 3,
-    audience: 5000,
-    completionRate: 40,
-  },
-  {
-    id: 3,
-    name: "Product Launch",
-    status: "draft",
-    trigger: { type: "segment", name: "All Users" },
-    steps: 7,
-    audience: 50000,
-    completionRate: 0,
-  },
-];
 
 const JourneyManagement = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -111,7 +84,42 @@ const JourneyManagement = () => {
   const [selectedJourney, setSelectedJourney] = useState(null);
   const [isAnalyticsPanelOpen, setIsAnalyticsPanelOpen] = useState(false);
   const [newJourneyName, setNewJourneyName] = useState("");
+  const [newJourneyRepeatOption, setNewJourneyRepeatOption] = useState("once");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [journeyToDelete, setJourneyToDelete] = useState(null);
+  const [statusChangeDialogOpen, setStatusChangeDialogOpen] = useState(false);
+  const [journeyToChangeStatus, setJourneyToChangeStatus] = useState(null);
   const router = useRouter();
+  const { setNewJourneyDetails } = useJourneyContext();
+  const [journeys, setJourneys] = useState([
+    {
+      id: 1,
+      name: "Welcome Series",
+      status: "active",
+      trigger: { type: "event", name: "Sign Up" },
+      steps: 5,
+      audience: 10000,
+      completionRate: 75,
+    },
+    {
+      id: 2,
+      name: "Re-engagement Campaign",
+      status: "paused",
+      trigger: { type: "segment", name: "Inactive Users" },
+      steps: 3,
+      audience: 5000,
+      completionRate: 40,
+    },
+    {
+      id: 3,
+      name: "Product Launch",
+      status: "draft",
+      trigger: { type: "segment", name: "All Users" },
+      steps: 7,
+      audience: 50000,
+      completionRate: 0,
+    },
+  ]);
 
   const filteredJourneys = journeys.filter(
     (journey) =>
@@ -120,9 +128,11 @@ const JourneyManagement = () => {
   );
 
   const createJourney = () => {
-    router.push(
-      `/dashboard/journeys/builder?name=${encodeURIComponent(newJourneyName)}`
-    );
+    setNewJourneyDetails({
+      name: newJourneyName,
+      repeatOption: newJourneyRepeatOption,
+    });
+    router.push(`/dashboard/journeys/builder`);
   };
 
   const StatusBadge = ({ status }) => {
@@ -156,6 +166,38 @@ const JourneyManagement = () => {
         </span>
       </Badge>
     );
+  };
+
+  const handleDeleteClick = (journey) => {
+    setJourneyToDelete(journey);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setJourneys(
+      journeys.filter((journey) => journey.id !== journeyToDelete.id)
+    );
+    setDeleteDialogOpen(false);
+    setJourneyToDelete(null);
+  };
+
+  const handleStatusChangeConfirm = () => {
+    const newStatus =
+      journeyToChangeStatus.status === "active" ? "paused" : "active";
+    setJourneys(
+      journeys.map((journey) =>
+        journey.id === journeyToChangeStatus.id
+          ? { ...journey, status: newStatus }
+          : journey
+      )
+    );
+    setStatusChangeDialogOpen(false);
+    setJourneyToChangeStatus(null);
+  };
+
+  const handleStatusChangeClick = (journey) => {
+    setJourneyToChangeStatus(journey);
+    setStatusChangeDialogOpen(true);
   };
 
   const JourneyList = () => (
@@ -222,27 +264,23 @@ const JourneyManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => handleDeleteClick(journey)}
                     className="text-meadow-500 hover:text-white hover:bg-forest-400"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  {journey.status === "active" ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-meadow-500 hover:text-white hover:bg-forest-400"
-                    >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleStatusChangeClick(journey)}
+                    className="text-meadow-500 hover:text-white hover:bg-forest-400"
+                  >
+                    {journey.status === "active" ? (
                       <Pause className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-meadow-500 hover:text-white hover:bg-forest-400"
-                    >
+                    ) : (
                       <Play className="h-4 w-4" />
-                    </Button>
-                  )}
+                    )}
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -560,6 +598,7 @@ const JourneyManagement = () => {
               >
                 <BarChart2 className="mr-2 h-4 w-4" /> Analytics
               </Button>
+              {/* Create Journey Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600">
@@ -589,21 +628,29 @@ const JourneyManagement = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="trigger" className="text-meadow-500">
-                        Trigger Type
+                      <Label className="text-meadow-500">
+                        Journey Repeat Option
                       </Label>
-                      <Select>
-                        <SelectTrigger
-                          id="trigger"
-                          className="bg-forest-500 text-white border-meadow-500"
+                      <div className="flex items-center space-x-3 bg-forest-400 p-3 rounded-md">
+                        <Switch
+                          id="repeat-option"
+                          checked={newJourneyRepeatOption === "multiple"}
+                          onCheckedChange={(checked) =>
+                            setNewJourneyRepeatOption(
+                              checked ? "multiple" : "once"
+                            )
+                          }
+                          className="data-[state=checked]:bg-meadow-500 data-[state=unchecked]:bg-forest-200"
+                        />
+                        <Label
+                          htmlFor="repeat-option"
+                          className="text-white cursor-pointer select-none flex-grow"
                         >
-                          <SelectValue placeholder="Select a trigger type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-forest-600 text-white border-meadow-500">
-                          <SelectItem value="event">Event</SelectItem>
-                          <SelectItem value="segment">Segment</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          {newJourneyRepeatOption === "once"
+                            ? "Run once per customer"
+                            : "Can run multiple times per customer"}
+                        </Label>
+                      </div>
                     </div>
                   </div>
                   <DialogFooter>
@@ -683,6 +730,69 @@ const JourneyManagement = () => {
         {selectedJourney && <JourneyDetails journey={selectedJourney} />}
         <AnalyticsPanel />
 
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[425px] bg-forest-600 text-white border-meadow-500">
+            <DialogHeader>
+              <DialogTitle className="text-meadow-500">
+                Confirm Deletion
+              </DialogTitle>
+              <DialogDescription className="text-white">
+                Are you sure you want to delete the journey "
+                {journeyToDelete?.name}"?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                onClick={() => setDeleteDialogOpen(false)}
+                className="bg-forest-500 text-white hover:bg-forest-400"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteConfirm}
+                className="bg-red-500 text-white hover:bg-red-600"
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Status Change Confirmation Dialog */}
+        <Dialog
+          open={statusChangeDialogOpen}
+          onOpenChange={setStatusChangeDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px] bg-forest-600 text-white border-meadow-500">
+            <DialogHeader>
+              <DialogTitle className="text-meadow-500">
+                Confirm Status Change
+              </DialogTitle>
+              <DialogDescription className="text-white">
+                Are you sure you want to{" "}
+                {journeyToChangeStatus?.status === "active"
+                  ? "pause"
+                  : "activate"}{" "}
+                the journey "{journeyToChangeStatus?.name}"?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                onClick={() => setStatusChangeDialogOpen(false)}
+                className="bg-forest-500 text-white hover:bg-forest-400"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleStatusChangeConfirm}
+                className="bg-meadow-500 text-forest-500 hover:bg-meadow-600"
+              >
+                Confirm
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {filteredJourneys.length === 0 && (
           <Card className="p-6 text-center mt-6 bg-forest-600 border-meadow-500">
             <AlertTriangle className="h-12 w-12 text-meadow-500 mx-auto mb-4" />

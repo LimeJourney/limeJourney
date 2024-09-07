@@ -48,6 +48,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useJourneyContext } from "@/app/contexts/journeyContext";
 
 const NodeWrapper = ({ children, icon: Icon, label, type }) => {
   const bgColor =
@@ -528,15 +529,23 @@ const FlowWithProvider = () => {
     [edges, setNodes, setEdges, updateNodePositions]
   );
 
+  const { newJourneyDetails, setNewJourneyDetails } = useJourneyContext();
+  const [journeyDetails, setJourneyDetails] = useState(newJourneyDetails);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const name = searchParams.get("name");
-    if (name) {
-      setJourneyName(decodeURIComponent(name));
+    if (newJourneyDetails) {
+      setJourneyDetails(newJourneyDetails);
+      setNewJourneyDetails(null); // Clear from context after transferring to local state
+    } else if (!journeyDetails) {
+      // If there are no details in context or local state, redirect to management page
+      router.push("/dashboard/journeys");
     }
-  }, [searchParams]);
+  }, [newJourneyDetails, setNewJourneyDetails, journeyDetails, router]);
+
+  if (!journeyDetails) {
+    return <div>Loading...</div>; // Show while redirecting
+  }
 
   const onDragStart = (event, nodeType) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
@@ -561,8 +570,10 @@ const FlowWithProvider = () => {
         <h1 className="text-2xl font-bold text-meadow-500">Journey Builder</h1>
         <div className="flex items-center space-x-4">
           <Input
-            value={journeyName}
-            onChange={(e) => setJourneyName(e.target.value)}
+            value={journeyDetails.name}
+            onChange={(e) =>
+              setJourneyDetails({ ...journeyDetails, name: e.target.value })
+            }
             className="bg-forest-600 text-white border-meadow-500/50"
           />
           <span className="text-meadow-500 font-semibold">{journeyMode}</span>
