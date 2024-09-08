@@ -13,6 +13,7 @@ export interface JourneyEdge {
   id: string;
   source: string;
   target: string;
+  type: string;
 }
 
 export interface JourneyDefinition {
@@ -60,6 +61,13 @@ export interface JourneyActivity {
   status: string;
   timestamp: Date;
   data?: any;
+}
+
+export interface JourneyWithMetrics extends Journey {
+  metrics: {
+    totalUsers: number;
+    completionRate: number;
+  };
 }
 
 export class JourneyManagementService {
@@ -144,12 +152,23 @@ export class JourneyManagementService {
   }
 
   async updateJourney(journeyData: UpdateJourneyDTO): Promise<Journey> {
+    const updateData: { name?: string; status?: Journey["status"] } = {};
+
+    if (journeyData.name && journeyData.name.trim() !== "") {
+      updateData.name = journeyData.name;
+    }
+
+    if (journeyData.status && journeyData.status.trim() !== "") {
+      updateData.status = journeyData.status as Journey["status"];
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new Error("No valid update data provided");
+    }
+
     const updatedJourney = await prisma.journey.update({
       where: { id: journeyData.id, organizationId: journeyData.organizationId },
-      data: {
-        name: journeyData.name,
-        status: journeyData.status,
-      },
+      data: updateData,
     });
 
     return updatedJourney;
@@ -170,16 +189,44 @@ export class JourneyManagementService {
   async listJourneys(
     organizationId: string,
     status?: string
-  ): Promise<Journey[]> {
+  ): Promise<JourneyWithMetrics[]> {
     const where: any = { organizationId };
     if (status) {
       where.status = status;
     }
 
-    return prisma.journey.findMany({
+    const journeys = await prisma.journey.findMany({
       where,
       orderBy: { createdAt: "desc" },
     });
+
+    const journeysWithMetrics = await Promise.all(
+      journeys.map(async (journey) => {
+        const events = await prisma.journeyEvent.findMany({
+          where: { journeyId: journey.id },
+        });
+
+        const totalUsers = new Set(events.map((e) => e.userId)).size;
+        const completedUsers = new Set(
+          events
+            .filter((e) => e.type === "JOURNEY_COMPLETED")
+            .map((e) => e.userId)
+        ).size;
+
+        const completionRate =
+          totalUsers > 0 ? (completedUsers / totalUsers) * 100 : 0;
+
+        return {
+          ...journey,
+          metrics: {
+            totalUsers,
+            completionRate,
+          },
+        };
+      })
+    );
+
+    return journeysWithMetrics;
   }
 
   async getRecentJourneyActivity(

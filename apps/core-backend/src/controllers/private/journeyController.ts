@@ -20,6 +20,7 @@ import {
   UpdateJourneyDTO,
   JourneyMetrics,
   JourneyActivity,
+  JourneyWithMetrics,
 } from "../../services/journeyService";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
@@ -40,7 +41,7 @@ export class JourneyManagementController {
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   @SuccessResponse("201", "Created")
   public async createJourney(
-    @Body() body: CreateJourneyDTO,
+    @Body() body: Omit<CreateJourneyDTO, "organizationId">,
     @Request() request: AuthenticatedRequest,
     @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
@@ -78,7 +79,7 @@ export class JourneyManagementController {
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async updateJourney(
     @Path() journeyId: string,
-    @Body() body: UpdateJourneyDTO,
+    @Body() body: Omit<UpdateJourneyDTO, "organizationId" | "id">,
     @Request() request: AuthenticatedRequest,
     @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
@@ -115,13 +116,13 @@ export class JourneyManagementController {
   }
 
   @Get()
-  @Response<ApiResponse<any[]>>(200, "Retrieved journeys")
+  @Response<ApiResponse<JourneyWithMetrics[]>>(200, "Retrieved journeys")
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async listJourneys(
     @Request() request: AuthenticatedRequest,
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
     @Query() status?: string
-  ): Promise<ApiResponse<any[]> | void> {
+  ): Promise<ApiResponse<JourneyWithMetrics[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
       const organizationId = user.currentOrganizationId as string;

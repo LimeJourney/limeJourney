@@ -67,12 +67,27 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useJourneyContext } from "@/app/contexts/journeyContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { eventsService } from "@/services/eventsService";
+import segmentationService, { Segment } from "@/services/segmentationService";
+import {
+  CreateJourneyDTO,
+  journeyManagementService,
+} from "@/services/journeyService";
 const InfoTooltip = ({ content }) => (
   <TooltipProvider>
     <Tooltip>
@@ -93,6 +108,33 @@ const TriggerNodeForm = ({ node, updateNodeData }) => {
   const [segmentAction, setSegmentAction] = useState(
     node.data.segmentAction || "joins"
   );
+  const [events, setEvents] = useState<string[]>([]);
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+
+  const { toast } = useToast();
+  useEffect(() => {
+    // Fetch events and segments when the component mounts
+    const fetchData = async () => {
+      try {
+        const [eventNames, segmentList] = await Promise.all([
+          eventsService.getUniqueEventNames(),
+          segmentationService.listSegments(),
+        ]);
+        setEvents(eventNames);
+        setSegments(segmentList);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch events and segments.",
+        });
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     updateNodeData("triggerType", triggerType);
@@ -162,24 +204,15 @@ const TriggerNodeForm = ({ node, updateNodeData }) => {
                     <SelectValue placeholder="Choose an event" />
                   </SelectTrigger>
                   <SelectContent className="bg-forest-900 border-forest-700">
-                    <SelectItem
-                      value="pageView"
-                      className="text-white hover:bg-forest-800"
-                    >
-                      Page View
-                    </SelectItem>
-                    <SelectItem
-                      value="purchase"
-                      className="text-white hover:bg-forest-800"
-                    >
-                      Purchase
-                    </SelectItem>
-                    <SelectItem
-                      value="signup"
-                      className="text-white hover:bg-forest-800"
-                    >
-                      Sign Up
-                    </SelectItem>
+                    {events.map((event) => (
+                      <SelectItem
+                        key={event}
+                        value={event}
+                        className="text-white hover:bg-forest-800"
+                      >
+                        {event}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -226,24 +259,15 @@ const TriggerNodeForm = ({ node, updateNodeData }) => {
                     <SelectValue placeholder="Choose a segment" />
                   </SelectTrigger>
                   <SelectContent className="bg-forest-900 border-forest-700">
-                    <SelectItem
-                      value="newUsers"
-                      className="text-white hover:bg-forest-800"
-                    >
-                      New Users
-                    </SelectItem>
-                    <SelectItem
-                      value="activeUsers"
-                      className="text-white hover:bg-forest-800"
-                    >
-                      Active Users
-                    </SelectItem>
-                    <SelectItem
-                      value="inactiveUsers"
-                      className="text-white hover:bg-forest-800"
-                    >
-                      Inactive Users
-                    </SelectItem>
+                    {segments.map((segment) => (
+                      <SelectItem
+                        key={segment.id}
+                        value={segment.id}
+                        className="text-white hover:bg-forest-800"
+                      >
+                        {segment.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -877,6 +901,118 @@ const FlowWithProvider = () => {
   const { toast } = useToast();
   const MIN_NODE_SPACING = 250; // Minimum vertical spacing between nodes
 
+  const [events, setEvents] = useState<string[]>([]);
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+  const { newJourneyDetails, setNewJourneyDetails } = useJourneyContext();
+
+  const [journeyDetails, setJourneyDetails] = useState(newJourneyDetails);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (newJourneyDetails) {
+      setJourneyDetails(newJourneyDetails);
+      setNewJourneyDetails(null); // Clear from context after transferring to local state
+    } else if (!journeyDetails) {
+      // If there are no details in context or local state, redirect to management page
+      router.push("/dashboard/journeys");
+    }
+  }, [newJourneyDetails, setNewJourneyDetails, journeyDetails, router]);
+
+  // useEffect(() => {
+  //   // Fetch events and segments when the component mounts
+  //   const fetchData = async () => {
+  //     try {
+  //       const [eventNames, segmentList] = await Promise.all([
+  //         eventsService.getUniqueEventNames(),
+  //         segmentationService.listSegments(),
+  //       ]);
+  //       setEvents(eventNames);
+  //       setSegments(segmentList);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //       toast({
+  //         variant: "destructive",
+  //         title: "Error",
+  //         description: "Failed to fetch events and segments.",
+  //       });
+  //     }
+  //   };
+  //   fetchData();
+  // }, []);
+
+  if (!journeyDetails) {
+    return <div>Loading...</div>; // Show while redirecting
+  }
+
+  const validateJourney = () => {
+    // Check if there's at least one node besides the trigger and exit
+    if (nodes.length <= 2) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Journey",
+        description: "Your journey must have at least one action node.",
+      });
+      return false;
+    }
+
+    // Check if all nodes are connected
+    const connectedNodeIds = new Set();
+    edges.forEach((edge) => {
+      connectedNodeIds.add(edge.source);
+      connectedNodeIds.add(edge.target);
+    });
+    if (connectedNodeIds.size !== nodes.length) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Journey",
+        description: "All nodes must be connected in the journey.",
+      });
+      return false;
+    }
+
+    // Add more validation rules as needed
+
+    return true;
+  };
+
+  const saveJourney = async () => {
+    if (!validateJourney()) return;
+
+    setIsSaving(true);
+    try {
+      const journeyData: CreateJourneyDTO = {
+        name: journeyName,
+        definition: {
+          nodes: nodes.map(({ id, type, data }) => ({
+            id,
+            type: type as string,
+            data,
+          })),
+          edges: edges,
+        },
+        runMultipleTimes: true, // You might want to make this configurable
+      };
+
+      await journeyManagementService.createJourney(journeyData);
+      toast({
+        title: "Success",
+        description: "Journey saved successfully.",
+      });
+      router.push("/dashboard/journeys");
+    } catch (error) {
+      console.error("Error saving journey:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save the journey. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const updateNodePositions = useCallback((newNodes) => {
     const sortedNodes = newNodes.sort((a, b) => {
       if (a.type === "triggerNode") return -1;
@@ -996,24 +1132,6 @@ const FlowWithProvider = () => {
     setSelectedNode(node);
   };
 
-  const { newJourneyDetails, setNewJourneyDetails } = useJourneyContext();
-  const [journeyDetails, setJourneyDetails] = useState(newJourneyDetails);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (newJourneyDetails) {
-      setJourneyDetails(newJourneyDetails);
-      setNewJourneyDetails(null); // Clear from context after transferring to local state
-    } else if (!journeyDetails) {
-      // If there are no details in context or local state, redirect to management page
-      router.push("/dashboard/journeys");
-    }
-  }, [newJourneyDetails, setNewJourneyDetails, journeyDetails, router]);
-
-  if (!journeyDetails) {
-    return <div>Loading...</div>; // Show while redirecting
-  }
-
   const onDragStart = (event, nodeType) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.effectAllowed = "move";
@@ -1025,11 +1143,11 @@ const FlowWithProvider = () => {
     setTimeout(() => setIsSimulating(false), 3000); // Simulating for 3 seconds
   };
 
-  const saveJourney = () => {
-    // Implement save logic here
-    console.log("Saving journey:", { nodes, edges });
-    router.push("/dashboard/journeys");
-  };
+  // const saveJourney = () => {
+  //   // Implement save logic here
+  //   console.log("Saving journey:", { nodes, edges });
+  //   router.push("/dashboard/journeys");
+  // };
 
   return (
     <div className="h-screen bg-white flex flex-col">
@@ -1037,27 +1155,20 @@ const FlowWithProvider = () => {
         <h1 className="text-2xl font-bold text-meadow-500">Journey Builder</h1>
         <div className="flex items-center space-x-4">
           <Input
-            value={journeyDetails.name}
-            onChange={(e) =>
-              setJourneyDetails({ ...journeyDetails, name: e.target.value })
-            }
+            value={journeyName}
+            onChange={(e) => setJourneyName(e.target.value)}
             className="bg-forest-600 text-white border-meadow-500/50"
           />
           <span className="text-meadow-500 font-semibold">{journeyMode}</span>
         </div>
         <div className="space-x-4">
           <Button
-            onClick={simulateJourney}
-            disabled={isSimulating}
+            onClick={() => setShowSaveConfirmation(true)}
             className="bg-meadow-500 text-forest-800 hover:bg-meadow-400"
+            disabled={isSaving}
           >
-            {isSimulating ? "Simulating..." : "Simulate Journey"}
-          </Button>
-          <Button
-            onClick={saveJourney}
-            className="bg-meadow-500 text-forest-800 hover:bg-meadow-400"
-          >
-            <Save className="mr-2 h-4 w-4" /> Save Journey
+            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? "Saving..." : "Save Journey"}
           </Button>
         </div>
       </div>
@@ -1090,6 +1201,24 @@ const FlowWithProvider = () => {
           />
         )}
       </div>
+      <AlertDialog
+        open={showSaveConfirmation}
+        onOpenChange={setShowSaveConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Journey</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to save this journey? Once saved, it will be
+              created and live in your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={saveJourney}>Save</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

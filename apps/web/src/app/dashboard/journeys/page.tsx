@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -75,8 +75,15 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 import { useJourneyContext } from "@/app/contexts/journeyContext";
-
-// Mock data for journeys (updated with trigger type)
+import {
+  journeyManagementService,
+  JourneyMetrics,
+  JourneyActivity,
+  Journey,
+  JourneyStatus,
+  TriggerInfo,
+  JourneyWithMetrics,
+} from "@/services/journeyService";
 
 const JourneyManagement = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -86,118 +93,178 @@ const JourneyManagement = () => {
   const [newJourneyName, setNewJourneyName] = useState("");
   const [newJourneyRepeatOption, setNewJourneyRepeatOption] = useState("once");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [journeyToDelete, setJourneyToDelete] = useState(null);
+  const [journeyToDelete, setJourneyToDelete] =
+    useState<JourneyWithMetrics | null>(null);
   const [statusChangeDialogOpen, setStatusChangeDialogOpen] = useState(false);
-  const [journeyToChangeStatus, setJourneyToChangeStatus] = useState(null);
+  const [journeyToChangeStatus, setJourneyToChangeStatus] =
+    useState<JourneyWithMetrics | null>(null);
+  const [journeys, setJourneys] = useState<JourneyWithMetrics[] | []>([]);
+  const [journeyMetrics, setJourneyMetrics] = useState<JourneyMetrics | null>(
+    null
+  );
+  const [recentActivities, setRecentActivities] = useState<JourneyActivity[]>(
+    []
+  );
   const router = useRouter();
   const { setNewJourneyDetails } = useJourneyContext();
-  const [journeys, setJourneys] = useState([
-    {
-      id: 1,
-      name: "Welcome Series",
-      status: "active",
-      trigger: { type: "event", name: "Sign Up" },
-      steps: 5,
-      audience: 10000,
-      completionRate: 75,
-    },
-    {
-      id: 2,
-      name: "Re-engagement Campaign",
-      status: "paused",
-      trigger: { type: "segment", name: "Inactive Users" },
-      steps: 3,
-      audience: 5000,
-      completionRate: 40,
-    },
-    {
-      id: 3,
-      name: "Product Launch",
-      status: "draft",
-      trigger: { type: "segment", name: "All Users" },
-      steps: 7,
-      audience: 50000,
-      completionRate: 0,
-    },
-  ]);
+
+  useEffect(() => {
+    fetchJourneys();
+  }, [activeTab]);
+
+  const fetchJourneys = async () => {
+    try {
+      const status =
+        activeTab !== "all"
+          ? (activeTab.toUpperCase() as JourneyStatus)
+          : undefined;
+      const fetchedJourneys =
+        await journeyManagementService.listJourneys(status);
+      setJourneys(fetchedJourneys);
+    } catch (error) {
+      console.error("Error fetching journeys:", error);
+    }
+  };
+
+  const extractTriggerInfo = (journey: Journey): TriggerInfo => {
+    const triggerNode = journey.definition.nodes.find(
+      (node) => node.type === "triggerNode"
+    );
+    if (triggerNode && triggerNode.data.triggerType) {
+      return {
+        type: triggerNode.data.triggerType as "event" | "segment" | null,
+        name:
+          triggerNode.data.triggerType === "segment"
+            ? (triggerNode.data.segmentAction as string) || "Segment"
+            : "Event Triggered",
+      };
+    }
+    return { type: null, name: null };
+  };
+
+  const fetchJourneyMetrics = async (journeyId: string) => {
+    try {
+      const metrics =
+        await journeyManagementService.getJourneyMetrics(journeyId);
+      setJourneyMetrics(metrics);
+    } catch (error) {
+      console.error("Error fetching journey metrics:", error);
+    }
+  };
+
+  const fetchRecentActivities = async (journeyId: string) => {
+    try {
+      const activities =
+        await journeyManagementService.getRecentJourneyActivity(journeyId, 5);
+      setRecentActivities(activities);
+    } catch (error) {
+      console.error("Error fetching recent activities:", error);
+    }
+  };
+
+  const createJourney = async () => {
+    try {
+      // const newJourney = await journeyManagementService.createJourney({
+      //   name: newJourneyName,
+      //   runMultipleTimes: newJourneyRepeatOption === "multiple",
+      //   definition: { nodes: [], edges: [] }, // Initialize with empty definition
+      // });
+      setNewJourneyDetails({
+        name: newJourneyName,
+        repeatOption: newJourneyRepeatOption,
+      });
+      router.push(`/dashboard/journeys/builder`);
+    } catch (error) {
+      console.error("Error creating journey:", error);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (journeyToDelete) {
+      try {
+        await journeyManagementService.updateJourney(journeyToDelete.id, {
+          status: "ARCHIVED",
+        });
+        setJourneys(
+          journeys.filter((journey) => journey.id !== journeyToDelete.id)
+        );
+        setDeleteDialogOpen(false);
+        setJourneyToDelete(null);
+      } catch (error) {
+        console.error("Error deleting journey:", error);
+      }
+    }
+  };
+
+  const handleStatusChangeConfirm = async () => {
+    if (journeyToChangeStatus) {
+      const newStatus: JourneyStatus =
+        journeyToChangeStatus.status === JourneyStatus.ACTIVE
+          ? JourneyStatus.PAUSED
+          : ("ACTIVE" as JourneyStatus);
+      try {
+        await journeyManagementService.updateJourney(journeyToChangeStatus.id, {
+          status: newStatus,
+        });
+        setJourneys(
+          journeys.map((journey) =>
+            journey.id === journeyToChangeStatus.id
+              ? { ...journey, status: newStatus }
+              : journey
+          )
+        );
+        setStatusChangeDialogOpen(false);
+        setJourneyToChangeStatus(null);
+      } catch (error) {
+        console.error("Error changing journey status:", error);
+      }
+    }
+  };
 
   const filteredJourneys = journeys.filter(
     (journey) =>
       journey.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (activeTab === "all" || journey.status === activeTab)
+      (activeTab === "all" || journey.status.toLowerCase() === activeTab)
   );
 
-  const createJourney = () => {
-    setNewJourneyDetails({
-      name: newJourneyName,
-      repeatOption: newJourneyRepeatOption,
-    });
-    router.push(`/dashboard/journeys/builder`);
-  };
+  console.log("Filtered Journeys", filteredJourneys);
 
   const StatusBadge = ({ status }) => {
     const statusConfig = {
-      active: { color: "bg-green-500", icon: CheckCircle },
-      paused: { color: "bg-yellow-500", icon: Pause },
-      draft: { color: "bg-blue-500", icon: Edit2 },
+      ACTIVE: { color: "bg-green-500", icon: CheckCircle },
+      PAUSED: { color: "bg-yellow-500", icon: Pause },
+      DRAFT: { color: "bg-blue-500", icon: Edit2 },
     };
-    const { color, icon: Icon } = statusConfig[status];
+    const { color, icon: Icon } = statusConfig[status] || {};
 
     return (
       <Badge variant="outline" className={`${color} text-forest-500`}>
         <Icon size={12} className="mr-1" />
-        <span className="capitalize">{status}</span>
+        <span className="capitalize">{status.toLowerCase()}</span>
       </Badge>
     );
   };
 
-  const TriggerBadge = ({ trigger }) => {
-    const triggerConfig = {
+  const TriggerBadge: React.FC<{ trigger: TriggerInfo }> = ({ trigger }) => {
+    if (!trigger.type) return null;
+
+    const triggerConfig: Record<
+      string,
+      { icon: React.ElementType; label: string }
+    > = {
       event: { icon: Zap, label: "Event" },
       segment: { icon: UserCircle, label: "Segment" },
     };
-    const { icon: Icon, label } = triggerConfig[trigger.type];
+    const { icon: Icon, label } = triggerConfig[trigger.type] || {};
 
     return (
       <Badge variant="outline" className="bg-meadow-500 text-forest-500">
-        <Icon size={12} className="mr-1" />
+        {Icon && <Icon size={12} className="mr-1" />}
         <span>
           {label}: {trigger.name}
         </span>
       </Badge>
     );
-  };
-
-  const handleDeleteClick = (journey) => {
-    setJourneyToDelete(journey);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    setJourneys(
-      journeys.filter((journey) => journey.id !== journeyToDelete.id)
-    );
-    setDeleteDialogOpen(false);
-    setJourneyToDelete(null);
-  };
-
-  const handleStatusChangeConfirm = () => {
-    const newStatus =
-      journeyToChangeStatus.status === "active" ? "paused" : "active";
-    setJourneys(
-      journeys.map((journey) =>
-        journey.id === journeyToChangeStatus.id
-          ? { ...journey, status: newStatus }
-          : journey
-      )
-    );
-    setStatusChangeDialogOpen(false);
-    setJourneyToChangeStatus(null);
-  };
-
-  const handleStatusChangeClick = (journey) => {
-    setJourneyToChangeStatus(journey);
-    setStatusChangeDialogOpen(true);
   };
 
   const JourneyList = () => (
@@ -209,7 +276,7 @@ const JourneyManagement = () => {
             <TableHead className="text-meadow-500">Status</TableHead>
             <TableHead className="text-meadow-500">Trigger</TableHead>
             <TableHead className="text-meadow-500">Steps</TableHead>
-            <TableHead className="text-meadow-500">Audience</TableHead>
+            {/* <TableHead className="text-meadow-500">Audience</TableHead> */}
             <TableHead className="text-meadow-500">Completion Rate</TableHead>
             <TableHead className="text-meadow-500">Actions</TableHead>
           </TableRow>
@@ -227,21 +294,25 @@ const JourneyManagement = () => {
                 <StatusBadge status={journey.status} />
               </TableCell>
               <TableCell>
-                <TriggerBadge trigger={journey.trigger} />
+                <TriggerBadge trigger={extractTriggerInfo(journey)} />
               </TableCell>
-              <TableCell className="text-white">{journey.steps}</TableCell>
               <TableCell className="text-white">
-                {journey.audience.toLocaleString()}
+                {journey.definition.nodes.length}
+              </TableCell>
+              <TableCell className="text-white">
+                {journey.metrics?.totalUsers.toLocaleString()}
               </TableCell>
               <TableCell>
                 <div className="w-full bg-forest-400 rounded-full h-2.5">
                   <div
                     className="bg-meadow-500 h-2.5 rounded-full"
-                    style={{ width: `${journey.completionRate}%` }}
+                    style={{
+                      width: `${journey.metrics?.completionRate || 0}%`,
+                    }}
                   ></div>
                 </div>
                 <span className="text-sm text-meadow-500 mt-1">
-                  {journey.completionRate}%
+                  {journey.metrics?.completionRate || 0}%
                 </span>
               </TableCell>
               <TableCell>
@@ -249,7 +320,11 @@ const JourneyManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedJourney(journey)}
+                    onClick={() => {
+                      setSelectedJourney(journey);
+                      fetchJourneyMetrics(journey.id);
+                      fetchRecentActivities(journey.id);
+                    }}
                     className="text-meadow-500 hover:text-white hover:bg-forest-400"
                   >
                     <Eye className="h-4 w-4" />
@@ -257,6 +332,9 @@ const JourneyManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() =>
+                      router.push(`/dashboard/journeys/builder/${journey.id}`)
+                    }
                     className="text-meadow-500 hover:text-white hover:bg-forest-400"
                   >
                     <Edit2 className="h-4 w-4" />
@@ -264,7 +342,10 @@ const JourneyManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteClick(journey)}
+                    onClick={() => {
+                      setJourneyToDelete(journey);
+                      setDeleteDialogOpen(true);
+                    }}
                     className="text-meadow-500 hover:text-white hover:bg-forest-400"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -272,10 +353,13 @@ const JourneyManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleStatusChangeClick(journey)}
+                    onClick={() => {
+                      setJourneyToChangeStatus(journey);
+                      setStatusChangeDialogOpen(true);
+                    }}
                     className="text-meadow-500 hover:text-white hover:bg-forest-400"
                   >
-                    {journey.status === "active" ? (
+                    {journey.status === "ACTIVE" ? (
                       <Pause className="h-4 w-4" />
                     ) : (
                       <Play className="h-4 w-4" />
@@ -327,7 +411,7 @@ const JourneyManagement = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TriggerBadge trigger={journey.trigger} />
+                  <TriggerBadge trigger={extractTriggerInfo(journey)} />
                 </CardContent>
               </Card>
               <Card className="bg-forest-600 border-meadow-500/20">
@@ -338,7 +422,7 @@ const JourneyManagement = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-lg font-semibold text-white">
-                    {journey.steps}
+                    {journey.definition.nodes.length}
                   </p>
                 </CardContent>
               </Card>
@@ -355,20 +439,22 @@ const JourneyManagement = () => {
                   <div>
                     <p className="text-sm text-meadow-500">Audience Size</p>
                     <p className="text-2xl font-bold text-white">
-                      {journey.audience.toLocaleString()}
+                      {journeyMetrics?.totalUsers.toLocaleString()}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-meadow-500">Completion Rate</p>
                     <p className="text-2xl font-bold text-white">
-                      {journey.completionRate}%
+                      {journeyMetrics?.completionRate}%
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-meadow-500">
                       Avg. Time to Complete
                     </p>
-                    <p className="text-2xl font-bold text-white">3.5 days</p>
+                    <p className="text-2xl font-bold text-white">
+                      {journeyMetrics?.averageCompletionTime.toFixed(1)} days
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -382,21 +468,23 @@ const JourneyManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[...Array(journey.steps)].map((_, index) => (
-                    <div key={index} className="flex items-center space-x-4">
+                  {journey.definition.nodes.map((node, index) => (
+                    <div key={node.id} className="flex items-center space-x-4">
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-meadow-500 flex items-center justify-center text-forest-500 font-bold">
                         {index + 1}
                       </div>
                       <div className="flex-grow">
                         <p className="font-medium text-white">
-                          Step {index + 1}
+                          {node.data.name || `Step ${index + 1}`}
                         </p>
-                        <p className="text-sm text-meadow-500">
-                          Description of step {index + 1}
-                        </p>
+                        <p className="text-sm text-meadow-500">{node.type}</p>
                       </div>
                       <div className="text-sm text-meadow-500">
-                        Conversion: 85%
+                        Conversion:{" "}
+                        {(journeyMetrics?.stepMetrics[node.id]?.completed /
+                          journeyMetrics?.stepMetrics[node.id]?.total) *
+                          100 || 0}
+                        %
                       </div>
                     </div>
                   ))}
@@ -412,19 +500,22 @@ const JourneyManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[...Array(5)].map((_, index) => (
-                    <div key={index} className="flex items-center space-x-4">
+                  {recentActivities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center space-x-4"
+                    >
                       <div className="flex-shrink-0 w-2 h-2 rounded-full bg-meadow-500"></div>
                       <div>
                         <p className="font-medium text-white">
-                          Activity {index + 1}
+                          {activity.type}: {activity.nodeName}
                         </p>
                         <p className="text-sm text-meadow-500">
-                          Description of activity {index + 1}
+                          User ID: {activity.userId}
                         </p>
                       </div>
                       <div className="ml-auto text-sm text-meadow-500">
-                        2h ago
+                        {new Date(activity.timestamp).toLocaleString()}
                       </div>
                     </div>
                   ))}
@@ -465,32 +556,54 @@ const JourneyManagement = () => {
                     <p className="text-sm text-meadow-500">
                       Total Active Journeys
                     </p>
-                    <p className="text-3xl font-bold text-white">12</p>
+                    <p className="text-3xl font-bold text-white">
+                      {journeys.filter((j) => j.status === "ACTIVE").length}
+                    </p>
                   </div>
                   <div className="bg-forest-400 p-4 rounded-lg">
                     <p className="text-sm text-meadow-500">
                       Avg. Completion Rate
                     </p>
-                    <p className="text-3xl font-bold text-white">68%</p>
+                    <p className="text-3xl font-bold text-white">
+                      {(
+                        journeys.reduce(
+                          (sum, j) => sum + (j.metrics?.completionRate || 0),
+                          0
+                        ) / journeys.length
+                      ).toFixed(1)}
+                      %
+                    </p>
                   </div>
                   <div className="bg-forest-400 p-4 rounded-lg">
                     <p className="text-sm text-meadow-500">
                       Total Users in Journeys
                     </p>
-                    <p className="text-3xl font-bold text-white">145,678</p>
+                    <p className="text-3xl font-bold text-white">
+                      {journeys
+                        .reduce(
+                          (sum, j) => sum + (j.metrics?.totalUsers || 0),
+                          0
+                        )
+                        .toLocaleString()}
+                    </p>
                   </div>
                   <div className="bg-forest-400 p-4 rounded-lg">
                     <p className="text-sm text-meadow-500">
                       Journeys Created (Last 30 days)
                     </p>
-                    <p className="text-3xl font-bold text-white">5</p>
+                    <p className="text-3xl font-bold text-white">
+                      {
+                        journeys.filter(
+                          (j) =>
+                            new Date(j.createdAt) >
+                            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                        ).length
+                      }
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            </div> */}
 
             <Card className="bg-forest-600 border-meadow-500/20">
               <CardHeader>
@@ -500,25 +613,34 @@ const JourneyManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {journeys.slice(0, 3).map((journey) => (
-                    <div
-                      key={journey.id}
-                      className="flex items-center justify-between bg-forest-400 p-4 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium text-white">{journey.name}</p>
-                        <TriggerBadge trigger={journey.trigger} />
+                  {journeys
+                    .sort(
+                      (a, b) =>
+                        (b.metrics?.completionRate || 0) -
+                        (a.metrics?.completionRate || 0)
+                    )
+                    .slice(0, 3)
+                    .map((journey) => (
+                      <div
+                        key={journey.id}
+                        className="flex items-center justify-between bg-forest-400 p-4 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-white">
+                            {journey.name}
+                          </p>
+                          <TriggerBadge trigger={extractTriggerInfo(journey)} />
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-white">
+                            {journey.metrics?.completionRate || 0}%
+                          </p>
+                          <p className="text-sm text-meadow-500">
+                            Completion Rate
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-white">
-                          {journey.completionRate}%
-                        </p>
-                        <p className="text-sm text-meadow-500">
-                          Completion Rate
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -531,46 +653,22 @@ const JourneyManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    {
-                      action: "Journey Created",
-                      name: "Product Upsell",
-                      time: "2h ago",
-                    },
-                    {
-                      action: "Journey Paused",
-                      name: "Welcome Series",
-                      time: "5h ago",
-                    },
-                    {
-                      action: "Journey Completed",
-                      name: "Abandoned Cart",
-                      time: "1d ago",
-                    },
-                    {
-                      action: "Journey Updated",
-                      name: "Loyalty Program",
-                      time: "2d ago",
-                    },
-                    {
-                      action: "Journey Reactivated",
-                      name: "Win-back Campaign",
-                      time: "3d ago",
-                    },
-                  ].map((activity, index) => (
+                  {recentActivities.map((activity) => (
                     <div
-                      key={index}
+                      key={activity.id}
                       className="flex items-center space-x-4 bg-forest-400 p-3 rounded-lg"
                     >
                       <div className="flex-shrink-0 w-2 h-2 rounded-full bg-meadow-500"></div>
                       <div className="flex-grow">
                         <p className="text-white">
-                          {activity.action}:{" "}
-                          <span className="font-medium">{activity.name}</span>
+                          {activity.type}:{" "}
+                          <span className="font-medium">
+                            {activity.nodeName}
+                          </span>
                         </p>
                       </div>
                       <div className="text-sm text-meadow-500">
-                        {activity.time}
+                        {new Date(activity.timestamp).toLocaleString()}
                       </div>
                     </div>
                   ))}
@@ -598,7 +696,6 @@ const JourneyManagement = () => {
               >
                 <BarChart2 className="mr-2 h-4 w-4" /> Analytics
               </Button>
-              {/* Create Journey Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600">
@@ -739,7 +836,7 @@ const JourneyManagement = () => {
               </DialogTitle>
               <DialogDescription className="text-white">
                 Are you sure you want to delete the journey "
-                {journeyToDelete?.name}"?
+                {journeyToDelete?.name}"? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -771,7 +868,7 @@ const JourneyManagement = () => {
               </DialogTitle>
               <DialogDescription className="text-white">
                 Are you sure you want to{" "}
-                {journeyToChangeStatus?.status === "active"
+                {journeyToChangeStatus?.status === "ACTIVE"
                   ? "pause"
                   : "activate"}{" "}
                 the journey "{journeyToChangeStatus?.name}"?
@@ -793,6 +890,7 @@ const JourneyManagement = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
         {filteredJourneys.length === 0 && (
           <Card className="p-6 text-center mt-6 bg-forest-600 border-meadow-500">
             <AlertTriangle className="h-12 w-12 text-meadow-500 mx-auto mb-4" />

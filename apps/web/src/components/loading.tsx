@@ -1,7 +1,7 @@
 export default function Loading() {
   return (
     <>
-      <div className="w-50 h-3 bg-screaminGreen rounded-full transform -rotate-15 animate-bar">
+      <div className="w-50 h-3 bg-meadow-500 rounded-full transform -rotate-15 animate-bar">
         <div className="relative w-[50px] h-[50px] bg-white rounded-full -bottom-[38px] animate-ball">
           <div className="absolute w-[5px] h-[5px] bg-black rounded-full top-[25px] right-[5px]"></div>
         </div>
