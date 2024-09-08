@@ -704,11 +704,15 @@ const Sidebar = ({ onDragStart }) => {
 
 const NodeProperties = ({ node, setNodes, onClose }) => {
   const updateNodeData = (key, value) => {
+    console.log("Updating node data:", node);
     setNodes((nds) =>
       nds.map((n) => {
         if (n.id === node.id) {
-          return { ...n, data: { ...n.data, [key]: value } };
+          const updatedNode = { ...n, data: { ...n.data, [key]: value } };
+          console.log("Updated node:", updatedNode);
+          return updatedNode;
         }
+
         return n;
       })
     );
@@ -972,7 +976,23 @@ const FlowWithProvider = () => {
       return false;
     }
 
-    // Add more validation rules as needed
+    // Check if all nodes (except exit) have more than just a label in their data
+    const invalidNodes = nodes.filter((node) => {
+      if (node.type === "exitNode") return false; // Exit node is allowed to have only a label
+      return Object.keys(node.data).length <= 1 && "label" in node.data;
+    });
+
+    if (invalidNodes.length > 0) {
+      const invalidNodeTypes = invalidNodes
+        .map((node) => node.type?.replace("Node", ""))
+        .join(", ");
+      toast({
+        variant: "destructive",
+        title: "Incomplete Nodes",
+        description: `The following nodes are incomplete: ${invalidNodeTypes}. Please fill in all required fields for each node.`,
+      });
+      return false;
+    }
 
     return true;
   };
@@ -1129,6 +1149,7 @@ const FlowWithProvider = () => {
   }, [setNodes, setEdges, updateNodePositions, updateEdges]);
 
   const onNodeClick = (event, node) => {
+    console.log("Node clicked:", node);
     setSelectedNode(node);
   };
 
@@ -1205,17 +1226,26 @@ const FlowWithProvider = () => {
         open={showSaveConfirmation}
         onOpenChange={setShowSaveConfirmation}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-forest-500 border border-meadow-500/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Save Journey</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-2xl font-bold text-meadow-500">
+              Save Journey
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-meadow-300">
               Are you sure you want to save this journey? Once saved, it will be
               created and live in your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={saveJourney}>Save</AlertDialogAction>
+            <AlertDialogCancel className="bg-forest-600 text-meadow-300 hover:bg-forest-700 hover:text-meadow-200">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={saveJourney}
+              className="bg-meadow-500 text-forest-800 hover:bg-meadow-400"
+            >
+              Save
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
