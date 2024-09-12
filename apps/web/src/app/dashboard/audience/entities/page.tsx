@@ -188,6 +188,7 @@ export default function EntityManagement() {
   );
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     setSelectedProperties(visibleProperties);
@@ -199,6 +200,32 @@ export default function EntityManagement() {
   useEffect(() => {
     fetchEntities();
   }, []);
+
+  const validateForm = (data: Partial<EntityData>) => {
+    const errors: { [key: string]: string } = {};
+
+    if (!data.external_id || data.external_id.trim() === "") {
+      errors.external_id = "External ID is required";
+    }
+
+    Object.entries(data.properties || {}).forEach(([key, value]) => {
+      if (value.toString().trim() === "") {
+        errors[key] = `${key} cannot be empty`;
+      }
+    });
+
+    customProperties.forEach((prop, index) => {
+      if (prop.key.trim() === "") {
+        errors[`customKey${index}`] = "Property name cannot be empty";
+      }
+      // if (prop.value.trim() === "") {
+      //   errors[`customValue${index}`] = "Property value cannot be empty";
+      // }
+    });
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const fetchEntities = async () => {
     setIsLoading(true);
@@ -270,6 +297,20 @@ export default function EntityManagement() {
         customProperties.map((prop) => [prop.key, prop.value])
       ),
     };
+
+    const dataToValidate = {
+      ...newEntityData,
+      properties: allProperties,
+    };
+
+    if (!validateForm(dataToValidate)) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please correct the errors in the form",
+      });
+      return;
+    }
 
     try {
       const createdEntity = await entityService.createOrUpdateEntity({
@@ -345,6 +386,19 @@ export default function EntityManagement() {
       ),
     };
 
+    const dataToValidate = {
+      ...editingEntity,
+      properties: updatedProperties,
+    };
+
+    if (!validateForm(dataToValidate)) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please correct the errors in the form",
+      });
+      return;
+    }
     try {
       const updatedEntity = await entityService.createOrUpdateEntity({
         external_id: editingEntity.external_id,
@@ -622,8 +676,15 @@ export default function EntityManagement() {
                             external_id: e.target.value,
                           })
                         }
-                        className="bg-forest-700 border-neutral-700 text-white mt-1"
+                        className={`bg-forest-700 border-neutral-700 text-white mt-1 ${
+                          formErrors.external_id ? "border-red-500" : ""
+                        }`}
                       />
+                      {formErrors.external_id && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {formErrors.external_id}
+                        </p>
+                      )}
                     </div>
                     {allProperties.map((prop, index) => (
                       <div key={index}>
@@ -640,36 +701,65 @@ export default function EntityManagement() {
                               },
                             })
                           }
-                          className="bg-forest-700 border-neutral-700 text-white mt-1"
+                          className={`bg-forest-700 border-neutral-700 text-white mt-1 ${
+                            formErrors[prop] ? "border-red-500" : ""
+                          }`}
                         />
+                        {formErrors[prop] && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {formErrors[prop]}
+                          </p>
+                        )}
                       </div>
                     ))}
                     {customProperties.map((prop, index) => (
                       <div key={index} className="flex items-center space-x-2">
-                        <Input
-                          placeholder="Property Name"
-                          value={prop.key}
-                          onChange={(e) =>
-                            updateCustomProperty(
-                              index,
-                              e.target.value,
-                              prop.value
-                            )
-                          }
-                          className="bg-forest-700 border-neutral-700 text-white"
-                        />
-                        <Input
-                          placeholder="Value"
-                          value={prop.value}
-                          onChange={(e) =>
-                            updateCustomProperty(
-                              index,
-                              prop.key,
-                              e.target.value
-                            )
-                          }
-                          className="bg-forest-700 border-neutral-700 text-white"
-                        />
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Property Name"
+                            value={prop.key}
+                            onChange={(e) =>
+                              updateCustomProperty(
+                                index,
+                                e.target.value,
+                                prop.value
+                              )
+                            }
+                            className={`bg-forest-700 border-neutral-700 text-white ${
+                              formErrors[`customKey${index}`]
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {formErrors[`customKey${index}`] && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {formErrors[`customKey${index}`]}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Value"
+                            value={prop.value}
+                            onChange={(e) =>
+                              updateCustomProperty(
+                                index,
+                                prop.key,
+                                e.target.value
+                              )
+                            }
+                            className={`bg-forest-700 border-neutral-700 text-white ${
+                              formErrors[`customValue${index}`]
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {formErrors[`customValue${index}`] && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {formErrors[`customValue${index}`]}
+                            </p>
+                          )}
+                        </div>
                         <Button
                           onClick={() => removeCustomProperty(index)}
                           variant="ghost"
@@ -963,28 +1053,53 @@ sdk.addEntity({
                       },
                     })
                   }
-                  className="bg-forest-700 border-neutral-700 text-white mt-1"
+                  className={`bg-forest-700 border-neutral-700 text-white mt-1 ${
+                    formErrors[prop] ? "border-red-500" : ""
+                  }`}
                 />
+                {formErrors[prop] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors[prop]}
+                  </p>
+                )}
               </div>
             ))}
             {customProperties.map((prop, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <Input
-                  placeholder="Property Name"
-                  value={prop.key}
-                  onChange={(e) =>
-                    updateCustomProperty(index, e.target.value, prop.value)
-                  }
-                  className="bg-forest-700 border-neutral-700 text-white"
-                />
-                <Input
-                  placeholder="Value"
-                  value={prop.value}
-                  onChange={(e) =>
-                    updateCustomProperty(index, prop.key, e.target.value)
-                  }
-                  className="bg-forest-700 border-neutral-700 text-white"
-                />
+                <div className="flex-1">
+                  <Input
+                    placeholder="Property Name"
+                    value={prop.key}
+                    onChange={(e) =>
+                      updateCustomProperty(index, e.target.value, prop.value)
+                    }
+                    className={`bg-forest-700 border-neutral-700 text-white ${
+                      formErrors[`customKey${index}`] ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors[`customKey${index}`] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors[`customKey${index}`]}
+                    </p>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Input
+                    placeholder="Value"
+                    value={prop.value}
+                    onChange={(e) =>
+                      updateCustomProperty(index, prop.key, e.target.value)
+                    }
+                    className={`bg-forest-700 border-neutral-700 text-white ${
+                      formErrors[`customValue${index}`] ? "border-red-500" : ""
+                    }`}
+                  />
+                  {formErrors[`customValue${index}`] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formErrors[`customValue${index}`]}
+                    </p>
+                  )}
+                </div>
                 <Button
                   onClick={() => removeCustomProperty(index)}
                   variant="ghost"
