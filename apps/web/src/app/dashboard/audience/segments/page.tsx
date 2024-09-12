@@ -1160,13 +1160,13 @@ export default function SegmentManagement() {
           <h1 className="text-3xl font-bold text-white">Segments</h1>
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-meadow-400" />
               <Input
                 type="text"
                 placeholder="Search segments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-neutral-800 text-white border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-screaminGreen focus:border-transparent"
+                className="pl-10 pr-4 py-2 bg-forest-800 text-white border border-meadow-700 rounded-md focus:outline-none focus:ring-2 focus:ring-meadow-500 focus:border-transparent"
               />
             </div>
             <TwoPanelSegmentCreator
