@@ -14,6 +14,7 @@ import { SwaggerController } from "./controllers/private/swaggerController";
 import * as SwaggerJson from "./generated/private/swagger.json";
 import { EventQueueService } from "./lib/queue";
 import { SegmentationService } from "./services/segmentationService";
+import { redisManager } from "./lib/redis";
 export class App {
   private app: Express;
   private server: Server | null = null;
@@ -75,14 +76,36 @@ export class App {
   }
 
   public async start(port: number): Promise<void> {
-    await this.eventQueueService.initialize();
-    this.server = this.app.listen(port, () => {
-      logger.info("lifecycle", `Server is running on port ${port}`);
-    });
+    try {
+      await redisManager.connect();
+      logger.info("lifecycle", "Redis connection established");
+
+      await this.eventQueueService.initialize();
+      this.server = this.app.listen(port, () => {
+        logger.info("lifecycle", `Server is running on port ${port}`);
+      });
+    } catch (error) {
+      logger.error(
+        "lifecycle",
+        "Failed to start the application",
+        error as Error
+      );
+      throw error;
+    }
   }
 
   public getApp(): Express {
     return this.app;
+  }
+
+  private async disconnectRedis(): Promise<void> {
+    try {
+      await redisManager.disconnect();
+      logger.info("lifecycle", "Redis disconnected successfully");
+    } catch (error) {
+      logger.error("lifecycle", "Error disconnecting Redis", error as Error);
+      throw error;
+    }
   }
 
   public async stop(): Promise<void> {
@@ -95,9 +118,10 @@ export class App {
           } else {
             try {
               await this.eventQueueService.shutdown();
+              await this.disconnectRedis();
               logger.info(
                 "lifecycle",
-                "Server and EventQueueService shut down gracefully"
+                "Server, EventQueueService, and Redis shut down gracefully"
               );
               resolve();
             } catch (error) {

@@ -31,6 +31,7 @@
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "redis": "^4.7.0",
     "reflect-metadata": "^0.2.2",
     "stripe": "^16.7.0",
     "swagger-ui-express": "^5.0.1",

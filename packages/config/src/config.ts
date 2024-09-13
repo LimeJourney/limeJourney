@@ -47,6 +47,9 @@ const configSchema = z.object({
       topic: z.string(),
     }),
   }),
+  redis: z.object({
+    url: z.string(),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -93,6 +96,9 @@ const config = {
       bootstrapEndpoint: env("KAFKA_BOOTSTRAP_ENDPOINT", "localhost:9092"),
       topic: env("KAFKA_TOPIC", "events"),
     },
+  },
+  redis: {
+    url: env("REDIS_URL", "redis://localhost:6379"),
   },
 };
 // Parse and validate the configuration

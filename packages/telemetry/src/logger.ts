@@ -13,7 +13,8 @@ type LogCategory =
   | "database"
   | "task"
   | "websockets"
-  | "events";
+  | "events"
+  | "redis";
 
 type LogLevel =
   | "error"
