@@ -88,6 +88,12 @@ const navItems: NavItem[] = [
     href: "/dashboard/channels",
   },
   {
+    id: "journeys",
+    title: "Journeys",
+    icon: File,
+    href: "/dashboard/journeys",
+  },
+  {
     id: "templates",
     title: "Templates",
     icon: File,

@@ -13,6 +13,8 @@ import { MessagingProfileController } from './../../controllers/private/messagin
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AdminMessagingController } from './../../controllers/private/messagingIntegrationController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { JourneyManagementController } from './../../controllers/private/journeyController';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { EventController } from './../../controllers/private/eventsController';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { EntityController } from './../../controllers/private/entitiesController';
@@ -429,6 +431,168 @@ const models: TsoaRoute.Models = {
             "type": {"dataType":"string"},
             "providerName": {"dataType":"string"},
             "requiredFields": {"dataType":"array","array":{"dataType":"string"}},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JourneyNode": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "type": {"dataType":"string","required":true},
+            "data": {"dataType":"any","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JourneyEdge": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "source": {"dataType":"string","required":true},
+            "target": {"dataType":"string","required":true},
+            "type": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JourneyDefinition": {
+        "dataType": "refObject",
+        "properties": {
+            "nodes": {"dataType":"array","array":{"dataType":"refObject","ref":"JourneyNode"},"required":true},
+            "edges": {"dataType":"array","array":{"dataType":"refObject","ref":"JourneyEdge"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Pick_CreateJourneyDTO.Exclude_keyofCreateJourneyDTO.organizationId__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string","required":true},"definition":{"ref":"JourneyDefinition","required":true},"runMultipleTimes":{"dataType":"boolean","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Omit_CreateJourneyDTO.organizationId_": {
+        "dataType": "refAlias",
+        "type": {"ref":"Pick_CreateJourneyDTO.Exclude_keyofCreateJourneyDTO.organizationId__","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string"},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["ACTIVE"]},{"dataType":"enum","enums":["DRAFT"]},{"dataType":"enum","enums":["PAUSED"]},{"dataType":"enum","enums":["ARCHIVED"]}]}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Omit_UpdateJourneyDTO.organizationId-or-id_": {
+        "dataType": "refAlias",
+        "type": {"ref":"Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "_36_Enums.JourneyStatus": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["ACTIVE"]},{"dataType":"enum","enums":["DRAFT"]},{"dataType":"enum","enums":["PAUSED"]},{"dataType":"enum","enums":["ARCHIVED"]}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DefaultSelection_Prisma._36_JourneyPayload_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"runMultipleTimes":{"dataType":"boolean","required":true},"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"status":{"ref":"_36_Enums.JourneyStatus","required":true},"definition":{"ref":"Prisma.JsonValue","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JourneyWithMetrics": {
+        "dataType": "refObject",
+        "properties": {
+            "runMultipleTimes": {"dataType":"boolean","required":true},
+            "updatedAt": {"dataType":"datetime","required":true},
+            "createdAt": {"dataType":"datetime","required":true},
+            "status": {"ref":"_36_Enums.JourneyStatus","required":true},
+            "definition": {"ref":"Prisma.JsonValue","required":true},
+            "organizationId": {"dataType":"string","required":true},
+            "name": {"dataType":"string","required":true},
+            "id": {"dataType":"string","required":true},
+            "metrics": {"dataType":"nestedObjectLiteral","nestedProperties":{"completionRate":{"dataType":"double","required":true},"totalUsers":{"dataType":"double","required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_JourneyWithMetrics-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"array","array":{"dataType":"refObject","ref":"JourneyWithMetrics"}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "StepMetric": {
+        "dataType": "refObject",
+        "properties": {
+            "total": {"dataType":"double","required":true},
+            "completed": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JourneyMetrics": {
+        "dataType": "refObject",
+        "properties": {
+            "totalUsers": {"dataType":"double","required":true},
+            "completedUsers": {"dataType":"double","required":true},
+            "completionRate": {"dataType":"double","required":true},
+            "averageCompletionTime": {"dataType":"double","required":true},
+            "stepMetrics": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"StepMetric"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_JourneyMetrics_": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"ref":"JourneyMetrics"},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "JourneyActivity": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "userId": {"dataType":"string","required":true},
+            "nodeId": {"dataType":"string","required":true},
+            "nodeName": {"dataType":"string","required":true},
+            "type": {"dataType":"string","required":true},
+            "status": {"dataType":"string","required":true},
+            "timestamp": {"dataType":"datetime","required":true},
+            "data": {"dataType":"any"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_JourneyActivity-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"array","array":{"dataType":"refObject","ref":"JourneyActivity"}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse__activities-JourneyActivity-Array--totalCount-number__": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"totalCount":{"dataType":"double","required":true},"activities":{"dataType":"array","array":{"dataType":"refObject","ref":"JourneyActivity"},"required":true}}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse___91_key-string_93__58_number__": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"double"}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
         },
         "additionalProperties": false,
     },
@@ -1519,6 +1683,244 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteIntegration',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.post('/api/internal/v1/journeys',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.createJourney)),
+
+            async function JourneyManagementController_createJourney(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    body: {"in":"body","name":"body","required":true,"ref":"Omit_CreateJourneyDTO.organizationId_"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    badRequestResponse: {"in":"res","name":"400","required":true,"ref":"ApiResponse_null_"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'createJourney',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.put('/api/internal/v1/journeys/:journeyId',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.updateJourney)),
+
+            async function JourneyManagementController_updateJourney(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    journeyId: {"in":"path","name":"journeyId","required":true,"dataType":"string"},
+                    body: {"in":"body","name":"body","required":true,"ref":"Omit_UpdateJourneyDTO.organizationId-or-id_"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    badRequestResponse: {"in":"res","name":"400","required":true,"ref":"ApiResponse_null_"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'updateJourney',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/journeys',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.listJourneys)),
+
+            async function JourneyManagementController_listJourneys(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+                    status: {"in":"query","name":"status","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'listJourneys',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/journeys/:journeyId/metrics',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.getJourneyMetrics)),
+
+            async function JourneyManagementController_getJourneyMetrics(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    journeyId: {"in":"path","name":"journeyId","required":true,"dataType":"string"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'getJourneyMetrics',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/journeys/:journeyId/activity/recent',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.getRecentJourneyActivity)),
+
+            async function JourneyManagementController_getRecentJourneyActivity(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    journeyId: {"in":"path","name":"journeyId","required":true,"dataType":"string"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+                    limit: {"in":"query","name":"limit","dataType":"double"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'getRecentJourneyActivity',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/journeys/:journeyId/activity/feed',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.getJourneyActivityFeed)),
+
+            async function JourneyManagementController_getJourneyActivityFeed(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    journeyId: {"in":"path","name":"journeyId","required":true,"dataType":"string"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+                    page: {"in":"query","name":"page","dataType":"double"},
+                    pageSize: {"in":"query","name":"pageSize","dataType":"double"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'getJourneyActivityFeed',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/journeys/:journeyId/activity/summary',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController)),
+            ...(fetchMiddlewares<RequestHandler>(JourneyManagementController.prototype.getJourneyActivitySummary)),
+
+            async function JourneyManagementController_getJourneyActivitySummary(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    journeyId: {"in":"path","name":"journeyId","required":true,"dataType":"string"},
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+                    timeframe: {"in":"query","name":"timeframe","dataType":"union","subSchemas":[{"dataType":"enum","enums":["day"]},{"dataType":"enum","enums":["week"]},{"dataType":"enum","enums":["month"]}]},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new JourneyManagementController();
+
+              await templateService.apiHandler({
+                methodName: 'getJourneyActivitySummary',
                 controller,
                 response,
                 next,

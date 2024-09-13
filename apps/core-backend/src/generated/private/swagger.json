@@ -1174,6 +1174,469 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"JourneyNode": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"data": {}
+				},
+				"required": [
+					"id",
+					"type",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JourneyEdge": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"source": {
+						"type": "string"
+					},
+					"target": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"source",
+					"target",
+					"type"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JourneyDefinition": {
+				"properties": {
+					"nodes": {
+						"items": {
+							"$ref": "#/components/schemas/JourneyNode"
+						},
+						"type": "array"
+					},
+					"edges": {
+						"items": {
+							"$ref": "#/components/schemas/JourneyEdge"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"nodes",
+					"edges"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Pick_CreateJourneyDTO.Exclude_keyofCreateJourneyDTO.organizationId__": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"definition": {
+						"$ref": "#/components/schemas/JourneyDefinition"
+					},
+					"runMultipleTimes": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"name",
+					"definition",
+					"runMultipleTimes"
+				],
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_CreateJourneyDTO.organizationId_": {
+				"$ref": "#/components/schemas/Pick_CreateJourneyDTO.Exclude_keyofCreateJourneyDTO.organizationId__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"ACTIVE",
+							"DRAFT",
+							"PAUSED",
+							"ARCHIVED"
+						]
+					}
+				},
+				"type": "object",
+				"description": "From T, pick a set of properties whose keys are in the union K"
+			},
+			"Omit_UpdateJourneyDTO.organizationId-or-id_": {
+				"$ref": "#/components/schemas/Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__",
+				"description": "Construct a type with the properties of T except for those in type K."
+			},
+			"_36_Enums.JourneyStatus": {
+				"type": "string",
+				"enum": [
+					"ACTIVE",
+					"DRAFT",
+					"PAUSED",
+					"ARCHIVED"
+				]
+			},
+			"DefaultSelection_Prisma._36_JourneyPayload_": {
+				"properties": {
+					"runMultipleTimes": {
+						"type": "boolean"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"status": {
+						"$ref": "#/components/schemas/_36_Enums.JourneyStatus"
+					},
+					"definition": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"runMultipleTimes",
+					"updatedAt",
+					"createdAt",
+					"status",
+					"definition",
+					"organizationId",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"JourneyWithMetrics": {
+				"properties": {
+					"runMultipleTimes": {
+						"type": "boolean"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"status": {
+						"$ref": "#/components/schemas/_36_Enums.JourneyStatus"
+					},
+					"definition": {
+						"$ref": "#/components/schemas/Prisma.JsonValue"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					},
+					"metrics": {
+						"properties": {
+							"completionRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalUsers": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"completionRate",
+							"totalUsers"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"runMultipleTimes",
+					"updatedAt",
+					"createdAt",
+					"status",
+					"definition",
+					"organizationId",
+					"name",
+					"id",
+					"metrics"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_JourneyWithMetrics-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/JourneyWithMetrics"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StepMetric": {
+				"properties": {
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"completed": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"total",
+					"completed"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JourneyMetrics": {
+				"properties": {
+					"totalUsers": {
+						"type": "number",
+						"format": "double"
+					},
+					"completedUsers": {
+						"type": "number",
+						"format": "double"
+					},
+					"completionRate": {
+						"type": "number",
+						"format": "double"
+					},
+					"averageCompletionTime": {
+						"type": "number",
+						"format": "double"
+					},
+					"stepMetrics": {
+						"properties": {},
+						"additionalProperties": {
+							"$ref": "#/components/schemas/StepMetric"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"totalUsers",
+					"completedUsers",
+					"completionRate",
+					"averageCompletionTime",
+					"stepMetrics"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_JourneyMetrics_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/JourneyMetrics"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"JourneyActivity": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					},
+					"nodeId": {
+						"type": "string"
+					},
+					"nodeName": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string"
+					},
+					"timestamp": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"data": {}
+				},
+				"required": [
+					"id",
+					"userId",
+					"nodeId",
+					"nodeName",
+					"type",
+					"status",
+					"timestamp"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_JourneyActivity-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/JourneyActivity"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse__activities-JourneyActivity-Array--totalCount-number__": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"properties": {
+							"totalCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"activities": {
+								"items": {
+									"$ref": "#/components/schemas/JourneyActivity"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"totalCount",
+							"activities"
+						],
+						"type": "object",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse___91_key-string_93__58_number__": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "number",
+							"format": "double"
+						},
+						"type": "object",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"Record_string.any_": {
 				"properties": {},
 				"additionalProperties": {},
@@ -2969,6 +3432,425 @@
 						"required": true,
 						"schema": {
 							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/journeys": {
+			"post": {
+				"operationId": "CreateJourney",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_any_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Omit_CreateJourneyDTO.organizationId_"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "ListJourneys",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_JourneyWithMetrics-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/journeys/{journeyId}": {
+			"put": {
+				"operationId": "UpdateJourney",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_any_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "journeyId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Omit_UpdateJourneyDTO.organizationId-or-id_"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/journeys/{journeyId}/metrics": {
+			"get": {
+				"operationId": "GetJourneyMetrics",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_JourneyMetrics_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "journeyId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/journeys/{journeyId}/activity/recent": {
+			"get": {
+				"operationId": "GetRecentJourneyActivity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_JourneyActivity-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "journeyId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/journeys/{journeyId}/activity/feed": {
+			"get": {
+				"operationId": "GetJourneyActivityFeed",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse__activities-JourneyActivity-Array--totalCount-number__"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "journeyId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "pageSize",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/journeys/{journeyId}/activity/summary": {
+			"get": {
+				"operationId": "GetJourneyActivitySummary",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse___91_key-string_93__58_number__"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Journeys"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "journeyId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "timeframe",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"day",
+								"week",
+								"month"
+							]
 						}
 					}
 				]
