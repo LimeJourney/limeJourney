@@ -75,8 +75,10 @@ export class App {
 
   public async start(port: number): Promise<void> {
     try {
-      await redisManager.connect();
-      logger.info("lifecycle", "Redis connection established");
+      // console.log("STARTING NOW");
+      // await redisManager.connect();
+
+      // logger.info("lifecycle", "Redis connection established");
 
       await this.eventQueueService.initialize();
       this.server = this.app.listen(port, () => {

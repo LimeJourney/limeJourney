@@ -112,9 +112,9 @@ class RedisManager {
 
   public getClient(): ReturnType<typeof createClient> {
     if (!this.isConnected) {
-      throw new Error(
-        "Redis client is not connected. Ensure connect() has been called and completed successfully."
-      );
+      this.connect();
+
+      logger.info("redis", "Redis client connected");
     }
     return this.client;
   }
