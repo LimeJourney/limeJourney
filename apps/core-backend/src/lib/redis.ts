@@ -9,13 +9,9 @@ import {
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
 
-type RedisClient = ReturnType<
-  typeof createClient<RedisModules, RedisFunctions, RedisScripts>
->;
-
 class RedisManager {
   private static instance: RedisManager | null = null;
-  private client: RedisClientType;
+  private client: ReturnType<typeof createClient>;
   private isConnected: boolean = false;
   private reconnectTimer: NodeJS.Timeout | null = null;
 
@@ -27,7 +23,7 @@ class RedisManager {
       },
     };
 
-    this.client = createClient(options) as RedisClient;
+    this.client = createClient(options);
 
     this.setupEventListeners();
   }
@@ -114,7 +110,7 @@ class RedisManager {
     }
   }
 
-  public getClient(): RedisClientType {
+  public getClient(): ReturnType<typeof createClient> {
     if (!this.isConnected) {
       throw new Error(
         "Redis client is not connected. Ensure connect() has been called and completed successfully."
@@ -230,3 +226,4 @@ class RedisManager {
 
 // Export a single instance
 export const redisManager = RedisManager.getInstance();
+export type RedisClient = ReturnType<typeof createClient>;

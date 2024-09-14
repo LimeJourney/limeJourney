@@ -8,6 +8,7 @@ export enum EventType {
   ENTITY_UPDATED = "ENTITY_UPDATED",
   SEGMENT_UPDATED = "SEGMENT_UPDATED",
   EVENT_OCCURRED = "EVENT_OCCURRED",
+  TRIGGER_JOURNEY = "TRIGGER_JOURNEY",
 }
 
 export interface BaseEvent {
@@ -41,11 +42,20 @@ export interface EventOccurredEvent extends BaseEvent {
   eventProperties: Record<string, any>;
 }
 
+export interface TriggerJourneyEvent extends BaseEvent {
+  type: EventType.TRIGGER_JOURNEY;
+  entityId: string;
+  journeyId: string;
+  eventName: string;
+  eventProperties: Record<string, any>;
+}
+
 export type Event =
   | EntityCreatedEvent
   | EntityUpdatedEvent
   | SegmentUpdatedEvent
-  | EventOccurredEvent;
+  | EventOccurredEvent
+  | TriggerJourneyEvent;
 
 interface IQueue {
   publish(topic: string, message: any): Promise<void>;

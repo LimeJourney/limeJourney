@@ -41,31 +41,28 @@ export class OrchestrationService {
   private eventService: EventService;
   private segmentationService: SegmentationService;
 
-  constructor(
-    eventService: EventService,
-    segmentationService: SegmentationService
-  ) {
-    this.eventService = eventService;
-    this.segmentationService = segmentationService;
+  constructor() // eventService: EventService,
+  // segmentationService: SegmentationService
+  {
+    this.eventService = new EventService();
+    this.segmentationService = new SegmentationService();
   }
 
   async registerTriggers(journey: Journey): Promise<void> {
-    for (const trigger of journey.triggers) {
+    const triggers = this.extractTriggers(journey);
+    for (const trigger of triggers) {
       switch (trigger.type) {
         case TriggerType.EVENT:
-          await this.registerEventTrigger(journey.id, trigger as EventTrigger);
+          await this.registerEventTrigger(journey.id, trigger);
           break;
-        case TriggerType.SEGMENT:
-          await this.registerSegmentTrigger(
-            journey.id,
-            trigger as SegmentTrigger
-          );
-          break;
-        case TriggerType.TIME:
-          await this.registerTimeTrigger(journey.id, trigger as TimeTrigger);
-          break;
+        // case TriggerType.SEGMENT:
+        //   await this.registerSegmentTrigger(journey.id, trigger);
+        //   break;
+        // case TriggerType.TIME:
+        //   await this.registerTimeTrigger(journey.id, trigger);
+        //   break;
         default:
-          throw new Error(`Unsupported trigger type: ${trigger.type}`);
+          throw new Error(`Unsupported trigger type: ${(trigger as any).type}`);
       }
     }
   }
@@ -111,29 +108,18 @@ export class OrchestrationService {
   ): Promise<void> {
     await this.eventService.registerJourneyForEvent(
       journeyId,
-      trigger.eventName,
-      trigger.conditions
+      trigger.eventName
     );
   }
 
-  private async registerSegmentTrigger(
-    journeyId: string,
-    trigger: SegmentTrigger
-  ): Promise<void> {
-    await this.segmentationService.registerJourneyForSegment(
-      journeyId,
-      trigger.segmentId,
-      trigger.action
-    );
-  }
-
-  private async registerTimeTrigger(
-    journeyId: string,
-    trigger: TimeTrigger
-  ): Promise<void> {
-    await this.schedulerService.scheduleJourneyTrigger(
-      journeyId,
-      trigger.schedule
-    );
-  }
+  //   private async registerSegmentTrigger(
+  //     journeyId: string,
+  //     trigger: SegmentTrigger
+  //   ): Promise<void> {
+  //     await this.segmentationService.registerJourneyForSegment(
+  //       journeyId,
+  //       trigger.segmentId,
+  //       trigger.action
+  //     );
+  //   }
 }

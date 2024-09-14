@@ -3,17 +3,21 @@ import { ClickHouseClient } from "@clickhouse/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
 import { EventData } from "../models/events";
-import { EventQueueService, EventType } from "../lib/queue";
+import { EventOccurredEvent, EventQueueService, EventType } from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
+import { redisManager } from "../lib/redis";
+import type { RedisClient } from "../lib/redis";
 type QueryParamsType = Record<string, unknown>;
 
 export class EventService {
   private clickhouse: ClickHouseClient;
   private eventQueueService: EventQueueService;
+  private redisClient: RedisClient;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
     this.eventQueueService = EventQueueService.getInstance();
+    this.redisClient = redisManager.getClient();
   }
 
   async recordEvent(
@@ -198,6 +202,57 @@ export class EventService {
         500,
         "EVENT_NAMES_FETCH_ERROR"
       );
+    }
+  }
+
+  async registerJourneyForEvent(
+    journeyId: string,
+    eventName: string
+  ): Promise<void> {
+    try {
+      // Add journeyId to the set of journeys for this event
+      await this.redisClient.sAdd(`event:${eventName}:journeys`, journeyId);
+      logger.debug(
+        "events",
+        `Registered journey ${journeyId} for event ${eventName}`
+      );
+    } catch (error: any) {
+      logger.error(
+        "events",
+        `Error registering journey ${journeyId} for event ${eventName}`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  async handleEventForJourneyRegistration(
+    event: EventOccurredEvent
+  ): Promise<void> {
+    const eventName = event.eventName;
+    try {
+      // Get all journeyIds for this event
+      const journeyIds = await this.redisClient.sMembers(
+        `event:${eventName}:journeys`
+      );
+
+      for (const journeyId of journeyIds) {
+        this.eventQueueService.publish({
+          type: EventType.TRIGGER_JOURNEY,
+          journeyId: journeyId,
+          organizationId: event.organizationId,
+          entityId: event.entityId,
+          eventName: event.eventName,
+          eventProperties: event.eventProperties,
+          timestamp: new Date().toISOString(),
+        });
+        logger.debug(
+          "events",
+          `Triggered journey ${journeyId} for event ${eventName}`
+        );
+      }
+    } catch (error: any) {
+      logger.error("events", `Error handling event ${eventName}`, error);
     }
   }
 }
