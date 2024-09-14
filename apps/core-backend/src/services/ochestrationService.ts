@@ -41,9 +41,8 @@ export class OrchestrationService {
   private eventService: EventService;
   private segmentationService: SegmentationService;
 
-  constructor() // eventService: EventService,
-  // segmentationService: SegmentationService
-  {
+  constructor() {
+    // segmentationService: SegmentationService // eventService: EventService,
     this.eventService = new EventService();
     this.segmentationService = new SegmentationService();
   }
@@ -53,7 +52,11 @@ export class OrchestrationService {
     for (const trigger of triggers) {
       switch (trigger.type) {
         case TriggerType.EVENT:
-          await this.registerEventTrigger(journey.id, trigger);
+          await this.registerEventTrigger(
+            journey.id,
+            journey.organizationId,
+            trigger
+          );
           break;
         // case TriggerType.SEGMENT:
         //   await this.registerSegmentTrigger(journey.id, trigger);
@@ -68,10 +71,19 @@ export class OrchestrationService {
   }
 
   private extractTriggers(journey: Journey): Trigger[] {
-    const definition = JSON.parse(journey.definition as string);
+    console.log("journey", journey.definition);
+
+    // Check if journey.definition is already an object
+    const definition =
+      typeof journey.definition === "string"
+        ? JSON.parse(journey.definition)
+        : journey.definition;
+
+    console.log("definition", definition);
     const triggers: Trigger[] = [];
 
     for (const node of definition.nodes) {
+      console.log("node", node);
       if (node.type === "triggerNode") {
         switch (node.data.triggerType) {
           case "segment":
@@ -84,30 +96,31 @@ export class OrchestrationService {
           case "event":
             triggers.push({
               type: TriggerType.EVENT,
-              eventName: node.data.eventName,
+              eventName: node.data.event,
             });
             break;
-          //   case "time":
-          //     triggers.push({
-          //       type: TriggerType.TIME,
-          //       cronExpression: node.data.cronExpression,
-          //     });
-          //     break;
+          // case "time":
+          //   triggers.push({
+          //     type: TriggerType.TIME,
+          //     cronExpression: node.data.cronExpression,
+          //   });
+          //   break;
           default:
             console.warn(`Unsupported trigger type: ${node.data.triggerType}`);
         }
       }
     }
-
     return triggers;
   }
 
   private async registerEventTrigger(
     journeyId: string,
+    organizationId: string,
     trigger: EventTrigger
   ): Promise<void> {
     await this.eventService.registerJourneyForEvent(
       journeyId,
+      organizationId,
       trigger.eventName
     );
   }

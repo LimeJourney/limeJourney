@@ -24,6 +24,7 @@ import {
 } from "../../services/journeyService";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
+import { logger } from "@lime/telemetry/logger";
 //   import { CreateJourneyDTO, UpdateJourneyDTO, JourneyMetrics, JourneyActivity } from "../../models/journey";
 
 @Route("journeys")
@@ -59,6 +60,7 @@ export class JourneyManagementController {
         message: "Journey created successfully",
       };
     } catch (error) {
+      logger.error("lifecycle", "Error creating journey", error as Error);
       if (error instanceof Error) {
         return badRequestResponse(400, {
           status: "error",

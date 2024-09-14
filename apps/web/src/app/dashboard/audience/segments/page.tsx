@@ -779,8 +779,8 @@ const TwoPanelSegmentCreator: React.FC<{
     const segmentData = {
       name: segmentName,
       description: segmentDescription,
-      tags: segmentTags.split(",").map((tag) => tag.trim()),
-      purpose: segmentPurpose,
+      // tags: segmentTags.split(",").map((tag) => tag.trim()),
+      // purpose: segmentPurpose,
       conditions: conditions,
     };
 

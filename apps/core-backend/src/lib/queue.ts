@@ -37,6 +37,7 @@ export interface SegmentUpdatedEvent extends BaseEvent {
 
 export interface EventOccurredEvent extends BaseEvent {
   type: EventType.EVENT_OCCURRED;
+  eventId: string;
   entityId: string;
   eventName: string;
   eventProperties: Record<string, any>;

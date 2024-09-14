@@ -11,7 +11,8 @@
     "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
     "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
-    "clickhouse": "ts-node src/cli/clickhouse.ts"
+    "clickhouse": "ts-node src/cli/clickhouse.ts",
+    "route:generate": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json"
   },
   "dependencies": {
     "@clickhouse/client": "^1.4.1",

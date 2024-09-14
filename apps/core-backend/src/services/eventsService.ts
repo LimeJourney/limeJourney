@@ -5,19 +5,19 @@ import { logger } from "@lime/telemetry/logger";
 import { EventData } from "../models/events";
 import { EventOccurredEvent, EventQueueService, EventType } from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
-import { redisManager } from "../lib/redis";
-import type { RedisClient } from "../lib/redis";
+import { RedisManager } from "../lib/redis";
+import { RedisClientType } from "redis";
 type QueryParamsType = Record<string, unknown>;
 
 export class EventService {
   private clickhouse: ClickHouseClient;
   private eventQueueService: EventQueueService;
-  private redisClient: RedisClient;
+  private redisManager: RedisManager;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
     this.eventQueueService = EventQueueService.getInstance();
-    this.redisClient = redisManager.getClient();
+    this.redisManager = RedisManager.getInstance();
   }
 
   async recordEvent(
@@ -63,6 +63,7 @@ export class EventService {
 
         this.eventQueueService.publish({
           type: EventType.EVENT_OCCURRED,
+          eventId: event.id as string,
           organizationId: organizationId,
           entityId: event.entity_id,
           eventName: event.name,
@@ -193,7 +194,6 @@ export class EventService {
       });
 
       const eventNames: { name: string }[] = await result.json();
-      console.log("EVENTNAMES", eventNames);
       return eventNames.map((event) => event.name);
     } catch (error: any) {
       logger.error("events", `Error fetching unique event names`, error);
@@ -207,11 +207,15 @@ export class EventService {
 
   async registerJourneyForEvent(
     journeyId: string,
+    organizationId: string,
     eventName: string
   ): Promise<void> {
     try {
       // Add journeyId to the set of journeys for this event
-      await this.redisClient.sAdd(`event:${eventName}:journeys`, journeyId);
+      await this.redisManager.sAdd(
+        `event:${eventName}:journeys:${organizationId}`,
+        journeyId
+      );
       logger.debug(
         "events",
         `Registered journey ${journeyId} for event ${eventName}`
@@ -222,7 +226,11 @@ export class EventService {
         `Error registering journey ${journeyId} for event ${eventName}`,
         error
       );
-      throw error;
+      throw new AppError(
+        "Failed to register journey for event",
+        500,
+        "JOURNEY_REGISTRATION_ERROR"
+      );
     }
   }
 
@@ -232,8 +240,8 @@ export class EventService {
     const eventName = event.eventName;
     try {
       // Get all journeyIds for this event
-      const journeyIds = await this.redisClient.sMembers(
-        `event:${eventName}:journeys`
+      const journeyIds = await this.redisManager.sMembers(
+        `event:${eventName}:journeys:${event.organizationId}`
       );
 
       for (const journeyId of journeyIds) {
@@ -253,6 +261,11 @@ export class EventService {
       }
     } catch (error: any) {
       logger.error("events", `Error handling event ${eventName}`, error);
+      throw new AppError(
+        "Failed to handle event for journey registration",
+        500,
+        "EVENT_HANDLING_ERROR"
+      );
     }
   }
 }
