@@ -12,33 +12,31 @@ import passport from "passport";
 import { expressErrorMiddleware } from "@lime/errors";
 import { SwaggerController } from "./controllers/private/swaggerController";
 import * as SwaggerJson from "./generated/private/swagger.json";
-import { EventQueueService } from "./lib/queue";
+import {
+  EntityCreatedEvent,
+  EntityUpdatedEvent,
+  EventOccurredEvent,
+  EventQueueService,
+  EventType,
+} from "./lib/queue";
 import { SegmentationService } from "./services/segmentationService";
 import { redisManager } from "./lib/redis";
+import { EventHandler } from "./lib/eventHandler";
 export class App {
   private app: Express;
   private server: Server | null = null;
   private eventQueueService: EventQueueService;
+  private eventHandler: EventHandler;
 
   constructor() {
     this.app = express();
     this.eventQueueService = EventQueueService.getInstance();
     this.configureMiddleware();
     this.configureRoutes();
-    this.configureEventHandlers();
+    this.eventHandler = new EventHandler();
+    this.eventHandler.configureEventHandlers();
   }
 
-  private configureEventHandlers(): void {
-    // const entityService = new EntityService();
-    const segmentationService = new SegmentationService();
-    this.eventQueueService.registerEventHandler("Events", async (message) => {
-      await segmentationService.segmentEvent(message);
-    });
-    // this.eventQueueService.registerEventHandler("segment_events", async (message) => {
-    //   await segmentationService.processEvent(message);
-    // });
-    // // Add more event handlers as needed
-  }
   private configureMiddleware(): void {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));

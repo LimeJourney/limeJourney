@@ -1,6 +1,17 @@
-import { createClient, RedisClientOptions, RedisClientType } from "redis";
+import {
+  createClient,
+  RedisClientOptions,
+  RedisClientType,
+  RedisFunctions,
+  RedisModules,
+  RedisScripts,
+} from "redis";
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
+
+type RedisClient = ReturnType<
+  typeof createClient<RedisModules, RedisFunctions, RedisScripts>
+>;
 
 class RedisManager {
   private static instance: RedisManager | null = null;
@@ -16,7 +27,7 @@ class RedisManager {
       },
     };
 
-    this.client = createClient(options);
+    this.client = createClient(options) as RedisClient;
 
     this.setupEventListeners();
   }
@@ -49,8 +60,10 @@ class RedisManager {
 
   public static getInstance(): RedisManager {
     if (!RedisManager.instance) {
+      console.log("Creating new RedisManager instance");
       RedisManager.instance = new RedisManager();
     }
+    console.log("Returning existing RedisManager instance");
     return RedisManager.instance;
   }
 

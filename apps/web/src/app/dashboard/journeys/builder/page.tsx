@@ -952,14 +952,14 @@ const FlowWithProvider = () => {
 
   const validateJourney = () => {
     // Check if there's at least one node besides the trigger and exit
-    if (nodes.length <= 2) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Journey",
-        description: "Your journey must have at least one action node.",
-      });
-      return false;
-    }
+    // if (nodes.length <= 2) {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Invalid Journey",
+    //     description: "Your journey must have at least one action node.",
+    //   });
+    //   return false;
+    // }
 
     // Check if all nodes are connected
     const connectedNodeIds = new Set();
@@ -977,22 +977,22 @@ const FlowWithProvider = () => {
     }
 
     // Check if all nodes (except exit) have more than just a label in their data
-    const invalidNodes = nodes.filter((node) => {
-      if (node.type === "exitNode") return false; // Exit node is allowed to have only a label
-      return Object.keys(node.data).length <= 1 && "label" in node.data;
-    });
+    // const invalidNodes = nodes.filter((node) => {
+    //   if (node.type === "exitNode") return false; // Exit node is allowed to have only a label
+    //   return Object.keys(node.data).length <= 1 && "label" in node.data;
+    // });
 
-    if (invalidNodes.length > 0) {
-      const invalidNodeTypes = invalidNodes
-        .map((node) => node.type?.replace("Node", ""))
-        .join(", ");
-      toast({
-        variant: "destructive",
-        title: "Incomplete Nodes",
-        description: `The following nodes are incomplete: ${invalidNodeTypes}. Please fill in all required fields for each node.`,
-      });
-      return false;
-    }
+    // if (invalidNodes.length > 0) {
+    //   const invalidNodeTypes = invalidNodes
+    //     .map((node) => node.type?.replace("Node", ""))
+    //     .join(", ");
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Incomplete Nodes",
+    //     description: `The following nodes are incomplete: ${invalidNodeTypes}. Please fill in all required fields for each node.`,
+    //   });
+    //   return false;
+    // }
 
     return true;
   };

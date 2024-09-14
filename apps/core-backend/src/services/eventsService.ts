@@ -3,7 +3,7 @@ import { ClickHouseClient } from "@clickhouse/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
 import { EventData } from "../models/events";
-import { EventQueueService } from "../lib/queue";
+import { EventQueueService, EventType } from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
 type QueryParamsType = Record<string, unknown>;
 
@@ -58,13 +58,12 @@ export class EventService {
         logger.info("events", `Event recorded for entity ${event.entity_id}`);
 
         this.eventQueueService.publish({
-          topic: "Events",
-          message: {
-            organizationId: organizationId,
-            entityId: event.entity_id,
-            eventName: event.name,
-            eventProperties: event.properties,
-          },
+          type: EventType.EVENT_OCCURRED,
+          organizationId: organizationId,
+          entityId: event.entity_id,
+          eventName: event.name,
+          eventProperties: event.properties,
+          timestamp: new Date().toISOString(),
         });
 
         return event;

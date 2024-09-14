@@ -9,7 +9,13 @@ import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
 import { SegmentationService } from "./segmentationService";
 import { EventData } from "../models/events";
-import { EventQueueMessage, EventQueueService } from "../lib/queue";
+import {
+  EntityCreatedEvent,
+  EntityUpdatedEvent,
+  Event,
+  EventQueueService,
+  EventType,
+} from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
 
 export interface EntityData {
@@ -113,6 +119,7 @@ export class EntityService {
 
       let entityId: string;
       let mergedProperties: Record<string, any>;
+      let isNewEntity: boolean;
 
       if (entityExists) {
         entityId = entityResult[0].id;
@@ -140,6 +147,7 @@ export class EntityService {
           },
           "Failed to update entity"
         );
+        isNewEntity = false;
       } else {
         // Generate a new UUID for the entity
         entityId = uuidv4();
@@ -160,16 +168,21 @@ export class EntityService {
           insertData,
           "Failed to create entity"
         );
+        isNewEntity = true;
       }
 
-      const message: EventQueueMessage = {
-        topic: "Events",
-        message: {
-          organizationId: organizationId,
-          entityId: entityId,
-          properties: mergedProperties,
-        },
-      };
+      // Publish separate events for creation and update
+      const eventType = isNewEntity
+        ? EventType.ENTITY_CREATED
+        : EventType.ENTITY_UPDATED;
+      const message = {
+        type: eventType,
+        organizationId: organizationId,
+        entityId: entityId,
+        entityData: mergedProperties,
+        timestamp: new Date().toISOString(),
+      } as EntityCreatedEvent | EntityUpdatedEvent;
+
       this.eventQueueService.publish(message);
 
       return {
