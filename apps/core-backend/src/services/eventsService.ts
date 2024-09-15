@@ -3,17 +3,21 @@ import { ClickHouseClient } from "@clickhouse/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
 import { EventData } from "../models/events";
-import { EventQueueService } from "../lib/queue";
+import { EventOccurredEvent, EventQueueService, EventType } from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
+import { RedisManager } from "../lib/redis";
+import { RedisClientType } from "redis";
 type QueryParamsType = Record<string, unknown>;
 
 export class EventService {
   private clickhouse: ClickHouseClient;
   private eventQueueService: EventQueueService;
+  private redisManager: RedisManager;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
     this.eventQueueService = EventQueueService.getInstance();
+    this.redisManager = RedisManager.getInstance();
   }
 
   async recordEvent(
@@ -58,13 +62,13 @@ export class EventService {
         logger.info("events", `Event recorded for entity ${event.entity_id}`);
 
         this.eventQueueService.publish({
-          topic: "Events",
-          message: {
-            organizationId: organizationId,
-            entityId: event.entity_id,
-            eventName: event.name,
-            eventProperties: event.properties,
-          },
+          type: EventType.EVENT_OCCURRED,
+          eventId: event.id as string,
+          organizationId: organizationId,
+          entityId: event.entity_id,
+          eventName: event.name,
+          eventProperties: event.properties,
+          timestamp: new Date().toISOString(),
         });
 
         return event;
@@ -190,7 +194,6 @@ export class EventService {
       });
 
       const eventNames: { name: string }[] = await result.json();
-      console.log("EVENTNAMES", eventNames);
       return eventNames.map((event) => event.name);
     } catch (error: any) {
       logger.error("events", `Error fetching unique event names`, error);
@@ -198,6 +201,70 @@ export class EventService {
         "Failed to fetch unique event names",
         500,
         "EVENT_NAMES_FETCH_ERROR"
+      );
+    }
+  }
+
+  async registerJourneyForEvent(
+    journeyId: string,
+    organizationId: string,
+    eventName: string
+  ): Promise<void> {
+    try {
+      // Add journeyId to the set of journeys for this event
+      await this.redisManager.sAdd(
+        `event:${eventName}:journeys:${organizationId}`,
+        journeyId
+      );
+      logger.debug(
+        "events",
+        `Registered journey ${journeyId} for event ${eventName}`
+      );
+    } catch (error: any) {
+      logger.error(
+        "events",
+        `Error registering journey ${journeyId} for event ${eventName}`,
+        error
+      );
+      throw new AppError(
+        "Failed to register journey for event",
+        500,
+        "JOURNEY_REGISTRATION_ERROR"
+      );
+    }
+  }
+
+  async handleEventForJourneyRegistration(
+    event: EventOccurredEvent
+  ): Promise<void> {
+    const eventName = event.eventName;
+    try {
+      // Get all journeyIds for this event
+      const journeyIds = await this.redisManager.sMembers(
+        `event:${eventName}:journeys:${event.organizationId}`
+      );
+
+      for (const journeyId of journeyIds) {
+        this.eventQueueService.publish({
+          type: EventType.TRIGGER_JOURNEY,
+          journeyId: journeyId,
+          organizationId: event.organizationId,
+          entityId: event.entityId,
+          eventName: event.eventName,
+          eventProperties: event.eventProperties,
+          timestamp: new Date().toISOString(),
+        });
+        logger.debug(
+          "events",
+          `Triggered journey ${journeyId} for event ${eventName}`
+        );
+      }
+    } catch (error: any) {
+      logger.error("events", `Error handling event ${eventName}`, error);
+      throw new AppError(
+        "Failed to handle event for journey registration",
+        500,
+        "EVENT_HANDLING_ERROR"
       );
     }
   }

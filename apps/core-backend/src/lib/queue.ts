@@ -3,13 +3,68 @@ import { EventEmitter } from "events";
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
 
-interface EventQueueMessage {
-  topic: string;
-  message: string | object;
+export enum EventType {
+  ENTITY_CREATED = "ENTITY_CREATED",
+  ENTITY_UPDATED = "ENTITY_UPDATED",
+  SEGMENT_UPDATED = "SEGMENT_UPDATED",
+  EVENT_OCCURRED = "EVENT_OCCURRED",
+  TRIGGER_JOURNEY = "TRIGGER_JOURNEY",
 }
 
-class SimpleEventQueue extends EventEmitter {
-  async publish(topic: string, message: string | object): Promise<void> {
+export interface BaseEvent {
+  type: EventType;
+  organizationId: string;
+  timestamp: string;
+}
+
+export interface EntityCreatedEvent extends BaseEvent {
+  type: EventType.ENTITY_CREATED;
+  entityId: string;
+  entityData: Record<string, any>;
+}
+
+export interface EntityUpdatedEvent extends BaseEvent {
+  type: EventType.ENTITY_UPDATED;
+  entityId: string;
+  changes: Record<string, any>;
+}
+
+export interface SegmentUpdatedEvent extends BaseEvent {
+  type: EventType.SEGMENT_UPDATED;
+  segmentId: string;
+  changes: Record<string, any>;
+}
+
+export interface EventOccurredEvent extends BaseEvent {
+  type: EventType.EVENT_OCCURRED;
+  eventId: string;
+  entityId: string;
+  eventName: string;
+  eventProperties: Record<string, any>;
+}
+
+export interface TriggerJourneyEvent extends BaseEvent {
+  type: EventType.TRIGGER_JOURNEY;
+  entityId: string;
+  journeyId: string;
+  eventName: string;
+  eventProperties: Record<string, any>;
+}
+
+export type Event =
+  | EntityCreatedEvent
+  | EntityUpdatedEvent
+  | SegmentUpdatedEvent
+  | EventOccurredEvent
+  | TriggerJourneyEvent;
+
+interface IQueue {
+  publish(topic: string, message: any): Promise<void>;
+  subscribe(topic: string, callback: (message: any) => void): Promise<void>;
+}
+
+class SimpleInMemoryEventQueue extends EventEmitter implements IQueue {
+  async publish(topic: string, message: any): Promise<void> {
     this.emit(topic, message);
     logger.info("events", `Published message to topic: ${topic}`, { topic });
   }
@@ -23,16 +78,15 @@ class SimpleEventQueue extends EventEmitter {
   }
 }
 
-class KafkaEventQueue {
+class KafkaEventQueue implements IQueue {
   private kafka: Kafka;
   private producer: Producer;
-  private consumers: Map<string, Consumer> = new Map();
+  private consumer: Consumer;
   private isShuttingDown: boolean = false;
 
   constructor() {
     this.kafka = new Kafka({
       brokers: AppConfig.eventQueue.options.brokers,
-      // clientId: AppConfig.eventQueue.options.clientId,
       ssl: AppConfig.eventQueue.options.ssl,
       sasl: AppConfig.eventQueue.options.username
         ? {
@@ -41,24 +95,23 @@ class KafkaEventQueue {
             password: AppConfig.eventQueue.options.password,
           }
         : undefined,
-
       logLevel: logLevel.ERROR,
     });
 
     this.producer = this.kafka.producer();
+    this.consumer = this.kafka.consumer({
+      groupId: "event-queue-service-group",
+    });
     logger.info("events", "Kafka event queue initialized");
   }
 
   async connect(): Promise<void> {
     try {
       await this.producer.connect();
-      logger.info("events", "Kafka producer connected");
+      await this.consumer.connect();
+      logger.info("events", "Kafka producer and consumer connected");
     } catch (error) {
-      logger.error(
-        "events",
-        "Failed to connect Kafka producer",
-        error as Error
-      );
+      logger.error("events", "Failed to connect Kafka", error as Error);
       throw error;
     }
   }
@@ -67,22 +120,15 @@ class KafkaEventQueue {
     this.isShuttingDown = true;
     try {
       await this.producer.disconnect();
-      logger.info("events", "Kafka producer disconnected");
-      for (const [topic, consumer] of this.consumers.entries()) {
-        await consumer.disconnect();
-        logger.info(
-          "events",
-          `Kafka consumer disconnected for topic: ${topic}`,
-          { topic }
-        );
-      }
+      await this.consumer.disconnect();
+      logger.info("events", "Kafka producer and consumer disconnected");
     } catch (error) {
       logger.error("events", "Error during Kafka disconnect", error as Error);
       throw error;
     }
   }
 
-  async publish(topic: string, message: string | object): Promise<void> {
+  async publish(topic: string, message: any): Promise<void> {
     try {
       await this.producer.send({
         topic,
@@ -104,57 +150,40 @@ class KafkaEventQueue {
 
   async subscribe(
     topic: string,
-    callback: (message: KafkaMessage) => void
+    callback: (message: any) => void
   ): Promise<void> {
-    if (!this.consumers.has(topic)) {
-      try {
-        const consumer = this.kafka.consumer({ groupId: `${topic}-group` });
-        await consumer.connect();
-        await consumer.subscribe({
-          topic: topic,
-          fromBeginning: true,
-        });
-        await consumer.run({
-          eachMessage: async ({ topic, partition, message }) => {
-            if (message.value) {
-              const messageString = message.value.toString();
-              console.log("Received message string:", messageString);
-
-              try {
-                const parsedMessage = JSON.parse(messageString);
-                console.log("Parsed message:", parsedMessage);
-                callback(parsedMessage);
-              } catch (error) {
-                console.error("Error parsing message:", error);
-                // Handle the error as needed
-              }
+    try {
+      await this.consumer.subscribe({ topic, fromBeginning: true });
+      await this.consumer.run({
+        eachMessage: async ({ topic, partition, message }) => {
+          if (message.value) {
+            const messageString = message.value.toString();
+            try {
+              const parsedMessage = JSON.parse(messageString);
+              callback(parsedMessage);
+            } catch (error) {
+              logger.error("events", "Error parsing message", error as Error);
             }
-            logger.debug(
-              "events",
-              `Received message from Kafka topic: ${topic}`,
-              { topic, partition }
-            );
-          },
-        });
-        this.consumers.set(topic, consumer);
-        logger.info("events", `Subscribed to Kafka topic: ${topic}`, { topic });
-      } catch (error) {
-        logger.error(
-          "events",
-          `Failed to subscribe to Kafka topic: ${topic}`,
-          error as Error,
-          { topic }
-        );
-        throw error;
-      }
+          }
+        },
+      });
+      logger.info("events", `Subscribed to Kafka topic: ${topic}`, { topic });
+    } catch (error) {
+      logger.error(
+        "events",
+        `Failed to subscribe to Kafka topic: ${topic}`,
+        error as Error,
+        { topic }
+      );
+      throw error;
     }
   }
 }
 
 class EventQueueService {
   private static instance: EventQueueService | null = null;
-  private queue: SimpleEventQueue | KafkaEventQueue;
-  private eventHandlers: Map<string, (message: any) => Promise<void>> =
+  private queue: IQueue;
+  private eventHandlers: Map<EventType, (event: Event) => Promise<void>> =
     new Map();
 
   private constructor() {
@@ -162,8 +191,8 @@ class EventQueueService {
       this.queue = new KafkaEventQueue();
       logger.info("events", "Initialized Kafka event queue");
     } else {
-      this.queue = new SimpleEventQueue();
-      logger.info("events", "Initialized Simple event queue");
+      this.queue = new SimpleInMemoryEventQueue();
+      logger.info("events", "Initialized Simple in-memory event queue");
     }
   }
 
@@ -180,7 +209,7 @@ class EventQueueService {
       try {
         await this.queue.connect();
         logger.info("events", "EventQueueService initialized and connected");
-        await this.subscribeToAllTopics();
+        await this.subscribeToEvents();
       } catch (error) {
         logger.error(
           "events",
@@ -208,68 +237,60 @@ class EventQueueService {
     }
   }
 
-  async publish(message: EventQueueMessage): Promise<void> {
-    console.log("MESSAGEEEE---------", message);
+  async publish(event: Event): Promise<void> {
     try {
-      await this.queue.publish(message.topic, message.message);
-      logger.info("events", `Message published to topic: ${message.topic}`, {
-        topic: message.topic,
+      await this.queue.publish("Events", event);
+      logger.info("events", `Event published: ${event.type}`, {
+        eventType: event.type,
       });
     } catch (error) {
       logger.error(
         "events",
-        `Failed to publish message to topic: ${message.topic}`,
+        `Failed to publish event: ${event.type}`,
         error as Error,
-        { topic: message.topic }
+        { eventType: event.type }
       );
       throw error;
     }
   }
 
   registerEventHandler(
-    topic: string,
-    handler: (message: any) => Promise<void>
+    eventType: EventType,
+    handler: (event: Event) => Promise<void>
   ): void {
-    this.eventHandlers.set(topic, handler);
-    logger.info("events", `Registered event handler for topic: ${topic}`, {
-      topic,
+    this.eventHandlers.set(eventType, handler);
+    logger.info("events", `Registered event handler for type: ${eventType}`, {
+      eventType,
     });
   }
 
-  private async subscribeToAllTopics(): Promise<void> {
-    for (const [topic, handler] of this.eventHandlers.entries()) {
-      await this.subscribe(topic, handler);
+  private async handleEvent(event: Event): Promise<void> {
+    const handler = this.eventHandlers.get(event.type);
+    if (handler) {
+      try {
+        await handler(event);
+      } catch (error) {
+        logger.error(
+          "events",
+          `Error processing event of type: ${event.type}`,
+          error as Error,
+          { eventType: event.type }
+        );
+      }
+    } else {
+      logger.warn(
+        "events",
+        `No handler registered for event type: ${event.type}`,
+        { eventType: event.type }
+      );
     }
   }
 
-  private async subscribe(
-    topic: string,
-    callback: (message: any) => Promise<void>
-  ): Promise<void> {
-    try {
-      await this.queue.subscribe(topic, async (message) => {
-        try {
-          await callback(message);
-        } catch (error) {
-          logger.error(
-            "events",
-            `Error processing message from topic: ${topic}`,
-            error as Error,
-            { topic }
-          );
-        }
-      });
-      logger.info("events", `Subscribed to topic: ${topic}`, { topic });
-    } catch (error) {
-      logger.error(
-        "events",
-        `Failed to subscribe to topic: ${topic}`,
-        error as Error,
-        { topic }
-      );
-      throw error;
-    }
+  private async subscribeToEvents(): Promise<void> {
+    await this.queue.subscribe("Events", async (message: Event) => {
+      await this.handleEvent(message);
+    });
   }
 }
 
-export { EventQueueService, EventQueueMessage };
+export { EventQueueService };

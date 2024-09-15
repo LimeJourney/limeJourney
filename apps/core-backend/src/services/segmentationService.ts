@@ -13,6 +13,12 @@ import { DatabaseError, ValidationError, NotFoundError } from "@lime/errors";
 import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
+import {
+  EntityCreatedEvent,
+  EntityUpdatedEvent,
+  EventOccurredEvent,
+  EventType,
+} from "../lib/queue";
 const prisma = new PrismaClient();
 
 interface SegmentSizeResult {
@@ -866,18 +872,36 @@ export class SegmentationService {
     }
   }
 
-  public async segmentEvent(eventData: {
-    type: "ENTITY_CREATED" | "ENTITY_UPDATED" | "EVENT_OCCURRED";
-    organizationId: string;
-    entityId: string;
-    eventName?: string;
-    eventProperties?: Record<string, any>;
-  }) {
+  public async segmentEvent(
+    event: EntityCreatedEvent | EntityUpdatedEvent | EventOccurredEvent
+  ): Promise<void> {
+    const baseEventData = {
+      type: event.type,
+      organizationId: event.organizationId,
+      entityId: event.entityId,
+    };
+
+    let eventName: string | undefined;
+    let eventProperties: Record<string, any> | undefined;
+
+    switch (event.type) {
+      case EventType.ENTITY_CREATED:
+        eventProperties = event.entityData;
+        break;
+      case EventType.ENTITY_UPDATED:
+        eventProperties = event.changes;
+        break;
+      case EventType.EVENT_OCCURRED:
+        eventName = event.eventName;
+        eventProperties = event.eventProperties;
+        break;
+    }
+
     const matchedSegments = await this.evaluateSegmentMembership(
-      eventData.organizationId,
-      eventData.entityId,
-      eventData.eventName,
-      eventData.eventProperties
+      baseEventData.organizationId,
+      baseEventData.entityId,
+      eventName,
+      eventProperties
     );
   }
 }

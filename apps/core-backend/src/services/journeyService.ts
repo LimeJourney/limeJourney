@@ -1,5 +1,6 @@
 import { PrismaClient, Journey } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { OrchestrationService } from "./ochestrationService";
 
 const prisma = new PrismaClient();
 
@@ -71,6 +72,11 @@ export interface JourneyWithMetrics extends Journey {
 }
 
 export class JourneyManagementService {
+  private ochestrationService: OrchestrationService;
+
+  constructor() {
+    this.ochestrationService = new OrchestrationService();
+  }
   async createJourney(journeyData: CreateJourneyDTO): Promise<Journey> {
     const journey = await prisma.journey.create({
       data: {
@@ -83,7 +89,7 @@ export class JourneyManagementService {
       },
     });
 
-    // await this.registerTriggers(journey);
+    await this.ochestrationService.registerTriggers(journey);
     return journey;
   }
 
