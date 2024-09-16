@@ -23,8 +23,6 @@ import {
   LayoutGrid,
   List,
   X,
-  ArrowLeft,
-  ArrowRight,
   Save,
   Tag,
 } from "lucide-react";
@@ -48,7 +46,6 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Popover,
   PopoverContent,
@@ -70,9 +67,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
   TooltipContent,
@@ -146,15 +141,13 @@ const TemplateManagement = () => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
-  const [activeTab, setActiveTab] = useState("design");
   const [previewMode, setPreviewMode] = useState("desktop");
   const [showSource, setShowSource] = useState(false);
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterChannel, setFilterChannel] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [currentStep, setCurrentStep] = useState(0);
   const [tagSuggestions] = useState([
     "promotional",
     "transactional",
@@ -247,8 +240,6 @@ const TemplateManagement = () => {
       `Sending test ${template.channel} for template: ${template.name}`
     );
   };
-
-  const steps = ["Design", "Settings", "Preview"];
 
   const TemplateEditor = () => (
     <div className="space-y-6">
@@ -349,11 +340,6 @@ const TemplateManagement = () => {
           className="bg-forest-500 text-white"
         />
       </div>
-    </div>
-  );
-
-  const TemplateSettings = () => (
-    <div className="space-y-6">
       <div>
         <Label htmlFor="tags" className="text-forest-500">
           Tags
@@ -413,43 +399,6 @@ const TemplateManagement = () => {
             </PopoverContent>
           </Popover>
         </div>
-      </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="personalization"
-          checked={currentTemplate.personalizationEnabled}
-          onCheckedChange={(checked) =>
-            setCurrentTemplate({
-              ...currentTemplate,
-              personalizationEnabled: checked,
-            })
-          }
-        />
-        <Label htmlFor="personalization" className="text-forest-500">
-          Enable Personalization
-        </Label>
-      </div>
-      <div>
-        <Label htmlFor="sendingFrequency" className="text-forest-500">
-          Sending Frequency (hours)
-        </Label>
-        <Slider
-          id="sendingFrequency"
-          min={1}
-          max={168}
-          step={1}
-          value={[currentTemplate.sendingFrequency || 24]}
-          onValueChange={([value]) =>
-            setCurrentTemplate({
-              ...currentTemplate,
-              sendingFrequency: value,
-            })
-          }
-          className="text-forest-500"
-        />
-        <span className="text-forest-500 text-sm">
-          {currentTemplate.sendingFrequency || 24} hours
-        </span>
       </div>
     </div>
   );
@@ -920,16 +869,12 @@ const TemplateManagement = () => {
           )}
         </AnimatePresence>
 
-        <Sheet
-          open={isTemplateSheetOpen}
-          onOpenChange={setIsTemplateSheetOpen}
-          onClose={() => setCurrentStep(0)}
-        >
+        <Sheet open={isTemplateSheetOpen} onOpenChange={setIsTemplateSheetOpen}>
           <SheetContent
-            className={`w-full sm:max-w-[1200px] p-0 bg-meadow-500`}
+            className={`w-full sm:max-w-[1200px] p-0 bg-forest-700`}
             side="right"
           >
-            <SheetHeader className="p-6 border-b border-forest-500">
+            <SheetHeader className="p-6 border-b border-meadow-500">
               <SheetTitle className="text-forest-500 text-2xl">
                 {currentTemplate.id ? "Edit Template" : "Create New Template"}
               </SheetTitle>
@@ -940,30 +885,7 @@ const TemplateManagement = () => {
             <div className={`flex h-[calc(100vh-200px)]`}>
               <div className="w-1/2 p-6 border-r border-forest-500">
                 <ScrollArea className="h-full pr-4">
-                  <Tabs value={steps[currentStep]} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 bg-meadow-600">
-                      {steps.map((step, index) => (
-                        <TabsTrigger
-                          key={step}
-                          value={step}
-                          disabled={index > currentStep}
-                          className="text-forest-500 data-[state=active]:bg-meadow-500"
-                          onClick={() => setCurrentStep(index)}
-                        >
-                          {step}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    <TabsContent value="Design">
-                      <TemplateEditor />
-                    </TabsContent>
-                    <TabsContent value="Settings">
-                      <TemplateSettings />
-                    </TabsContent>
-                    <TabsContent value="Preview">
-                      <TemplatePreview />
-                    </TabsContent>
-                  </Tabs>
+                  <TemplateEditor />
                 </ScrollArea>
               </div>
               <div className="w-1/2 p-6">
@@ -975,24 +897,13 @@ const TemplateManagement = () => {
             <SheetFooter className="p-6 border-t border-forest-500">
               <div className="flex justify-between items-center w-full">
                 <div>
-                  {currentStep > 0 && (
-                    <Button
-                      onClick={() => setCurrentStep(currentStep - 1)}
-                      variant="outline"
-                      className="mr-2 border-forest-500 text-forest-500"
-                    >
-                      <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-                    </Button>
-                  )}
-                  {currentStep < steps.length - 1 && (
-                    <Button
-                      onClick={() => setCurrentStep(currentStep + 1)}
-                      variant="outline"
-                      className="border-forest-500 text-forest-500"
-                    >
-                      Next <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => setIsTemplateSheetOpen(false)}
+                    variant="outline"
+                    className="mr-2 border-forest-500 text-forest-500"
+                  >
+                    Cancel
+                  </Button>
                 </div>
                 <div className="flex space-x-2">
                   <Button
