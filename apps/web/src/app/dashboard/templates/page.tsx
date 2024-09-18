@@ -25,6 +25,7 @@ import {
   X,
   Save,
   Tag,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { entityService } from "@/services/entitiesService";
+import EmailTemplateEditor from "./components/stripeLikeEditor";
 
 const TemplateManagement = () => {
   const [templates, setTemplates] = useState([
@@ -124,7 +127,6 @@ const TemplateManagement = () => {
       updatedAt: "2023-09-04T00:00:00Z",
     },
   ]);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -140,10 +142,11 @@ const TemplateManagement = () => {
     status: "draft",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    profile: "", // New field for profile
   });
   const [previewMode, setPreviewMode] = useState("desktop");
   const [showSource, setShowSource] = useState(false);
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("list");
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterChannel, setFilterChannel] = useState("all");
@@ -155,6 +158,26 @@ const TemplateManagement = () => {
     "welcome",
     "reminder",
   ]);
+  const [profiles, setProfiles] = useState([
+    { id: "1", name: "Email Profile", type: "email" },
+    { id: "2", name: "Push Notification Profile", type: "push" },
+    { id: "3", name: "SMS Profile", type: "sms" },
+  ]);
+  const [placeholders, setPlaceholders] = useState([]);
+
+  useEffect(() => {
+    // Fetch placeholders when component mounts
+    fetchPlaceholders();
+  }, []);
+
+  const fetchPlaceholders = async () => {
+    try {
+      const response = await entityService.getEntityProperties();
+      setPlaceholders(response);
+    } catch (error) {
+      console.error("Error fetching placeholders:", error);
+    }
+  };
 
   const filteredAndSortedTemplates = templates
     .filter(
@@ -177,22 +200,28 @@ const TemplateManagement = () => {
 
   const handleSaveTemplate = () => {
     const now = new Date().toISOString();
-    if (currentTemplate.id) {
+    const templateToSave = {
+      ...currentTemplate,
+      updatedAt: now,
+    };
+
+    if (!templateToSave.id) {
+      templateToSave.id = (templates.length + 1).toString();
+      templateToSave.createdAt = now;
+    }
+
+    // Log all the data about the template that is about to be saved
+    console.log("Template data to be saved:", {
+      ...templateToSave,
+      selectedProfile: profiles.find((p) => p.id === templateToSave.profile),
+    });
+
+    if (templateToSave.id) {
       setTemplates(
-        templates.map((t) =>
-          t.id === currentTemplate.id
-            ? { ...currentTemplate, updatedAt: now }
-            : t
-        )
+        templates.map((t) => (t.id === templateToSave.id ? templateToSave : t))
       );
     } else {
-      const newTemplate = {
-        ...currentTemplate,
-        id: (templates.length + 1).toString(),
-        createdAt: now,
-        updatedAt: now,
-      };
-      setTemplates([...templates, newTemplate]);
+      setTemplates([...templates, templateToSave]);
     }
     setIsTemplateSheetOpen(false);
     resetCurrentTemplate();
@@ -221,6 +250,7 @@ const TemplateManagement = () => {
       status: "draft",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      profile: "",
     });
   };
 
@@ -240,243 +270,10 @@ const TemplateManagement = () => {
       `Sending test ${template.channel} for template: ${template.name}`
     );
   };
-
-  const TemplateEditor = () => (
-    <div className="space-y-6">
-      <Input
-        placeholder="Template Name"
-        value={currentTemplate.name}
-        onChange={(e) =>
-          setCurrentTemplate({ ...currentTemplate, name: e.target.value })
-        }
-        className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
-      />
-      <div className="flex space-x-4">
-        <div className="w-1/2">
-          <Label htmlFor="channel" className="text-forest-500">
-            Channel
-          </Label>
-          <Select
-            id="channel"
-            value={currentTemplate.channel}
-            onValueChange={(value) =>
-              setCurrentTemplate({ ...currentTemplate, channel: value })
-            }
-          >
-            <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
-              <SelectValue placeholder="Select channel" />
-            </SelectTrigger>
-            <SelectContent className="bg-forest-500 text-white">
-              <SelectItem value="email">Email</SelectItem>
-              <SelectItem value="push">Push Notification</SelectItem>
-              <SelectItem value="sms">SMS</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-1/2">
-          <Label htmlFor="status" className="text-forest-500">
-            Status
-          </Label>
-          <Select
-            id="status"
-            value={currentTemplate.status}
-            onValueChange={(value) =>
-              setCurrentTemplate({ ...currentTemplate, status: value })
-            }
-          >
-            <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent className="bg-forest-500 text-white">
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      {currentTemplate.channel === "email" && (
-        <>
-          <Input
-            placeholder="Subject Line"
-            value={currentTemplate.subjectLine}
-            onChange={(e) =>
-              setCurrentTemplate({
-                ...currentTemplate,
-                subjectLine: e.target.value,
-              })
-            }
-            className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
-          />
-          <Input
-            placeholder="Preview Text"
-            value={currentTemplate.previewText}
-            onChange={(e) =>
-              setCurrentTemplate({
-                ...currentTemplate,
-                previewText: e.target.value,
-              })
-            }
-            className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
-          />
-        </>
-      )}
-      <div className="border rounded-md border-meadow-500">
-        <ReactQuill
-          theme="snow"
-          value={currentTemplate.content}
-          onChange={(content) =>
-            setCurrentTemplate({ ...currentTemplate, content })
-          }
-          modules={{
-            toolbar: [
-              [{ header: [1, 2, 3, false] }],
-              ["bold", "italic", "underline", "strike"],
-              [{ list: "ordered" }, { list: "bullet" }],
-              ["link", "image"],
-              ["clean"],
-            ],
-          }}
-          className="bg-forest-500 text-white"
-        />
-      </div>
-      <div>
-        <Label htmlFor="tags" className="text-forest-500">
-          Tags
-        </Label>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {currentTemplate.tags.map((tag, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              className="bg-forest-500 text-meadow-500"
-            >
-              {tag}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-1 p-0 h-auto text-meadow-500 hover:text-meadow-400"
-                onClick={() => {
-                  const newTags = [...currentTemplate.tags];
-                  newTags.splice(index, 1);
-                  setCurrentTemplate({ ...currentTemplate, tags: newTags });
-                }}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </Badge>
-          ))}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 text-forest-500 border-forest-500"
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add Tag
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 bg-meadow-500 border-forest-500">
-              <ScrollArea className="h-64">
-                {tagSuggestions.map((tag) => (
-                  <Button
-                    key={tag}
-                    variant="ghost"
-                    className="w-full justify-start text-forest-500 hover:bg-meadow-600"
-                    onClick={() => {
-                      if (!currentTemplate.tags.includes(tag)) {
-                        setCurrentTemplate({
-                          ...currentTemplate,
-                          tags: [...currentTemplate.tags, tag],
-                        });
-                      }
-                    }}
-                  >
-                    {tag}
-                  </Button>
-                ))}
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-    </div>
-  );
-
-  const TemplatePreview = () => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-forest-500">Preview</h2>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={previewMode === "desktop" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setPreviewMode("desktop")}
-            className="text-forest-500 hover:bg-meadow-600"
-          >
-            <Monitor className="w-4 h-4 mr-2" /> Desktop
-          </Button>
-          <Button
-            variant={previewMode === "mobile" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setPreviewMode("mobile")}
-            className="text-forest-500 hover:bg-meadow-600"
-          >
-            <Smartphone className="w-4 h-4 mr-2" /> Mobile
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSource(!showSource)}
-            className="text-forest-500 hover:bg-meadow-600"
-          >
-            {showSource ? (
-              <Eye className="w-4 h-4" />
-            ) : (
-              <Code className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-      <Card
-        className={`bg-white ${
-          previewMode === "mobile" ? "max-w-[375px] mx-auto" : ""
-        }`}
-      >
-        <CardContent className="p-4">
-          {showSource ? (
-            <pre className="bg-forest-500 p-4 rounded-md overflow-x-auto text-sm text-white">
-              <code>{currentTemplate.content}</code>
-            </pre>
-          ) : (
-            <>
-              {currentTemplate.channel === "email" && (
-                <>
-                  <div className="mb-4">
-                    <strong className="text-forest-500">Subject:</strong>{" "}
-                    <span className="text-forest-700">
-                      {currentTemplate.subjectLine || "No subject"}
-                    </span>
-                  </div>
-                  <div className="mb-4">
-                    <strong className="text-forest-500">Preview:</strong>{" "}
-                    <span className="text-forest-700">
-                      {currentTemplate.previewText || "No preview text"}
-                    </span>
-                  </div>
-                </>
-              )}
-              <div
-                className="prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: currentTemplate.content }}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-
+  const insertPlaceholder = (placeholder) => {
+    const newContent = currentTemplate.content + `{{${placeholder}}}`;
+    setCurrentTemplate({ ...currentTemplate, content: newContent });
+  };
   const TemplateGrid = () => (
     <motion.div
       initial={{ opacity: 0 }}
@@ -505,8 +302,10 @@ const TemplateManagement = () => {
                 >
                   {template.channel === "email" ? (
                     <Mail className="mr-2 h-4 w-4" />
-                  ) : (
+                  ) : template.channel === "push" ? (
                     <Bell className="mr-2 h-4 w-4" />
+                  ) : (
+                    <MessageSquare className="mr-2 h-4 w-4" />
                   )}
                   {template.channel}
                 </Badge>
@@ -623,7 +422,7 @@ const TemplateManagement = () => {
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-forest-500 text-white border-meadow-500 rounded-md focus:outline-none focus:ring-2 focus:ring-meadow-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 bg-forest-600 text-white border-meadow-500 rounded-md focus:outline-none focus:ring-2 focus:ring-meadow-500 focus:border-transparent"
               />
             </div>
             <Button
@@ -641,10 +440,10 @@ const TemplateManagement = () => {
         <div className="mb-4 flex justify-between items-center">
           <div className="flex space-x-4">
             <Select value={filterChannel} onValueChange={setFilterChannel}>
-              <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
+              <SelectTrigger className="bg-forest-600 text-white border-meadow-500">
                 <SelectValue placeholder="Filter by channel" />
               </SelectTrigger>
-              <SelectContent className="bg-forest-500 text-white">
+              <SelectContent className="bg-forest-600 text-white">
                 <SelectItem value="all">All Channels</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="push">Push Notification</SelectItem>
@@ -652,10 +451,10 @@ const TemplateManagement = () => {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
+              <SelectTrigger className="bg-forest-600 text-white border-meadow-500">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
-              <SelectContent className="bg-forest-500 text-white">
+              <SelectContent className="bg-forest-600 text-white">
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
@@ -671,10 +470,10 @@ const TemplateManagement = () => {
                 setSortOrder(sortOrder === "asc" ? "desc" : "asc");
               }}
             >
-              <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
+              <SelectTrigger className="bg-forest-600 text-white border-meadow-500">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent className="bg-forest-500 text-white">
+              <SelectContent className="bg-forest-600 text-white">
                 <SelectItem value="name">Name</SelectItem>
                 <SelectItem value="channel">Channel</SelectItem>
                 <SelectItem value="status">Status</SelectItem>
@@ -717,10 +516,10 @@ const TemplateManagement = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <Card className="bg-forest-500 border-meadow-500">
+              <Card className="bg-forest-600 border-meadow-500">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-forest-600 border-meadow-500">
+                    <TableRow className="hover:bg-forest-700 border-meadow-500">
                       <TableHead className="text-meadow-500">Name</TableHead>
                       <TableHead className="text-meadow-500">Channel</TableHead>
                       <TableHead className="text-meadow-500">
@@ -737,7 +536,7 @@ const TemplateManagement = () => {
                     {filteredAndSortedTemplates.map((template) => (
                       <TableRow
                         key={template.id}
-                        className="hover:bg-forest-600 border-meadow-500"
+                        className="hover:bg-forest-700 border-meadow-500"
                       >
                         <TableCell className="font-medium text-white">
                           {template.name}
@@ -745,12 +544,14 @@ const TemplateManagement = () => {
                         <TableCell className="text-white">
                           <Badge
                             variant="outline"
-                            className="bg-forest-600 text-meadow-500 border-meadow-500"
+                            className="bg-forest-500 text-meadow-500 border-meadow-500"
                           >
                             {template.channel === "email" ? (
                               <Mail className="mr-2 h-4 w-4" />
-                            ) : (
+                            ) : template.channel === "push" ? (
                               <Bell className="mr-2 h-4 w-4" />
+                            ) : (
+                              <MessageSquare className="mr-2 h-4 w-4" />
                             )}
                             {template.channel}
                           </Badge>
@@ -789,7 +590,7 @@ const TemplateManagement = () => {
                                       setCurrentTemplate(template);
                                       setIsTemplateSheetOpen(true);
                                     }}
-                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-500"
                                   >
                                     <Edit2 className="h-4 w-4" />
                                   </Button>
@@ -808,7 +609,7 @@ const TemplateManagement = () => {
                                     onClick={() =>
                                       handleDeleteTemplate(template)
                                     }
-                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-500"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -827,7 +628,7 @@ const TemplateManagement = () => {
                                     onClick={() =>
                                       handleDuplicateTemplate(template)
                                     }
-                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-500"
                                   >
                                     <Copy className="h-4 w-4" />
                                   </Button>
@@ -846,7 +647,7 @@ const TemplateManagement = () => {
                                     onClick={() =>
                                       handleSendTestMessage(template)
                                     }
-                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+                                    className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-500"
                                   >
                                     <Send className="h-4 w-4" />
                                   </Button>
@@ -875,45 +676,38 @@ const TemplateManagement = () => {
             side="right"
           >
             <SheetHeader className="p-6 border-b border-meadow-500">
-              <SheetTitle className="text-forest-500 text-2xl">
+              <SheetTitle className="text-meadow-500 text-2xl">
                 {currentTemplate.id ? "Edit Template" : "Create New Template"}
               </SheetTitle>
-              <SheetDescription className="text-forest-700">
+              <SheetDescription className="text-forest-300">
                 Design your message template and preview it in real-time
               </SheetDescription>
             </SheetHeader>
-            <div className={`flex h-[calc(100vh-200px)]`}>
-              <div className="w-1/2 p-6 border-r border-forest-500">
-                <ScrollArea className="h-full pr-4">
-                  <TemplateEditor />
-                </ScrollArea>
-              </div>
-              <div className="w-1/2 p-6">
-                <ScrollArea className="h-full">
-                  <TemplatePreview />
-                </ScrollArea>
-              </div>
+            <div className={`h-[calc(100vh-200px)]`}>
+              <EmailTemplateEditor
+                currentTemplate={currentTemplate}
+                setCurrentTemplate={setCurrentTemplate}
+                profiles={profiles}
+                placeholders={placeholders}
+                tagSuggestions={tagSuggestions}
+              />
             </div>
             <SheetFooter className="p-6 border-t border-forest-500">
               <div className="flex justify-between items-center w-full">
-                <div>
-                  <Button
-                    onClick={() => setIsTemplateSheetOpen(false)}
-                    variant="outline"
-                    className="mr-2 border-forest-500 text-forest-500"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    onClick={handleSaveTemplate}
-                    className="bg-forest-500 text-meadow-500 hover:bg-forest-600"
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {currentTemplate.id ? "Update Template" : "Create Template"}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setIsTemplateSheetOpen(false)}
+                  variant="outline"
+                  className="mr-2 border-meadow-500 bg-forest-600 text-meadow-500 hover:bg-forest-700 hover:text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveTemplate}
+                  className="bg-meadow-500 text-forest-500 hover:bg-meadow-600"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {currentTemplate.id ? "Update Template" : "Create Template"}
+                </Button>
               </div>
             </SheetFooter>
           </SheetContent>

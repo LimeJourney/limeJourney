@@ -57,6 +57,7 @@ model Organization {
   segments Segment[]
   messagingProfiles MessagingProfile[]
   journeys         Journey[]
+  templates        Template[]
 }
 
 model ApiKey {
@@ -133,7 +134,7 @@ model MessagingProfile {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   logs                  MessageLog[]
-
+  templates             Template[]
   @@index([organizationId])
   @@index([integrationId])
   @@unique([id, organizationId])
@@ -240,4 +241,36 @@ enum EventStatus {
   SUCCESS
   FAILURE
   PENDING
+}
+
+enum ChannelType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+model Template {
+  id               String    @id @default(uuid())
+  name             String
+  channel          ChannelType
+  subjectLine      String?
+  previewText      String?
+  content          String
+  tags             String[]
+  status           TemplateStatus @default(DRAFT)
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  messagingProfileId String?
+  messagingProfile MessagingProfile? @relation(fields: [messagingProfileId], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([messagingProfileId])
+}
+
+enum TemplateStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
 }

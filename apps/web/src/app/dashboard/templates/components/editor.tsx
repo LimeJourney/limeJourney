@@ -1,293 +1,402 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
-  Mail,
-  Settings,
+  Edit2,
   Smartphone,
   Monitor,
-  Eye,
   Code,
-  ChevronDown,
+  Eye,
+  Save,
+  Mail,
+  Bell,
+  MessageSquare,
   Plus,
-  Send,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
-const IntegratedEmailTemplateEditor = () => {
-  const [activeTab, setActiveTab] = useState("design");
+const EmailTemplateEditor = ({
+  currentTemplate,
+  setCurrentTemplate,
+  profiles,
+  placeholders,
+  tagSuggestions,
+}) => {
   const [previewMode, setPreviewMode] = useState("desktop");
-  const [showSource, setShowSource] = useState(false);
-  const [template, setTemplate] = useState({
-    name: "",
-    subject: "",
-    previewText: "",
-    content: "<p>Hello {{first_name}},</p><p>Your content here...</p>",
-    channel: "email",
-  });
+  const quillRef = useRef(null);
 
-  const placeholders = [
-    { key: "first_name", description: "Customer's first name" },
-    { key: "last_name", description: "Customer's last name" },
-    { key: "email", description: "Customer's email address" },
-    { key: "company", description: "Customer's company name" },
-    {
-      key: "subscription_plan",
-      description: "Customer's current subscription plan",
-    },
-    {
-      key: "last_purchase_date",
-      description: "Date of customer's last purchase",
-    },
-  ];
-
-  const handleContentChange = (e) => {
-    setTemplate({ ...template, content: e.target.value });
-  };
-
-  const insertPlaceholder = (placeholder) => {
-    setTemplate({
-      ...template,
-      content: template.content + `{{${placeholder}}}`,
-    });
-  };
-
-  const replacePlaceholders = (content) => {
-    const replacements = {
-      first_name: "John",
-      last_name: "Doe",
-      email: "john.doe@example.com",
-      company: "Acme Corp",
-      subscription_plan: "Premium",
-      last_purchase_date: "2023-09-15",
-    };
-
-    return content.replace(
-      /{{(\w+)}}/g,
-      (match, p1) => replacements[p1] || match
-    );
-  };
-
-  const TemplateEditor = () => (
-    <div className="space-y-4">
-      <Input
-        placeholder="Template Name"
-        value={template.name}
-        onChange={(e) => setTemplate({ ...template, name: e.target.value })}
-        className="bg-forest-600 text-meadow-100 border-meadow-500/30 placeholder-meadow-300/50"
-      />
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-forest-600">
-          <TabsTrigger
-            value="design"
-            className="text-meadow-300 data-[state=active]:bg-forest-500"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Design
-          </TabsTrigger>
-          <TabsTrigger
-            value="settings"
-            className="text-meadow-300 data-[state=active]:bg-forest-500"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="design" className="space-y-4 mt-4">
-          <Input
-            placeholder="Subject Line"
-            value={template.subject}
-            onChange={(e) =>
-              setTemplate({ ...template, subject: e.target.value })
-            }
-            className="bg-forest-600 text-meadow-100 border-meadow-500/30 placeholder-meadow-300/50"
-          />
-          <Input
-            placeholder="Preview Text"
-            value={template.previewText}
-            onChange={(e) =>
-              setTemplate({ ...template, previewText: e.target.value })
-            }
-            className="bg-forest-600 text-meadow-100 border-meadow-500/30 placeholder-meadow-300/50"
-          />
-          <div className="border rounded-md border-meadow-500/30">
-            <div className="bg-forest-600 p-2 flex items-center space-x-2 border-b border-meadow-500/30">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-meadow-300 hover:bg-forest-500 hover:text-meadow-100"
-              >
-                B
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-meadow-300 hover:bg-forest-500 hover:text-meadow-100"
-              >
-                I
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-meadow-300 hover:bg-forest-500 hover:text-meadow-100"
-              >
-                U
-              </Button>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-meadow-300 hover:bg-forest-500 hover:text-meadow-100"
-                  >
-                    Placeholders <ChevronDown className="w-4 h-4 ml-1" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 bg-forest-600 border-meadow-500/30">
-                  <ScrollArea className="h-64">
-                    {placeholders.map((p) => (
-                      <Button
-                        key={p.key}
-                        variant="ghost"
-                        className="w-full justify-start text-meadow-300 hover:bg-forest-500 hover:text-meadow-100"
-                        onClick={() => insertPlaceholder(p.key)}
-                      >
-                        {p.key}
-                        <span className="text-xs text-meadow-400 ml-2">
-                          {p.description}
-                        </span>
-                      </Button>
-                    ))}
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <Textarea
-              value={template.content}
-              onChange={handleContentChange}
-              className="w-full h-64 p-2 bg-forest-700 text-meadow-100 focus:outline-none resize-none border-0"
-              placeholder="Enter your email content here..."
-            />
+  const BrowserFrame = ({ children }) => (
+    <div className="border-2 border-forest-300 rounded-lg overflow-hidden shadow-lg bg-white">
+      <div className="bg-forest-200 p-2 flex items-center space-x-2">
+        <div className="flex space-x-1">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+        </div>
+        <div className="flex-grow">
+          <div className="bg-forest-100 rounded px-2 py-1 text-sm text-forest-700 truncate">
+            https://example.com/email-preview
           </div>
-        </TabsContent>
-        <TabsContent value="settings" className="space-y-4 mt-4">
-          <p className="text-meadow-300">Template settings will go here...</p>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-
-  const TemplatePreview = () => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-meadow-300">Preview</h2>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={previewMode === "desktop" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setPreviewMode("desktop")}
-            className="text-meadow-300 hover:bg-forest-600"
-          >
-            <Monitor className="w-4 h-4 mr-2" /> Desktop
-          </Button>
-          <Button
-            variant={previewMode === "mobile" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setPreviewMode("mobile")}
-            className="text-meadow-300 hover:bg-forest-600"
-          >
-            <Smartphone className="w-4 h-4 mr-2" /> Mobile
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSource(!showSource)}
-            className="text-meadow-300 hover:bg-forest-600"
-          >
-            {showSource ? (
-              <Eye className="w-4 h-4" />
-            ) : (
-              <Code className="w-4 h-4" />
-            )}
-          </Button>
         </div>
       </div>
-      <Card
-        className={`bg-white ${previewMode === "mobile" ? "max-w-[375px] mx-auto" : ""}`}
-      >
-        <CardContent className="p-4">
-          {showSource ? (
-            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm">
-              <code>{template.content}</code>
-            </pre>
-          ) : (
-            <>
-              <div className="mb-4">
-                <strong className="text-gray-700">Subject:</strong>{" "}
-                <span className="text-gray-600">
-                  {template.subject || "No subject"}
-                </span>
-              </div>
-              <div className="mb-4">
-                <strong className="text-gray-700">Preview:</strong>{" "}
-                <span className="text-gray-500">
-                  {template.previewText || "No preview text"}
-                </span>
-              </div>
-              <div
-                className="prose max-w-none"
-                dangerouslySetInnerHTML={{
-                  __html: replacePlaceholders(template.content),
-                }}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
-      <div className="flex justify-between items-center">
-        <Badge variant="secondary" className="bg-meadow-500/20 text-meadow-300">
-          {template.channel.toUpperCase()}
-        </Badge>
-        <Button className="bg-meadow-500 text-forest-800 hover:bg-meadow-600">
-          <Send className="w-4 h-4 mr-2" /> Send Test
-        </Button>
-      </div>
+      <div className="p-4 bg-white">{children}</div>
     </div>
   );
 
+  const PhoneFrame = ({ children }) => (
+    <div className="mx-auto w-[300px] h-[600px] bg-white rounded-[3rem] border-[14px] border-forest-100 relative overflow-hidden shadow-xl">
+      <div className="absolute top-0 inset-x-0 h-6 bg-forest-200 rounded-b-3xl"></div>
+      <div className="h-full w-full bg-white overflow-y-auto">{children}</div>
+    </div>
+  );
+
+  const PushNotification = () => (
+    <div className="bg-forest-100 p-4 rounded-lg shadow-md m-2">
+      <div className="flex items-center mb-2">
+        <div className="w-8 h-8 bg-meadow-500 rounded-full flex items-center justify-center mr-2">
+          <Bell className="w-4 h-4 text-forest-700" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-forest-800">App Name</h3>
+          <p className="text-xs text-forest-600">now</p>
+        </div>
+      </div>
+      <p className="text-sm text-forest-700">
+        {quillRef.current ? quillRef.current.getEditor().getText() : ""}
+      </p>
+    </div>
+  );
+
+  const insertPlaceholder = (placeholder) => {
+    const editor = quillRef.current.getEditor();
+    const range = editor.getSelection();
+    let position = 0;
+    if (range) {
+      position = range.index;
+    }
+    editor.insertText(position, `{{${placeholder}}}`);
+  };
+
+  const handleContentChange = (content) => {
+    setCurrentTemplate({ ...currentTemplate, content });
+  };
+
   return (
-    <div className="bg-forest-800 min-h-screen p-6">
-      <Card className="max-w-7xl mx-auto bg-forest-700 shadow-xl border-meadow-500/20">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-meadow-300">
-              Create New Template
-            </h1>
-            <Button className="bg-meadow-500 text-forest-800 hover:bg-meadow-600">
-              Save Template
+    <div className="flex h-full bg-forest-700">
+      {/* Editor Panel */}
+      <div className="w-1/2 p-6 bg-forest-600 overflow-y-auto">
+        <ScrollArea className="h-full pr-4">
+          <div className="space-y-6">
+            <Input
+              placeholder="Template Name"
+              value={currentTemplate.name}
+              onChange={(e) =>
+                setCurrentTemplate({ ...currentTemplate, name: e.target.value })
+              }
+              className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
+            />
+            <div className="flex space-x-4">
+              <div className="w-1/2">
+                <Label htmlFor="profile" className="text-meadow-500">
+                  Profile
+                </Label>
+                <Select
+                  id="profile"
+                  value={currentTemplate.profile}
+                  onValueChange={(value) => {
+                    const selectedProfile = profiles.find(
+                      (p) => p.id === value
+                    );
+                    setCurrentTemplate({
+                      ...currentTemplate,
+                      profile: value,
+                      channel: selectedProfile.type,
+                    });
+                  }}
+                >
+                  <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
+                    <SelectValue placeholder="Select profile" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-forest-600 text-white">
+                    {profiles.map((profile) => (
+                      <SelectItem key={profile.id} value={profile.id}>
+                        {profile.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-1/2">
+                <Label htmlFor="status" className="text-meadow-500">
+                  Status
+                </Label>
+                <Select
+                  id="status"
+                  value={currentTemplate.status}
+                  onValueChange={(value) =>
+                    setCurrentTemplate({ ...currentTemplate, status: value })
+                  }
+                >
+                  <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-forest-600 text-white">
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {currentTemplate.channel === "email" && (
+              <>
+                <Input
+                  placeholder="Subject Line"
+                  value={currentTemplate.subjectLine}
+                  onChange={(e) =>
+                    setCurrentTemplate({
+                      ...currentTemplate,
+                      subjectLine: e.target.value,
+                    })
+                  }
+                  className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
+                />
+                <Input
+                  placeholder="Preview Text"
+                  value={currentTemplate.previewText}
+                  onChange={(e) =>
+                    setCurrentTemplate({
+                      ...currentTemplate,
+                      previewText: e.target.value,
+                    })
+                  }
+                  className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
+                />
+              </>
+            )}
+            <div className="border rounded-md border-meadow-500">
+              <ReactQuill
+                ref={quillRef}
+                theme="snow"
+                value={currentTemplate.content}
+                onChange={handleContentChange}
+                modules={{
+                  toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["link", "image"],
+                    ["clean"],
+                  ],
+                }}
+                className="bg-forest-500 text-white"
+              />
+            </div>
+            <div>
+              <Label htmlFor="placeholders" className="text-meadow-500">
+                Insert Placeholder
+              </Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {placeholders.map((placeholder) => (
+                  <Button
+                    key={placeholder}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => insertPlaceholder(placeholder)}
+                    className="bg-forest-600 text-meadow-500 border-meadow-500 hover:bg-forest-700"
+                  >
+                    {placeholder}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="tags" className="text-meadow-500">
+                Tags
+              </Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {currentTemplate.tags.map((tag, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="bg-forest-500 text-meadow-500"
+                  >
+                    {tag}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-1 p-0 h-auto text-meadow-500 hover:text-meadow-400"
+                      onClick={() => {
+                        const newTags = [...currentTemplate.tags];
+                        newTags.splice(index, 1);
+                        setCurrentTemplate({
+                          ...currentTemplate,
+                          tags: newTags,
+                        });
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-meadow-500 border-meadow-500 bg-forest-600 hover:bg-forest-700"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Tag
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 bg-forest-600 border-meadow-500">
+                    <ScrollArea className="h-64">
+                      {tagSuggestions.map((tag) => (
+                        <Button
+                          key={tag}
+                          variant="ghost"
+                          className="w-full justify-start text-meadow-500 hover:bg-forest-700"
+                          onClick={() => {
+                            if (!currentTemplate.tags.includes(tag)) {
+                              setCurrentTemplate({
+                                ...currentTemplate,
+                                tags: [...currentTemplate.tags, tag],
+                              });
+                            }
+                          }}
+                        >
+                          {tag}
+                        </Button>
+                      ))}
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Preview Panel */}
+      <div className="w-1/2 p-6 bg-forest-800 overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-meadow-500">Preview</h2>
+          <div className="flex space-x-2">
+            <Button
+              variant={previewMode === "desktop" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPreviewMode("desktop")}
+              className="text-meadow-500 hover:bg-forest-700"
+            >
+              <Monitor className="w-4 h-4 mr-2" /> Desktop
+            </Button>
+            <Button
+              variant={previewMode === "mobile" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPreviewMode("mobile")}
+              className="text-meadow-500 hover:bg-forest-700"
+            >
+              <Smartphone className="w-4 h-4 mr-2" /> Mobile
+            </Button>
+            <Button
+              variant={previewMode === "code" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setPreviewMode("code")}
+              className="text-meadow-500 hover:bg-forest-700"
+            >
+              {previewMode === "code" ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <Code className="w-4 h-4" />
+              )}
             </Button>
           </div>
-          <div className="grid grid-cols-5 gap-6">
-            <div className="col-span-3">
-              <TemplateEditor />
-            </div>
-            <div className="col-span-2">
-              <TemplatePreview />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {previewMode === "code" ? (
+          <Card className="bg-forest-700 border-meadow-700">
+            <CardContent className="p-4">
+              <pre className="text-meadow-300 overflow-x-auto">
+                <code>{currentTemplate.content}</code>
+              </pre>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {currentTemplate.channel === "email" ? (
+              previewMode === "desktop" ? (
+                <BrowserFrame>
+                  <div className="prose prose-meadow max-w-none">
+                    <h2 className="text-forest-800">
+                      {currentTemplate.subjectLine}
+                    </h2>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: currentTemplate.content,
+                      }}
+                    />
+                  </div>
+                </BrowserFrame>
+              ) : (
+                <PhoneFrame>
+                  <div className="p-4">
+                    <div className="bg-forest-100 rounded-lg p-4 shadow-md">
+                      <h2 className="text-forest-800 text-lg font-semibold mb-2">
+                        {currentTemplate.subjectLine}
+                      </h2>
+                      <div
+                        className="prose prose-sm prose-meadow"
+                        dangerouslySetInnerHTML={{
+                          __html: currentTemplate.content,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </PhoneFrame>
+              )
+            ) : currentTemplate.channel === "push" ? (
+              <PhoneFrame>
+                <PushNotification />
+              </PhoneFrame>
+            ) : (
+              <PhoneFrame>
+                <div className="p-4">
+                  <div className="bg-forest-100 rounded-lg p-4 shadow-md">
+                    <h2 className="text-forest-800 text-lg font-semibold mb-2">
+                      SMS Message
+                    </h2>
+                    <p className="text-forest-700">
+                      {quillRef.current
+                        ? quillRef.current.getEditor().getText()
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+              </PhoneFrame>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
 
-export default IntegratedEmailTemplateEditor;
+export default EmailTemplateEditor;

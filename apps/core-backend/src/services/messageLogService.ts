@@ -5,7 +5,9 @@ const prisma = new PrismaClient();
 
 export class MessageLogService {
   async createLog(
-    data: Omit<MessageLog, "id" | "createdAt">
+    data: Omit<MessageLog, "id" | "createdAt"> & {
+      metadata: Prisma.InputJsonValue;
+    }
   ): Promise<MessageLog> {
     try {
       return await prisma.messageLog.create({ data });
