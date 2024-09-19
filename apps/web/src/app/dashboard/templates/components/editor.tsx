@@ -36,6 +36,8 @@ import "react-quill/dist/quill.snow.css";
 const EmailTemplateEditor = ({
   currentTemplate,
   setCurrentTemplate,
+  selectedProfile,
+  onProfileSelect,
   profiles,
   placeholders,
   tagSuggestions,
@@ -119,18 +121,8 @@ const EmailTemplateEditor = ({
                   Profile
                 </Label>
                 <Select
-                  id="profile"
-                  value={currentTemplate.profile}
-                  onValueChange={(value) => {
-                    const selectedProfile = profiles.find(
-                      (p) => p.id === value
-                    );
-                    setCurrentTemplate({
-                      ...currentTemplate,
-                      profile: value,
-                      channel: selectedProfile.type,
-                    });
-                  }}
+                  value={selectedProfile?.id || ""}
+                  onValueChange={onProfileSelect}
                 >
                   <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
                     <SelectValue placeholder="Select profile" />

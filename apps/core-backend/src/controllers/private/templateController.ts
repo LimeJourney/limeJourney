@@ -22,13 +22,13 @@ import { Template, ChannelType, Prisma, TemplateStatus } from "@prisma/client";
 
 interface CreateTemplateRequest {
   name: string;
-  channel: ChannelType;
-  subjectLine: string | null; // Remove the optional (?) modifier
-  previewText: string | null;
+  channel: string;
+  subjectLine: string; // Remove the optional (?) modifier
+  previewText: string;
   content: string;
   tags: string[];
-  status: TemplateStatus;
-  messagingProfileId: string | null;
+  status: string;
+  messagingProfileId: string;
 }
 
 interface UpdateTemplateRequest {
@@ -207,8 +207,8 @@ export class TemplateController {
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
     @Query() limit?: number,
     @Query() offset?: number,
-    @Query() channel?: ChannelType,
-    @Query() status?: Prisma.EnumTemplateStatusFilter,
+    @Query() channel?: string,
+    @Query() status?: string,
     @Query() search?: string
   ): Promise<ApiResponse<Template[]> | void> {
     try {

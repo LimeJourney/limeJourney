@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import {
   Plus,
@@ -12,19 +11,11 @@ import {
   Send,
   Mail,
   Bell,
-  ChevronDown,
-  Eye,
-  Code,
-  Smartphone,
-  Monitor,
-  Filter,
   SortAsc,
   SortDesc,
   LayoutGrid,
   List,
-  X,
   Save,
-  Tag,
   MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,12 +37,6 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -68,7 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import {
   Tooltip,
   TooltipContent,
@@ -76,99 +60,78 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { entityService } from "@/services/entitiesService";
-import EmailTemplateEditor from "./components/stripeLikeEditor";
+import EmailTemplateEditor from "./components/editor";
+import {
+  templateService,
+  Template,
+  ChannelType,
+  TemplateStatus,
+  CreateTemplateInput,
+  UpdateTemplateInput,
+} from "@/services/templateService";
+import {
+  messagingProfileService,
+  MessagingProfile,
+} from "@/services/messagingProfileService";
 
-const TemplateManagement = () => {
-  const [templates, setTemplates] = useState([
-    {
-      id: "1",
-      name: "Welcome Email",
-      channel: "email",
-      subjectLine: "Welcome to our platform!",
-      previewText: "We're excited to have you on board.",
-      content:
-        "<h1>Welcome, {{first_name}}!</h1><p>We're thrilled to have you join our platform.</p>",
-      status: "active",
-      tags: ["welcome", "onboarding"],
-      createdAt: "2023-09-01T00:00:00Z",
-      updatedAt: "2023-09-01T00:00:00Z",
-    },
-    {
-      id: "2",
-      name: "Order Confirmation",
-      channel: "email",
-      subjectLine: "Your order is confirmed",
-      previewText: "Thank you for your purchase. Here are your order details.",
-      content:
-        "<h2>Order Confirmation</h2><p>Dear {{first_name}},</p><p>Thank you for your purchase. Your order #{{order_number}} has been confirmed.</p>",
-      status: "active",
-      tags: ["transactional", "order"],
-      createdAt: "2023-09-02T00:00:00Z",
-      updatedAt: "2023-09-02T00:00:00Z",
-    },
-    {
-      id: "3",
-      name: "New Product Alert",
-      channel: "push",
-      content: "Check out our latest product: The Ultimate Gadget! 🚀",
-      status: "draft",
-      tags: ["promotional", "product"],
-      createdAt: "2023-09-03T00:00:00Z",
-      updatedAt: "2023-09-03T00:00:00Z",
-    },
-    {
-      id: "4",
-      name: "Flash Sale Notification",
-      channel: "push",
-      content: "24-hour Flash Sale! 50% off all items. Shop now! 🛍️",
-      status: "active",
-      tags: ["promotional", "sale"],
-      createdAt: "2023-09-04T00:00:00Z",
-      updatedAt: "2023-09-04T00:00:00Z",
-    },
-  ]);
+const TemplateManagement: React.FC = () => {
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState(null);
-  const [currentTemplate, setCurrentTemplate] = useState({
-    id: "",
+  const [templateToDelete, setTemplateToDelete] = useState<Template | null>(
+    null
+  );
+  const [currentTemplate, setCurrentTemplate] = useState<
+    CreateTemplateInput & { id?: string }
+  >({
     name: "",
-    channel: "email",
+    channel: ChannelType.EMAIL,
     subjectLine: "",
     previewText: "",
     content: "",
     tags: [],
-    status: "draft",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    profile: "", // New field for profile
+    status: TemplateStatus.DRAFT,
   });
-  const [previewMode, setPreviewMode] = useState("desktop");
-  const [showSource, setShowSource] = useState(false);
-  const [viewMode, setViewMode] = useState("list");
-  const [sortBy, setSortBy] = useState("name");
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [filterChannel, setFilterChannel] = useState("all");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [tagSuggestions] = useState([
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [sortBy, setSortBy] = useState<keyof Template>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [filterChannel, setFilterChannel] = useState<ChannelType | "all">(
+    "all"
+  );
+  const [filterStatus, setFilterStatus] = useState<TemplateStatus | "all">(
+    "all"
+  );
+  const [tagSuggestions] = useState<string[]>([
     "promotional",
     "transactional",
     "newsletter",
     "welcome",
     "reminder",
   ]);
-  const [profiles, setProfiles] = useState([
-    { id: "1", name: "Email Profile", type: "email" },
-    { id: "2", name: "Push Notification Profile", type: "push" },
-    { id: "3", name: "SMS Profile", type: "sms" },
-  ]);
-  const [placeholders, setPlaceholders] = useState([]);
+  const [selectedProfile, setSelectedProfile] =
+    useState<MessagingProfile | null>(null);
+  const [profiles, setProfiles] = useState<MessagingProfile[]>([]);
+  const [placeholders, setPlaceholders] = useState<string[]>([]);
 
   useEffect(() => {
-    // Fetch placeholders when component mounts
+    fetchTemplates();
     fetchPlaceholders();
+    fetchProfiles();
   }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const fetchedTemplates = await templateService.getTemplates({
+        channel: filterChannel !== "all" ? filterChannel : undefined,
+        status: filterStatus !== "all" ? filterStatus : undefined,
+        // search: searchQuery,
+      });
+      setTemplates(fetchedTemplates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+    }
+  };
 
   const fetchPlaceholders = async () => {
     try {
@@ -179,102 +142,128 @@ const TemplateManagement = () => {
     }
   };
 
-  const filteredAndSortedTemplates = templates
-    .filter(
-      (template) =>
-        template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        template.channel.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .filter(
-      (template) =>
-        filterChannel === "all" || template.channel === filterChannel
-    )
-    .filter(
-      (template) => filterStatus === "all" || template.status === filterStatus
-    )
-    .sort((a, b) => {
-      if (a[sortBy] < b[sortBy]) return sortOrder === "asc" ? -1 : 1;
-      if (a[sortBy] > b[sortBy]) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-
-  const handleSaveTemplate = () => {
-    const now = new Date().toISOString();
-    const templateToSave = {
-      ...currentTemplate,
-      updatedAt: now,
-    };
-
-    if (!templateToSave.id) {
-      templateToSave.id = (templates.length + 1).toString();
-      templateToSave.createdAt = now;
+  const fetchProfiles = async () => {
+    try {
+      const fetchedProfiles = await messagingProfileService.getProfiles();
+      setProfiles(fetchedProfiles);
+    } catch (error) {
+      console.error("Error fetching messaging profiles:", error);
     }
-
-    // Log all the data about the template that is about to be saved
-    console.log("Template data to be saved:", {
-      ...templateToSave,
-      selectedProfile: profiles.find((p) => p.id === templateToSave.profile),
-    });
-
-    if (templateToSave.id) {
-      setTemplates(
-        templates.map((t) => (t.id === templateToSave.id ? templateToSave : t))
-      );
-    } else {
-      setTemplates([...templates, templateToSave]);
-    }
-    setIsTemplateSheetOpen(false);
-    resetCurrentTemplate();
   };
 
-  const handleDeleteTemplate = (template) => {
-    setTemplateToDelete(template);
-    setIsDeleteDialogOpen(true);
+  useEffect(() => {
+    fetchTemplates();
+  }, [filterChannel, filterStatus, searchQuery]);
+
+  const handleSaveTemplate = async () => {
+    try {
+      if (!selectedProfile) {
+        console.error("No messaging profile selected");
+        return;
+      }
+
+      const templateData = {
+        ...currentTemplate,
+        messagingProfileId: selectedProfile.id,
+      };
+
+      if (currentTemplate.id) {
+        const { id, ...updateData } = templateData;
+        await templateService.updateTemplate(
+          id as string,
+          updateData as UpdateTemplateInput
+        );
+      } else {
+        await templateService.createTemplate(
+          templateData as CreateTemplateInput
+        );
+      }
+      setIsTemplateSheetOpen(false);
+      fetchTemplates();
+      resetCurrentTemplate();
+    } catch (error) {
+      console.error("Error saving template:", error);
+    }
   };
 
-  const confirmDeleteTemplate = () => {
-    setTemplates(templates.filter((t) => t.id !== templateToDelete.id));
-    setIsDeleteDialogOpen(false);
-    setTemplateToDelete(null);
+  const getChannelFromIntegrationType = (
+    integrationType: string
+  ): ChannelType => {
+    switch (integrationType.toLowerCase()) {
+      case "email":
+        return ChannelType.EMAIL;
+      case "sms":
+        return ChannelType.SMS;
+      default:
+        return ChannelType.PUSH;
+    }
   };
 
   const resetCurrentTemplate = () => {
     setCurrentTemplate({
-      id: "",
       name: "",
-      channel: "email",
+      channel: ChannelType.EMAIL,
       subjectLine: "",
       previewText: "",
       content: "",
       tags: [],
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      profile: "",
+      status: TemplateStatus.DRAFT,
     });
+    setSelectedProfile(null);
   };
 
-  const handleDuplicateTemplate = (template) => {
-    const newTemplate = {
-      ...template,
-      id: (templates.length + 1).toString(),
-      name: `${template.name} (Copy)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setTemplates([...templates, newTemplate]);
+  const handleDeleteTemplate = (template: Template) => {
+    setTemplateToDelete(template);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleSendTestMessage = (template) => {
+  const confirmDeleteTemplate = async () => {
+    if (templateToDelete) {
+      try {
+        await templateService.deleteTemplate(templateToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setTemplateToDelete(null);
+        fetchTemplates();
+      } catch (error) {
+        console.error("Error deleting template:", error);
+      }
+    }
+  };
+
+  const handleDuplicateTemplate = async (template: Template) => {
+    try {
+      await templateService.duplicateTemplate(template.id);
+      fetchTemplates();
+    } catch (error) {
+      console.error("Error duplicating template:", error);
+    }
+  };
+
+  const handleSendTestMessage = (template: Template) => {
     console.log(
       `Sending test ${template.channel} for template: ${template.name}`
     );
+    // Implement test message sending logic here
   };
-  const insertPlaceholder = (placeholder) => {
-    const newContent = currentTemplate.content + `{{${placeholder}}}`;
-    setCurrentTemplate({ ...currentTemplate, content: newContent });
+
+  const filteredAndSortedTemplates = templates.sort((a, b) => {
+    if (a[sortBy] < b[sortBy]) return sortOrder === "asc" ? -1 : 1;
+    if (a[sortBy] > b[sortBy]) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleProfileSelect = (profileId: string) => {
+    const profile = profiles.find((p) => p.id === profileId);
+    if (profile) {
+      setSelectedProfile(profile);
+      setCurrentTemplate((prev) => ({
+        ...prev,
+        channel: getChannelFromIntegrationType(profile.integration.type),
+      }));
+    }
   };
-  const TemplateGrid = () => (
+
+  const TemplateGrid: React.FC = () => (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -300,9 +289,9 @@ const TemplateManagement = () => {
                   variant="outline"
                   className="bg-forest-500 text-meadow-500 border-meadow-500"
                 >
-                  {template.channel === "email" ? (
+                  {template.channel === ChannelType.EMAIL ? (
                     <Mail className="mr-2 h-4 w-4" />
-                  ) : template.channel === "push" ? (
+                  ) : template.channel === ChannelType.PUSH ? (
                     <Bell className="mr-2 h-4 w-4" />
                   ) : (
                     <MessageSquare className="mr-2 h-4 w-4" />
@@ -311,7 +300,7 @@ const TemplateManagement = () => {
                 </Badge>
               </div>
               <p className="text-gray-300 mb-4 truncate">
-                {template.channel === "email"
+                {template.channel === ChannelType.EMAIL
                   ? template.subjectLine
                   : template.content}
               </p>
@@ -319,9 +308,9 @@ const TemplateManagement = () => {
                 <Badge
                   variant="outline"
                   className={`${
-                    template.status === "active"
+                    template.status === TemplateStatus.ACTIVE
                       ? "bg-green-900 text-green-300 border-green-500"
-                      : template.status === "archived"
+                      : template.status === TemplateStatus.ARCHIVED
                         ? "bg-gray-900 text-gray-300 border-gray-500"
                         : "bg-yellow-900 text-yellow-300 border-yellow-500"
                   }`}
@@ -439,26 +428,40 @@ const TemplateManagement = () => {
 
         <div className="mb-4 flex justify-between items-center">
           <div className="flex space-x-4">
-            <Select value={filterChannel} onValueChange={setFilterChannel}>
+            <Select
+              value={filterChannel}
+              onValueChange={(value) =>
+                setFilterChannel(value as ChannelType | "all")
+              }
+            >
               <SelectTrigger className="bg-forest-600 text-white border-meadow-500">
                 <SelectValue placeholder="Filter by channel" />
               </SelectTrigger>
               <SelectContent className="bg-forest-600 text-white">
                 <SelectItem value="all">All Channels</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="push">Push Notification</SelectItem>
-                <SelectItem value="sms">SMS</SelectItem>
+                <SelectItem value={ChannelType.EMAIL}>Email</SelectItem>
+                <SelectItem value={ChannelType.PUSH}>
+                  Push Notification
+                </SelectItem>
+                <SelectItem value={ChannelType.SMS}>SMS</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <Select
+              value={filterStatus}
+              onValueChange={(value) =>
+                setFilterStatus(value as TemplateStatus | "all")
+              }
+            >
               <SelectTrigger className="bg-forest-600 text-white border-meadow-500">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent className="bg-forest-600 text-white">
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value={TemplateStatus.DRAFT}>Draft</SelectItem>
+                <SelectItem value={TemplateStatus.ACTIVE}>Active</SelectItem>
+                <SelectItem value={TemplateStatus.ARCHIVED}>
+                  Archived
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -466,7 +469,7 @@ const TemplateManagement = () => {
             <Select
               value={sortBy}
               onValueChange={(value) => {
-                setSortBy(value);
+                setSortBy(value as keyof Template);
                 setSortOrder(sortOrder === "asc" ? "desc" : "asc");
               }}
             >
@@ -546,9 +549,9 @@ const TemplateManagement = () => {
                             variant="outline"
                             className="bg-forest-500 text-meadow-500 border-meadow-500"
                           >
-                            {template.channel === "email" ? (
+                            {template.channel === ChannelType.EMAIL ? (
                               <Mail className="mr-2 h-4 w-4" />
-                            ) : template.channel === "push" ? (
+                            ) : template.channel === ChannelType.PUSH ? (
                               <Bell className="mr-2 h-4 w-4" />
                             ) : (
                               <MessageSquare className="mr-2 h-4 w-4" />
@@ -557,7 +560,7 @@ const TemplateManagement = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white">
-                          {template.channel === "email"
+                          {template.channel === ChannelType.EMAIL
                             ? template.subjectLine
                             : template.content}
                         </TableCell>
@@ -565,9 +568,9 @@ const TemplateManagement = () => {
                           <Badge
                             variant="outline"
                             className={`${
-                              template.status === "active"
+                              template.status === TemplateStatus.ACTIVE
                                 ? "bg-green-900 text-green-300 border-green-500"
-                                : template.status === "archived"
+                                : template.status === TemplateStatus.ARCHIVED
                                   ? "bg-gray-900 text-gray-300 border-gray-500"
                                   : "bg-yellow-900 text-yellow-300 border-yellow-500"
                             }`}
@@ -687,6 +690,8 @@ const TemplateManagement = () => {
               <EmailTemplateEditor
                 currentTemplate={currentTemplate}
                 setCurrentTemplate={setCurrentTemplate}
+                selectedProfile={selectedProfile}
+                onProfileSelect={handleProfileSelect}
                 profiles={profiles}
                 placeholders={placeholders}
                 tagSuggestions={tagSuggestions}
