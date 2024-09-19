@@ -247,9 +247,11 @@ const TemplateManagement: React.FC = () => {
   };
 
   const filteredAndSortedTemplates = templates.sort((a, b) => {
-    if (a[sortBy] < b[sortBy]) return sortOrder === "asc" ? -1 : 1;
-    if (a[sortBy] > b[sortBy]) return sortOrder === "asc" ? 1 : -1;
-    return 0;
+    const aValue = String(a[sortBy] ?? "");
+    const bValue = String(b[sortBy] ?? "");
+    return sortOrder === "asc"
+      ? aValue.localeCompare(bValue)
+      : bValue.localeCompare(aValue);
   });
 
   const handleProfileSelect = (profileId: string) => {

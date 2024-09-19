@@ -139,13 +139,25 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"PrismaChannelType": {
+				"$ref": "#/components/schemas/_36_Enums.ChannelType"
+			},
+			"ChannelType": {
+				"$ref": "#/components/schemas/PrismaChannelType"
+			},
+			"PrismaTemplateStatus": {
+				"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
+			},
+			"TemplateStatus": {
+				"$ref": "#/components/schemas/PrismaTemplateStatus"
+			},
 			"CreateTemplateRequest": {
 				"properties": {
 					"name": {
 						"type": "string"
 					},
 					"channel": {
-						"type": "string"
+						"$ref": "#/components/schemas/ChannelType"
 					},
 					"subjectLine": {
 						"type": "string"
@@ -163,7 +175,7 @@
 						"type": "array"
 					},
 					"status": {
-						"type": "string"
+						"$ref": "#/components/schemas/TemplateStatus"
 					},
 					"messagingProfileId": {
 						"type": "string"
@@ -181,12 +193,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"ChannelType": {
-				"$ref": "#/components/schemas/_36_Enums.ChannelType"
-			},
-			"TemplateStatus": {
-				"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
 			},
 			"UpdateTemplateRequest": {
 				"properties": {
@@ -2570,7 +2576,7 @@
 						"name": "channel",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/ChannelType"
 						}
 					},
 					{
@@ -2578,7 +2584,7 @@
 						"name": "status",
 						"required": false,
 						"schema": {
-							"type": "string"
+							"$ref": "#/components/schemas/TemplateStatus"
 						}
 					},
 					{

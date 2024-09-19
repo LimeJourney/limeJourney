@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Edit2,
   Smartphone,
@@ -32,6 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { ChannelType, TemplateStatus } from "@/services/templateService";
 
 const EmailTemplateEditor = ({
   currentTemplate,
@@ -41,11 +42,37 @@ const EmailTemplateEditor = ({
   profiles,
   placeholders,
   tagSuggestions,
+}: {
+  currentTemplate: any;
+  setCurrentTemplate: any;
+  selectedProfile: any;
+  onProfileSelect: any;
+  profiles: any;
+  placeholders: any;
+  tagSuggestions: any;
 }) => {
   const [previewMode, setPreviewMode] = useState("desktop");
-  const quillRef = useRef(null);
+  const quillRef = useRef<ReactQuill>(null);
 
-  const BrowserFrame = ({ children }) => (
+  const [localTemplate, setLocalTemplate] = useState(currentTemplate);
+
+  // Update local state when currentTemplate changes
+  useEffect(() => {
+    setLocalTemplate(currentTemplate);
+  }, [currentTemplate]);
+
+  // Update parent state when local state changes
+  const updateTemplate = (updates: Partial<typeof localTemplate>) => {
+    const updatedTemplate = { ...localTemplate, ...updates };
+    setLocalTemplate(updatedTemplate);
+    setCurrentTemplate(updatedTemplate);
+  };
+
+  const handleContentChange = (content: string) => {
+    updateTemplate({ content });
+  };
+
+  const BrowserFrame = ({ children }: { children: React.ReactNode }) => (
     <div className="border-2 border-forest-300 rounded-lg overflow-hidden shadow-lg bg-white">
       <div className="bg-forest-200 p-2 flex items-center space-x-2">
         <div className="flex space-x-1">
@@ -63,7 +90,7 @@ const EmailTemplateEditor = ({
     </div>
   );
 
-  const PhoneFrame = ({ children }) => (
+  const PhoneFrame = ({ children }: { children: React.ReactNode }) => (
     <div className="mx-auto w-[300px] h-[600px] bg-white rounded-[3rem] border-[14px] border-forest-100 relative overflow-hidden shadow-xl">
       <div className="absolute top-0 inset-x-0 h-6 bg-forest-200 rounded-b-3xl"></div>
       <div className="h-full w-full bg-white overflow-y-auto">{children}</div>
@@ -82,24 +109,23 @@ const EmailTemplateEditor = ({
         </div>
       </div>
       <p className="text-sm text-forest-700">
-        {quillRef.current ? quillRef.current.getEditor().getText() : ""}
+        {quillRef.current?.getEditor().getText() || ""}
       </p>
     </div>
   );
 
-  const insertPlaceholder = (placeholder) => {
-    const editor = quillRef.current.getEditor();
+  const insertPlaceholder = (placeholder: any) => {
+    const editor = quillRef.current?.getEditor();
+    if (!editor) return;
+
     const range = editor.getSelection();
-    let position = 0;
-    if (range) {
-      position = range.index;
-    }
+    let position = range ? range.index : 0;
     editor.insertText(position, `{{${placeholder}}}`);
   };
 
-  const handleContentChange = (content) => {
-    setCurrentTemplate({ ...currentTemplate, content });
-  };
+  // const handleContentChange = (content: any) => {
+  //   setCurrentTemplate({ ...currentTemplate, content });
+  // };
 
   return (
     <div className="flex h-full bg-forest-700">
@@ -109,13 +135,11 @@ const EmailTemplateEditor = ({
           <div className="space-y-6">
             <Input
               placeholder="Template Name"
-              value={currentTemplate.name}
-              onChange={(e) =>
-                setCurrentTemplate({ ...currentTemplate, name: e.target.value })
-              }
+              value={localTemplate.name}
+              onChange={(e) => updateTemplate({ name: e.target.value })}
               className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
             />
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               <div className="w-1/2">
                 <Label htmlFor="profile" className="text-meadow-500">
                   Profile
@@ -137,48 +161,71 @@ const EmailTemplateEditor = ({
                 </Select>
               </div>
               <div className="w-1/2">
+                <Label htmlFor="channel" className="text-meadow-500">
+                  Channel
+                </Label>
+                <Select
+                  value={currentTemplate.channel}
+                  onValueChange={(value) =>
+                    setCurrentTemplate({
+                      ...currentTemplate,
+                      channel: value as ChannelType,
+                    })
+                  }
+                  disabled={true} // Disable manual selection as it's now controlled by profile
+                >
+                  <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
+                    <SelectValue placeholder="Select channel" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-forest-600 text-white">
+                    <SelectItem value={ChannelType.EMAIL}>Email</SelectItem>
+                    <SelectItem value={ChannelType.SMS}>SMS</SelectItem>
+                    <SelectItem value={ChannelType.PUSH}>Push</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-1/2">
                 <Label htmlFor="status" className="text-meadow-500">
                   Status
                 </Label>
                 <Select
                   id="status"
-                  value={currentTemplate.status}
+                  value={localTemplate.status}
                   onValueChange={(value) =>
-                    setCurrentTemplate({ ...currentTemplate, status: value })
+                    updateTemplate({ status: value as TemplateStatus })
                   }
                 >
                   <SelectTrigger className="bg-forest-500 text-white border-meadow-500">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent className="bg-forest-600 text-white">
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
+                    <SelectItem value={TemplateStatus.DRAFT}>Draft</SelectItem>
+                    <SelectItem value={TemplateStatus.ACTIVE}>
+                      Active
+                    </SelectItem>
+                    <SelectItem value={TemplateStatus.ARCHIVED}>
+                      Archived
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            {currentTemplate.channel === "email" && (
+            {localTemplate.channel === ChannelType.EMAIL && (
               <>
                 <Input
                   placeholder="Subject Line"
-                  value={currentTemplate.subjectLine}
+                  value={localTemplate.subjectLine}
                   onChange={(e) =>
-                    setCurrentTemplate({
-                      ...currentTemplate,
-                      subjectLine: e.target.value,
-                    })
+                    updateTemplate({ subjectLine: e.target.value })
                   }
                   className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
                 />
                 <Input
                   placeholder="Preview Text"
-                  value={currentTemplate.previewText}
+                  value={localTemplate.previewText}
                   onChange={(e) =>
-                    setCurrentTemplate({
-                      ...currentTemplate,
-                      previewText: e.target.value,
-                    })
+                    updateTemplate({ previewText: e.target.value })
                   }
                   className="bg-forest-500 text-white border-meadow-500 placeholder-gray-400"
                 />

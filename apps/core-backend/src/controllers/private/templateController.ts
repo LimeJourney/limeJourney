@@ -18,16 +18,54 @@ import {
 import { TemplateService } from "../../services/templateService";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
-import { Template, ChannelType, Prisma, TemplateStatus } from "@prisma/client";
+import {
+  Prisma,
+  ChannelType as PrismaChannelType,
+  TemplateStatus as PrismaTemplateStatus,
+  Template,
+} from "@prisma/client";
+// import { Template  } from "@prisma/client";
+
+// Define ChannelType and TemplateStatus to match Prisma's types
+
+export type ChannelType = PrismaChannelType;
+export const ChannelType = {
+  EMAIL: "EMAIL" as const,
+  SMS: "SMS" as const,
+  PUSH: "PUSH" as const,
+};
+
+export type TemplateStatus = PrismaTemplateStatus;
+export const TemplateStatus = {
+  DRAFT: "DRAFT" as const,
+  ACTIVE: "ACTIVE" as const,
+  ARCHIVED: "ARCHIVED" as const,
+};
+
+// Define Template interface to match Prisma's Template model
+// interface Template {
+//   id: string;
+//   name: string;
+//   channel: ChannelType;
+//   subjectLine: string | null;
+//   previewText: string | null;
+//   content: string;
+//   tags: string[];
+//   status: TemplateStatus;
+//   messagingProfileId: string | null;
+//   organizationId: string;
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
 
 interface CreateTemplateRequest {
   name: string;
-  channel: string;
-  subjectLine: string; // Remove the optional (?) modifier
+  channel: ChannelType;
+  subjectLine: string;
   previewText: string;
   content: string;
   tags: string[];
-  status: string;
+  status: TemplateStatus;
   messagingProfileId: string;
 }
 
@@ -42,6 +80,13 @@ interface UpdateTemplateRequest {
   messagingProfileId?: string | null;
 }
 
+// Utility type to convert enum to Prisma's filter type
+type EnumFilter<T> = {
+  equals?: T;
+  in?: T[];
+  notIn?: T[];
+  not?: T;
+};
 @Route("templates")
 @Tags("Templates")
 @Security("jwt")
@@ -137,7 +182,9 @@ export class TemplateController {
     try {
       const updatedTemplate = await this.templateService.updateTemplate(
         templateId,
-        body
+        {
+          ...body,
+        }
       );
       return {
         status: "success",
@@ -163,6 +210,45 @@ export class TemplateController {
         status: "error",
         data: null,
         message: "An error occurred while updating the template",
+      });
+    }
+  }
+
+  @Get()
+  @Response<ApiResponse<Template[]>>(200, "Retrieved templates")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getTemplates(
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
+    @Query() limit?: number,
+    @Query() offset?: number,
+    @Query() channel?: ChannelType,
+    @Query() status?: TemplateStatus,
+    @Query() search?: string
+  ): Promise<ApiResponse<Template[]> | void> {
+    try {
+      const user = request.user as JWTAuthenticatedUser;
+      const organizationId = user.currentOrganizationId as string;
+      const templates = await this.templateService.getTemplates(
+        organizationId,
+        limit,
+        offset,
+        {
+          channel,
+          status,
+          search,
+        }
+      );
+      return {
+        status: "success",
+        data: templates,
+        message: "Templates retrieved successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving templates",
       });
     }
   }
@@ -195,41 +281,6 @@ export class TemplateController {
         status: "error",
         data: null,
         message: "An error occurred while deleting the template",
-      });
-    }
-  }
-
-  @Get()
-  @Response<ApiResponse<Template[]>>(200, "Retrieved templates")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
-  public async getTemplates(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() limit?: number,
-    @Query() offset?: number,
-    @Query() channel?: string,
-    @Query() status?: string,
-    @Query() search?: string
-  ): Promise<ApiResponse<Template[]> | void> {
-    try {
-      const user = request.user as JWTAuthenticatedUser;
-      const organizationId = user.currentOrganizationId as string;
-      const templates = await this.templateService.getTemplates(
-        organizationId,
-        limit,
-        offset,
-        { channel, status, search }
-      );
-      return {
-        status: "success",
-        data: templates,
-        message: "Templates retrieved successfully",
-      };
-    } catch (error) {
-      return serverErrorResponse(500, {
-        status: "error",
-        data: null,
-        message: "An error occurred while retrieving templates",
       });
     }
   }

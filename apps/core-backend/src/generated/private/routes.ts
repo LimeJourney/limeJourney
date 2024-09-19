@@ -74,29 +74,39 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateTemplateRequest": {
-        "dataType": "refObject",
-        "properties": {
-            "name": {"dataType":"string","required":true},
-            "channel": {"dataType":"string","required":true},
-            "subjectLine": {"dataType":"string","required":true},
-            "previewText": {"dataType":"string","required":true},
-            "content": {"dataType":"string","required":true},
-            "tags": {"dataType":"array","array":{"dataType":"string"},"required":true},
-            "status": {"dataType":"string","required":true},
-            "messagingProfileId": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ChannelType": {
+    "PrismaChannelType": {
         "dataType": "refAlias",
         "type": {"ref":"_36_Enums.ChannelType","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "TemplateStatus": {
+    "ChannelType": {
+        "dataType": "refAlias",
+        "type": {"ref":"PrismaChannelType","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PrismaTemplateStatus": {
         "dataType": "refAlias",
         "type": {"ref":"_36_Enums.TemplateStatus","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "TemplateStatus": {
+        "dataType": "refAlias",
+        "type": {"ref":"PrismaTemplateStatus","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateTemplateRequest": {
+        "dataType": "refObject",
+        "properties": {
+            "name": {"dataType":"string","required":true},
+            "channel": {"ref":"ChannelType","required":true},
+            "subjectLine": {"dataType":"string","required":true},
+            "previewText": {"dataType":"string","required":true},
+            "content": {"dataType":"string","required":true},
+            "tags": {"dataType":"array","array":{"dataType":"string"},"required":true},
+            "status": {"ref":"TemplateStatus","required":true},
+            "messagingProfileId": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "UpdateTemplateRequest": {
@@ -1007,6 +1017,43 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/templates',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(TemplateController)),
+            ...(fetchMiddlewares<RequestHandler>(TemplateController.prototype.getTemplates)),
+
+            async function TemplateController_getTemplates(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+                    limit: {"in":"query","name":"limit","dataType":"double"},
+                    offset: {"in":"query","name":"offset","dataType":"double"},
+                    channel: {"in":"query","name":"channel","ref":"ChannelType"},
+                    status: {"in":"query","name":"status","ref":"TemplateStatus"},
+                    search: {"in":"query","name":"search","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new TemplateController();
+
+              await templateService.apiHandler({
+                methodName: 'getTemplates',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.delete('/api/internal/v1/templates/:templateId',
             authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(TemplateController)),
@@ -1030,43 +1077,6 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteTemplate',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.get('/api/internal/v1/templates',
-            authenticateMiddleware([{"jwt":[]}]),
-            ...(fetchMiddlewares<RequestHandler>(TemplateController)),
-            ...(fetchMiddlewares<RequestHandler>(TemplateController.prototype.getTemplates)),
-
-            async function TemplateController_getTemplates(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    request: {"in":"request","name":"request","required":true,"dataType":"object"},
-                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
-                    limit: {"in":"query","name":"limit","dataType":"double"},
-                    offset: {"in":"query","name":"offset","dataType":"double"},
-                    channel: {"in":"query","name":"channel","dataType":"string"},
-                    status: {"in":"query","name":"status","dataType":"string"},
-                    search: {"in":"query","name":"search","dataType":"string"},
-            };
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
-
-                const controller = new TemplateController();
-
-              await templateService.apiHandler({
-                methodName: 'getTemplates',
                 controller,
                 response,
                 next,

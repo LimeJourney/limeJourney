@@ -1,4 +1,10 @@
-import { PrismaClient, Template, Prisma, ChannelType } from "@prisma/client";
+import {
+  PrismaClient,
+  Template,
+  Prisma,
+  ChannelType,
+  TemplateStatus,
+} from "@prisma/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
 
@@ -71,7 +77,7 @@ export class TemplateService {
     offset: number = 0,
     filters?: {
       channel?: ChannelType;
-      status?: Prisma.EnumTemplateStatusFilter;
+      status?: TemplateStatus;
       search?: string;
     }
   ): Promise<Template[]> {
