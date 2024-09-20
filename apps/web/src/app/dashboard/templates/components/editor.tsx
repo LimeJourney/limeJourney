@@ -59,7 +59,6 @@ const EmailTemplateEditor = ({
   // Update local state when currentTemplate changes
   useEffect(() => {
     setLocalTemplate(currentTemplate);
-    console.log("localTemplate", localTemplate);
   }, [currentTemplate]);
 
   // Update parent state when local state changes
@@ -344,7 +343,7 @@ const EmailTemplateEditor = ({
               variant={previewMode === "desktop" ? "default" : "ghost"}
               size="sm"
               onClick={() => setPreviewMode("desktop")}
-              className="text-meadow-500 border "
+              className="text-meadow-500"
             >
               <Monitor className="w-4 h-4 mr-2" /> Desktop
             </Button>
