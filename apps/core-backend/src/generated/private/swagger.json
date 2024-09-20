@@ -7,6 +7,256 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
+			"_36_Enums.ChannelType": {
+				"type": "string",
+				"enum": [
+					"EMAIL",
+					"SMS",
+					"PUSH"
+				]
+			},
+			"_36_Enums.TemplateStatus": {
+				"type": "string",
+				"enum": [
+					"DRAFT",
+					"ACTIVE",
+					"ARCHIVED"
+				]
+			},
+			"DefaultSelection_Prisma._36_TemplatePayload_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"messagingProfileId": {
+						"type": "string"
+					},
+					"organizationId": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"content": {
+						"type": "string"
+					},
+					"previewText": {
+						"type": "string"
+					},
+					"subjectLine": {
+						"type": "string"
+					},
+					"channel": {
+						"$ref": "#/components/schemas/_36_Enums.ChannelType"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"messagingProfileId",
+					"organizationId",
+					"status",
+					"tags",
+					"content",
+					"previewText",
+					"subjectLine",
+					"channel",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"Template": {
+				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_TemplatePayload_",
+				"description": "Model Template"
+			},
+			"ApiResponse_Template_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Template"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_null_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"anyOf": [],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PrismaChannelType": {
+				"$ref": "#/components/schemas/_36_Enums.ChannelType"
+			},
+			"ChannelType": {
+				"$ref": "#/components/schemas/PrismaChannelType"
+			},
+			"PrismaTemplateStatus": {
+				"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
+			},
+			"TemplateStatus": {
+				"$ref": "#/components/schemas/PrismaTemplateStatus"
+			},
+			"CreateTemplateRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"channel": {
+						"$ref": "#/components/schemas/ChannelType"
+					},
+					"subjectLine": {
+						"type": "string"
+					},
+					"previewText": {
+						"type": "string"
+					},
+					"content": {
+						"type": "string"
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"status": {
+						"$ref": "#/components/schemas/TemplateStatus"
+					},
+					"messagingProfileId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"channel",
+					"subjectLine",
+					"previewText",
+					"content",
+					"tags",
+					"status",
+					"messagingProfileId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"UpdateTemplateRequest": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"channel": {
+						"$ref": "#/components/schemas/ChannelType"
+					},
+					"subjectLine": {
+						"type": "string",
+						"nullable": true
+					},
+					"previewText": {
+						"type": "string",
+						"nullable": true
+					},
+					"content": {
+						"type": "string"
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"status": {
+						"$ref": "#/components/schemas/TemplateStatus"
+					},
+					"messagingProfileId": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_Template-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/Template"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"SegmentCriterionType": {
 				"enum": [
 					"property",
@@ -193,30 +443,6 @@
 					"name",
 					"description",
 					"conditions"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_null_": {
-				"properties": {
-					"status": {
-						"type": "string",
-						"enum": [
-							"success",
-							"error"
-						]
-					},
-					"data": {
-						"anyOf": [],
-						"nullable": true
-					},
-					"message": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"data"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -1270,10 +1496,10 @@
 					"status": {
 						"type": "string",
 						"enum": [
-							"ACTIVE",
 							"DRAFT",
-							"PAUSED",
-							"ARCHIVED"
+							"ACTIVE",
+							"ARCHIVED",
+							"PAUSED"
 						]
 					}
 				},
@@ -1287,10 +1513,10 @@
 			"_36_Enums.JourneyStatus": {
 				"type": "string",
 				"enum": [
-					"ACTIVE",
 					"DRAFT",
-					"PAUSED",
-					"ARCHIVED"
+					"ACTIVE",
+					"ARCHIVED",
+					"PAUSED"
 				]
 			},
 			"DefaultSelection_Prisma._36_JourneyPayload_": {
@@ -2229,6 +2455,405 @@
 		"contact": {}
 	},
 	"paths": {
+		"/templates": {
+			"post": {
+				"operationId": "CreateTemplate",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_Template_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Templates"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateTemplateRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetTemplates",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_Template-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Templates"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "channel",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ChannelType"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/TemplateStatus"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/templates/{templateId}": {
+			"get": {
+				"operationId": "GetTemplate",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_Template_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Templates"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "templateId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "UpdateTemplate",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_Template_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Templates"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "templateId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateTemplateRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteTemplate",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_null_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Templates"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "templateId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/templates/{templateId}/duplicate": {
+			"post": {
+				"operationId": "DuplicateTemplate",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_Template_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Templates"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "templateId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/docs": {
 			"get": {
 				"operationId": "GetSwaggerUI",
