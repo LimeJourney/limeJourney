@@ -48,7 +48,7 @@ const EmailTemplateEditor = ({
   selectedProfile: any;
   onProfileSelect: any;
   profiles: any;
-  placeholders: any;
+  placeholders: string[];
   tagSuggestions: any;
 }) => {
   const [previewMode, setPreviewMode] = useState("desktop");
@@ -59,6 +59,7 @@ const EmailTemplateEditor = ({
   // Update local state when currentTemplate changes
   useEffect(() => {
     setLocalTemplate(currentTemplate);
+    console.log("localTemplate", localTemplate);
   }, [currentTemplate]);
 
   // Update parent state when local state changes
@@ -91,9 +92,10 @@ const EmailTemplateEditor = ({
   );
 
   const PhoneFrame = ({ children }: { children: React.ReactNode }) => (
-    <div className="mx-auto w-[300px] h-[600px] bg-white rounded-[3rem] border-[14px] border-forest-100 relative overflow-hidden shadow-xl">
-      <div className="absolute top-0 inset-x-0 h-6 bg-forest-200 rounded-b-3xl"></div>
-      <div className="h-full w-full bg-white overflow-y-auto">{children}</div>
+    <div className="mx-auto w-[300px] h-[600px] bg-white rounded-[3rem] border-[5px] border-black relative overflow-hidden shadow-xl">
+      <div className="h-full w-full bg-white overflow-y-auto mt-10">
+        {children}
+      </div>
     </div>
   );
 
@@ -114,7 +116,7 @@ const EmailTemplateEditor = ({
     </div>
   );
 
-  const insertPlaceholder = (placeholder: any) => {
+  const insertPlaceholder = (placeholder: string) => {
     const editor = quillRef.current?.getEditor();
     if (!editor) return;
 
@@ -152,7 +154,7 @@ const EmailTemplateEditor = ({
                     <SelectValue placeholder="Select profile" />
                   </SelectTrigger>
                   <SelectContent className="bg-forest-600 text-white">
-                    {profiles.map((profile) => (
+                    {profiles.map((profile: any) => (
                       <SelectItem key={profile.id} value={profile.id}>
                         {profile.name}
                       </SelectItem>
@@ -190,7 +192,6 @@ const EmailTemplateEditor = ({
                   Status
                 </Label>
                 <Select
-                  id="status"
                   value={localTemplate.status}
                   onValueChange={(value) =>
                     updateTemplate({ status: value as TemplateStatus })
@@ -254,7 +255,7 @@ const EmailTemplateEditor = ({
                 Insert Placeholder
               </Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {placeholders.map((placeholder) => (
+                {placeholders.map((placeholder: string) => (
                   <Button
                     key={placeholder}
                     variant="outline"
@@ -272,7 +273,7 @@ const EmailTemplateEditor = ({
                 Tags
               </Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {currentTemplate.tags.map((tag, index) => (
+                {currentTemplate.tags.map((tag: any, index: number) => (
                   <Badge
                     key={index}
                     variant="secondary"
@@ -308,7 +309,7 @@ const EmailTemplateEditor = ({
                   </PopoverTrigger>
                   <PopoverContent className="w-64 bg-forest-600 border-meadow-500">
                     <ScrollArea className="h-64">
-                      {tagSuggestions.map((tag) => (
+                      {tagSuggestions.map((tag: any) => (
                         <Button
                           key={tag}
                           variant="ghost"
@@ -340,32 +341,33 @@ const EmailTemplateEditor = ({
           <h2 className="text-2xl font-bold text-meadow-500">Preview</h2>
           <div className="flex space-x-2">
             <Button
-              variant={previewMode === "desktop" ? "secondary" : "ghost"}
+              variant={previewMode === "desktop" ? "default" : "ghost"}
               size="sm"
               onClick={() => setPreviewMode("desktop")}
-              className="text-meadow-500 hover:bg-forest-700"
+              className="text-meadow-500 border "
             >
               <Monitor className="w-4 h-4 mr-2" /> Desktop
             </Button>
             <Button
-              variant={previewMode === "mobile" ? "secondary" : "ghost"}
+              variant={previewMode === "mobile" ? "default" : "ghost"}
               size="sm"
               onClick={() => setPreviewMode("mobile")}
-              className="text-meadow-500 hover:bg-forest-700"
+              className="text-meadow-500"
             >
               <Smartphone className="w-4 h-4 mr-2" /> Mobile
             </Button>
             <Button
-              variant={previewMode === "code" ? "secondary" : "ghost"}
+              variant={previewMode === "code" ? "default" : "ghost"}
               size="sm"
               onClick={() => setPreviewMode("code")}
-              className="text-meadow-500 hover:bg-forest-700"
+              className="text-meadow-500"
             >
               {previewMode === "code" ? (
-                <Eye className="w-4 h-4" />
+                <Eye className="w-4 h-4 mr-2" />
               ) : (
-                <Code className="w-4 h-4" />
+                <Code className="w-4 h-4 mr-2" />
               )}
+              Code
             </Button>
           </div>
         </div>
@@ -380,16 +382,16 @@ const EmailTemplateEditor = ({
           </Card>
         ) : (
           <>
-            {currentTemplate.channel === "email" ? (
+            {localTemplate.channel === ChannelType.EMAIL ? (
               previewMode === "desktop" ? (
                 <BrowserFrame>
                   <div className="prose prose-meadow max-w-none">
                     <h2 className="text-forest-800">
-                      {currentTemplate.subjectLine}
+                      {localTemplate.subjectLine}
                     </h2>
                     <div
                       dangerouslySetInnerHTML={{
-                        __html: currentTemplate.content,
+                        __html: localTemplate.content,
                       }}
                     />
                   </div>
@@ -399,19 +401,19 @@ const EmailTemplateEditor = ({
                   <div className="p-4">
                     <div className="bg-forest-100 rounded-lg p-4 shadow-md">
                       <h2 className="text-forest-800 text-lg font-semibold mb-2">
-                        {currentTemplate.subjectLine}
+                        {localTemplate.subjectLine}
                       </h2>
                       <div
                         className="prose prose-sm prose-meadow"
                         dangerouslySetInnerHTML={{
-                          __html: currentTemplate.content,
+                          __html: localTemplate.content,
                         }}
                       />
                     </div>
                   </div>
                 </PhoneFrame>
               )
-            ) : currentTemplate.channel === "push" ? (
+            ) : localTemplate.channel === ChannelType.PUSH ? (
               <PhoneFrame>
                 <PushNotification />
               </PhoneFrame>
