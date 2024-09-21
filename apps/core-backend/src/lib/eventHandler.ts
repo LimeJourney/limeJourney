@@ -6,6 +6,7 @@ import {
   EventOccurredEvent,
 } from "./queue";
 import { EventService } from "../services/eventsService";
+import { TemporalService } from "./temporal";
 
 /**
  * EventHandler class manages the processing of various event types in the system.
@@ -111,6 +112,27 @@ export class EventHandler {
         "\x1b[1m%s\x1b[0m",
         `Journey Triggered: ${JSON.stringify(event, null, 2)}`
       );
+
+      try {
+        const temporalService = await TemporalService.getInstance();
+
+        await temporalService.startJourneyWorkflow({
+          journeyId: event.journeyId,
+          entityId: event.entityId,
+          organizationId: event.organizationId,
+          triggerEvent: {
+            eventName: event.eventName,
+            eventProperties: event.eventProperties,
+          },
+        });
+
+        console.log(
+          `Started journey workflow for journey ${event.journeyId} and entity ${event.entityId}`
+        );
+      } catch (error) {
+        console.error(`Error starting journey workflow: ${error}`);
+        // Handle the error appropriately
+      }
     }
   };
 

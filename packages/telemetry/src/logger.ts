@@ -14,7 +14,9 @@ type LogCategory =
   | "task"
   | "websockets"
   | "events"
-  | "redis";
+  | "redis"
+  | "temporal"
+  | "worker";
 
 type LogLevel =
   | "error"

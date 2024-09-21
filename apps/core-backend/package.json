@@ -12,7 +12,8 @@
     "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
     "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
     "clickhouse": "ts-node src/cli/clickhouse.ts",
-    "route:generate": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json"
+    "route:generate": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json",
+    "start:worker": "ts-node src/worker/index.ts"
   },
   "dependencies": {
     "@clickhouse/client": "^1.4.1",

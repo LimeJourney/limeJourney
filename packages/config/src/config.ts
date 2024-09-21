@@ -50,6 +50,11 @@ const configSchema = z.object({
   redis: z.object({
     url: z.string(),
   }),
+  temporal: z.object({
+    address: z.string(),
+    namespace: z.string(),
+    taskQueue: z.string(),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -99,6 +104,11 @@ const config = {
   },
   redis: {
     url: env("REDIS_URL", "redis://localhost:6379"),
+  },
+  temporal: {
+    address: env("TEMPORAL_ADDRESS", "localhost:7233"),
+    namespace: env("TEMPORAL_NAMESPACE", "default"),
+    taskQueue: env("TEMPORAL_TASK_QUEUE", "default"),
   },
 };
 // Parse and validate the configuration
