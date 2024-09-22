@@ -94,7 +94,6 @@ export class TemporalService {
     return this.startWorkflow("JourneyWorkflow", params, {
       taskQueue: AppConfig.temporal.taskQueue,
       workflowId: `journey-${params.journeyId}-${params.entityId}`,
-      //   workflowRunTimeout: "24 hours",
     });
   }
 
@@ -229,6 +228,38 @@ export class TemporalService {
       logger.error("temporal", `Failed to resume workflow`, error as Error, {
         workflowId,
       });
+      throw error;
+    }
+  }
+
+  public async scheduleWorkflow<N extends WorkflowName>(
+    workflowName: N,
+    params: Parameters<(typeof WorkflowRegistry)[N]>[0],
+    options: {
+      taskQueue: string;
+      workflowId?: string;
+      startTime?: Date;
+    }
+  ): Promise<void> {
+    const workflowId = options.workflowId || `${workflowName}-${uuidv4()}`;
+    try {
+      await this.client.workflow.start(workflowName, {
+        args: [params],
+        taskQueue: options.taskQueue,
+        workflowId: workflowId,
+        startDelay: options.startTime,
+      });
+      logger.info("temporal", `Scheduled workflow ${workflowName}`, {
+        workflowId,
+        startTime: options.startTime,
+      });
+    } catch (error) {
+      logger.error(
+        "temporal",
+        `Failed to schedule workflow ${workflowName}`,
+        error as Error,
+        { workflowId, startTime: options.startTime }
+      );
       throw error;
     }
   }
