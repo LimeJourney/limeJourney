@@ -1,4 +1,9 @@
-import { Connection, Client, WorkflowHandle } from "@temporalio/client";
+import {
+  Connection,
+  Client,
+  WorkflowHandle,
+  WorkflowIdReusePolicy,
+} from "@temporalio/client";
 import { v4 as uuidv4 } from "uuid";
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
@@ -54,6 +59,7 @@ export class TemporalService {
       taskQueue: string;
       workflowId?: string;
       workflowRunTimeout?: string;
+      workflowIdReusePolicy?: WorkflowIdReusePolicy;
     }
   ): Promise<WorkflowHandle> {
     const workflowId = options.workflowId || `${workflowName}-${uuidv4()}`;
@@ -63,6 +69,9 @@ export class TemporalService {
         taskQueue: options.taskQueue,
         workflowId: workflowId,
         workflowRunTimeout: options.workflowRunTimeout,
+        workflowIdReusePolicy:
+          options.workflowIdReusePolicy ||
+          WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE,
       });
       logger.info("temporal", `Started workflow ${workflowName}`, {
         workflowId,
@@ -87,6 +96,48 @@ export class TemporalService {
       workflowId: `journey-${params.journeyId}-${params.entityId}`,
       //   workflowRunTimeout: "24 hours",
     });
+  }
+
+  public async startOrContinueJourneyWorkflow(
+    params: JourneyWorkflowParams
+  ): Promise<WorkflowHandle> {
+    const workflowId = `journey-${params.journeyId}-${params.entityId}`;
+
+    try {
+      // Try to fetch an existing workflow
+      const existingWorkflow = await this.client.workflow.getHandle(workflowId);
+      const status = await existingWorkflow.describe();
+
+      if (status.status.name === "RUNNING") {
+        logger.info("temporal", `Workflow ${workflowId} is already running`, {
+          workflowId,
+        });
+        return existingWorkflow;
+      }
+
+      // If workflow is completed or failed, start a new one
+      return this.startWorkflow("JourneyWorkflow", params, {
+        taskQueue: AppConfig.temporal.taskQueue,
+        workflowId: workflowId,
+        workflowRunTimeout: "24 hours",
+      });
+    } catch (error) {
+      // If workflow doesn't exist, start a new one
+      if (error instanceof Error && error.name === "WorkflowNotFoundError") {
+        return this.startWorkflow("JourneyWorkflow", params, {
+          taskQueue: AppConfig.temporal.taskQueue,
+          workflowId: workflowId,
+          workflowRunTimeout: "24 hours",
+        });
+      }
+      logger.error(
+        "temporal",
+        `Failed to start or continue workflow`,
+        error as Error,
+        { workflowId }
+      );
+      throw error;
+    }
   }
 
   public async getWorkflowHandle(workflowId: string): Promise<WorkflowHandle> {
@@ -154,6 +205,30 @@ export class TemporalService {
         error as Error,
         { workflowId, signalName }
       );
+      throw error;
+    }
+  }
+
+  public async pauseWorkflow(workflowId: string): Promise<void> {
+    try {
+      await this.signalWorkflow(workflowId, "PAUSE_SIGNAL");
+      logger.info("temporal", `Paused workflow`, { workflowId });
+    } catch (error) {
+      logger.error("temporal", `Failed to pause workflow`, error as Error, {
+        workflowId,
+      });
+      throw error;
+    }
+  }
+
+  public async resumeWorkflow(workflowId: string): Promise<void> {
+    try {
+      await this.signalWorkflow(workflowId, "RESUME_SIGNAL");
+      logger.info("temporal", `Resumed workflow`, { workflowId });
+    } catch (error) {
+      logger.error("temporal", `Failed to resume workflow`, error as Error, {
+        workflowId,
+      });
       throw error;
     }
   }

@@ -52,6 +52,9 @@ import {
   UsersIcon,
   CalendarIcon,
   InfoIcon,
+  SpeakerIcon,
+  Link2Icon,
+  Captions,
 } from "lucide-react";
 import {
   Select,
@@ -88,6 +91,9 @@ import {
   CreateJourneyDTO,
   journeyManagementService,
 } from "@/services/journeyService";
+import EmailNodeForm from "./components/emailNode";
+import { SpeakerLoudIcon } from "@radix-ui/react-icons";
+import WaitNodeForm from "./components/waitNode";
 const InfoTooltip = ({ content }) => (
   <TooltipProvider>
     <Tooltip>
@@ -148,8 +154,15 @@ const TriggerNodeForm = ({ node, updateNodeData }) => {
     updateNodeData(key, value);
   };
 
+  const handleSegmentChange = (segmentId: string) => {
+    const selectedSegment = segments.find((seg) => seg.id === segmentId);
+    console.log("Selected Segment:", selectedSegment);
+    updateNodeData("segment", segmentId);
+    updateNodeData("segmentName", selectedSegment ? selectedSegment.name : "");
+  };
+
   return (
-    <Card className="w-full bg-forest-9050 text-white shadow-lg border border-meadow-700">
+    <Card className="w-full bg-forest-500 text-white shadow-lg border border-meadow-700">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-meadow-300">
           Configure Trigger
@@ -247,9 +260,7 @@ const TriggerNodeForm = ({ node, updateNodeData }) => {
                   <InfoTooltip content="Choose the user segment that this trigger will apply to." />
                 </Label>
                 <Select
-                  onValueChange={(value) =>
-                    handleUpdateNodeData("segment", value)
-                  }
+                  onValueChange={handleSegmentChange}
                   value={node.data.segment}
                 >
                   <SelectTrigger
@@ -340,12 +351,13 @@ const NodeWrapper = ({ children, icon: Icon, label, type }) => {
 };
 
 const TriggerNode = ({ data }) => {
+  console.log("Trigger Node Data:", data);
   return (
     <NodeWrapper icon={Play} label={data.label} type="trigger">
       <div className="text-forest-700 text-sm font-medium mb-2">
         {data.triggerType === "segment"
-          ? `Segment: ${data.segment} (${data.segmentAction})`
-          : `Event: ${data.event}`}
+          ? `Segment: ${data.segmentName || "Not Set"} (${data.segmentAction || "Not Set"})`
+          : `Event: ${data.event || "Not Set"}`}
       </div>
       <div className="flex items-center justify-between text-forest-600 text-xs">
         <div className="flex items-center">
@@ -367,18 +379,18 @@ const EmailNode = ({ data }) => {
     <NodeWrapper icon={Mail} label={data.label} type="email">
       <div className="space-y-2">
         <div className="flex items-center text-forest-700 text-sm">
-          <MessageSquare size={14} className="mr-2" />
-          <span className="truncate">{data.subject || "Set subject..."}</span>
+          <Link2Icon size={14} className="mr-2" />
+          <span className="truncate">
+            {data.templateName || "Set Template..."}
+          </span>
         </div>
         <div className="flex items-center text-forest-700 text-sm">
-          <User size={14} className="mr-2" />
-          <span className="truncate">
-            {data.recipient || "Set recipient..."}
-          </span>
+          <Captions size={14} className="mr-2" />
+          <span className="truncate">{data.subject || "Email Subject..."}</span>
         </div>
         <div className="flex items-center text-forest-600 text-xs">
           <Zap size={12} className="mr-1" />
-          <span>{data.automationType || "Manual"}</span>
+          <span>{data.automationType || "Automated"}</span>
         </div>
       </div>
       <Handle
@@ -541,14 +553,20 @@ const ExitNode = ({ data }) => {
 };
 
 const WaitNode = ({ data }) => {
+  console.log("Wait Node Data:", data);
+  const getWaitDescription = () => {
+    if (data.waitType === "duration") {
+      return `Wait for ${data.duration} ${data.timeUnit}`;
+    } else if (data.waitType === "specificDate") {
+      return `Wait until ${new Date(data.specificDate).toLocaleString()}`;
+    }
+    return "Set wait condition...";
+  };
+
   return (
     <NodeWrapper icon={Clock} label={data.label} type="wait">
       <div className="text-forest-700 text-sm font-medium mb-2">
-        Wait for: {data.duration || "Set duration..."}
-      </div>
-      <div className="flex items-center text-forest-600 text-xs">
-        <Info size={12} className="mr-1" />
-        <span>{data.condition || "No condition"}</span>
+        {getWaitDescription()}
       </div>
       <Handle
         type="target"
@@ -721,44 +739,7 @@ const NodeProperties = ({ node, setNodes, onClose }) => {
   const renderNodeSpecificProperties = () => {
     switch (node.type) {
       case "emailNode":
-        return (
-          <>
-            <div>
-              <Label htmlFor="subject" className="text-meadow-500">
-                Subject
-              </Label>
-              <Input
-                id="subject"
-                value={node.data.subject || ""}
-                onChange={(e) => updateNodeData("subject", e.target.value)}
-                className="bg-forest-600 text-white border-meadow-500/50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="recipient" className="text-meadow-500">
-                Recipient
-              </Label>
-              <Input
-                id="recipient"
-                value={node.data.recipient || ""}
-                onChange={(e) => updateNodeData("recipient", e.target.value)}
-                className="bg-forest-600 text-white border-meadow-500/50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="content" className="text-meadow-500">
-                Email Content
-              </Label>
-              <Textarea
-                id="content"
-                value={node.data.content || ""}
-                onChange={(e) => updateNodeData("content", e.target.value)}
-                className="bg-forest-600 text-white border-meadow-500/50"
-                rows={5}
-              />
-            </div>
-          </>
-        );
+        return <EmailNodeForm node={node} updateNodeData={updateNodeData} />;
       case "smsNode":
         return (
           <>
@@ -855,7 +836,8 @@ const NodeProperties = ({ node, setNodes, onClose }) => {
         );
       case "triggerNode":
         return <TriggerNodeForm node={node} updateNodeData={updateNodeData} />;
-      // Add cases for other node types as needed
+      case "waitNode":
+        return <WaitNodeForm node={node} updateNodeData={updateNodeData} />;
       default:
         return null;
     }
@@ -874,7 +856,7 @@ const NodeProperties = ({ node, setNodes, onClose }) => {
         </SheetHeader>
         <ScrollArea className="mt-6 h-[calc(100vh-180px)]">
           <div className="space-y-6 pr-4">
-            <div>
+            {/* <div>
               <Label htmlFor="label" className="text-meadow-500">
                 Label
               </Label>
@@ -884,7 +866,7 @@ const NodeProperties = ({ node, setNodes, onClose }) => {
                 onChange={(e) => updateNodeData("label", e.target.value)}
                 className="bg-forest-600 text-white border-meadow-500/50"
               />
-            </div>
+            </div> */}
             {renderNodeSpecificProperties()}
           </div>
         </ScrollArea>

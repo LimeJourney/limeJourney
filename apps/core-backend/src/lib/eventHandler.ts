@@ -116,7 +116,7 @@ export class EventHandler {
       try {
         const temporalService = await TemporalService.getInstance();
 
-        await temporalService.startJourneyWorkflow({
+        await temporalService.startOrContinueJourneyWorkflow({
           journeyId: event.journeyId,
           entityId: event.entityId,
           organizationId: event.organizationId,
