@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
+import FeatureShowcase from "@/components/feature-showcase";
 
 const HeroBackground = ({ height = "100vh" }) => {
   return (
@@ -360,6 +361,7 @@ const Home = () => {
         </div>
       </section>
 
+      <FeatureShowcase />
       <section className="mt-40 h-screen w-screen bg-meadow-100">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-forest-800 mb-8">Section 1</h2>

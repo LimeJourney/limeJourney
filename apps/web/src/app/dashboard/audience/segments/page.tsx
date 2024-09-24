@@ -229,8 +229,11 @@ const CriterionEditor: React.FC<CriterionEditorProps> = ({
   entityProperties,
   eventNames,
 }) => {
-  const allFields = [...entityProperties, ...eventNames];
+  const allFields = [...entityProperties, ...eventNames].filter(
+    (field) => field !== ""
+  );
 
+  console.log("allFields", allFields);
   const operatorsRequiringTimeUnit = [
     SegmentOperator.HAS_DONE_WITHIN,
     SegmentOperator.HAS_NOT_DONE_WITHIN,

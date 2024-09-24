@@ -133,7 +133,7 @@ export class EntityService {
         // Update existing entity
         const updateQuery = `
           ALTER TABLE entities
-          UPDATE properties = {properties:String}, updated_at = {updated_at:String}
+          UPDATE properties = {properties:String}
           WHERE org_id = {org_id:String} AND external_id = {external_id:String}
         `;
 
@@ -143,7 +143,6 @@ export class EntityService {
             org_id: organizationId,
             external_id: external_id || "",
             properties: JSON.stringify(mergedProperties),
-            updated_at: timestamp,
           },
           "Failed to update entity"
         );
