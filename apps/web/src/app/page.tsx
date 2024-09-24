@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
 import FeatureShowcase from "@/components/feature-showcase";
+import GetStartedSection from "@/components/get-started-section";
+import FooterSection from "@/components/footer-section";
 
 const HeroBackground = ({ height = "100vh" }) => {
   return (
@@ -362,26 +364,8 @@ const Home = () => {
       </section>
 
       <FeatureShowcase />
-      <section className="mt-40 h-screen w-screen bg-meadow-100">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-forest-800 mb-8">Section 1</h2>
-          {/* Add your content for Section 1 here */}
-        </div>
-      </section>
-
-      <section className="h-screen w-screen bg-forest-100">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-meadow-800 mb-8">Section 2</h2>
-          {/* Add your content for Section 2 here */}
-        </div>
-      </section>
-
-      <section className="h-screen w-screen bg-meadow-200">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-forest-800 mb-8">Section 3</h2>
-          {/* Add your content for Section 3 here */}
-        </div>
-      </section>
+      <GetStartedSection />
+      <FooterSection />
     </div>
   );
 };
