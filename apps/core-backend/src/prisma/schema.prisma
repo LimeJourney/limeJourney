@@ -58,6 +58,7 @@ model Organization {
   messagingProfiles MessagingProfile[]
   journeys         Journey[]
   templates        Template[]
+  aiInsightQueries AIInsightQuery[]
 }
 
 model ApiKey {
@@ -273,4 +274,16 @@ enum TemplateStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+model AIInsightQuery {
+  id               String    @id @default(uuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  query            String
+  response         String    @db.Text
+  createdAt        DateTime  @default(now())
+
+  @@index([organizationId])
+  @@index([createdAt])
 }

@@ -50,6 +50,9 @@ const configSchema = z.object({
   redis: z.object({
     url: z.string(),
   }),
+  anthropic: z.object({
+    apiKey: z.string(),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -99,6 +102,9 @@ const config = {
   },
   redis: {
     url: env("REDIS_URL", "redis://localhost:6379"),
+  },
+  anthropic: {
+    apiKey: env("ANTHROPIC_API_KEY"),
   },
 };
 // Parse and validate the configuration
