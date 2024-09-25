@@ -82,71 +82,22 @@ const navItems: NavItem[] = [
     href: "/dashboard/events",
   },
   {
-    id: "channels",
-    title: "Channels",
-    icon: Inbox,
-    href: "/dashboard/channels",
-  },
-  {
     id: "journeys",
     title: "Journeys",
     icon: File,
     href: "/dashboard/journeys",
   },
   {
+    id: "channels",
+    title: "Channels",
+    icon: Inbox,
+    href: "/dashboard/channels",
+  },
+  {
     id: "templates",
     title: "Templates",
     icon: File,
     href: "/dashboard/templates",
-  },
-  { id: "inbox", title: "Inbox", icon: Inbox, href: "/dashboard/inbox" },
-  { id: "drafts", title: "Drafts", icon: File, href: "/dashboard/drafts" },
-  { id: "sent", title: "Sent", icon: Send, href: "/dashboard/sent" },
-  { id: "junk", title: "Junk", icon: ArchiveX, href: "/dashboard/junk" },
-  { id: "trash", title: "Trash", icon: Trash2, href: "/dashboard/trash" },
-  {
-    id: "archive",
-    title: "Archive",
-    icon: Archive,
-    href: "/dashboard/archive",
-  },
-  {
-    id: "categories",
-    title: "Categories",
-    icon: AlertCircle,
-    href: "/dashboard/categories",
-    children: [
-      {
-        id: "social",
-        title: "Social",
-        icon: Users2,
-        href: "/dashboard/categories/social",
-      },
-      {
-        id: "updates",
-        title: "Updates",
-        icon: AlertCircle,
-        href: "/dashboard/categories/updates",
-      },
-      {
-        id: "forums",
-        title: "Forums",
-        icon: MessagesSquare,
-        href: "/dashboard/categories/forums",
-      },
-      {
-        id: "shopping",
-        title: "Shopping",
-        icon: ShoppingCart,
-        href: "/dashboard/categories/shopping",
-      },
-      {
-        id: "promotions",
-        title: "Promotions",
-        icon: Archive,
-        href: "/dashboard/categories/promotions",
-      },
-    ],
   },
   {
     id: "settings",
@@ -299,15 +250,6 @@ export function DashboardSidebar({
           <nav className="grid gap-1">{renderNavItems(navItems)}</nav>
         </div>
       </ScrollArea>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full justify-start p-2"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-      >
-        {isCollapsed ? <ChevronRight /> : <ChevronDown />}
-        {!isCollapsed && <span>Collapse</span>}
-      </Button>
     </div>
   );
 }

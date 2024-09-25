@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -19,25 +20,23 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Search,
   Plus,
   Settings,
-  Code,
-  Database,
   X,
   ChevronDown,
   ClipboardX,
@@ -46,9 +45,14 @@ import {
   AlertCircle,
   User,
   Clock,
-  Loader2,
   Eye,
   EyeOff,
+  Edit2,
+  Trash2,
+  SortAsc,
+  SortDesc,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import {
   HoverCard,
@@ -73,67 +77,76 @@ import {
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
-interface DatePickerWithRangeProps {
-  className?: string;
-  onDateRangeChange: (range: DateRange | undefined) => void;
-}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-function DatePickerWithRange({
-  className,
-  onDateRangeChange,
-}: DatePickerWithRangeProps) {
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2022, 0, 20),
-    to: addDays(new Date(2022, 0, 20), 20),
-  });
+// interface DatePickerWithRangeProps {
+//   className?: string;
+//   onDateRangeChange: (range: DateRange | undefined) => void;
+// }
 
-  const handleDateChange = (newDate: DateRange | undefined) => {
-    setDate(newDate);
-    onDateRangeChange(newDate);
-  };
+// function DatePickerWithRange({
+//   className,
+//   onDateRangeChange,
+// }: DatePickerWithRangeProps) {
+//   const [date, setDate] = React.useState<DateRange | undefined>({
+//     from: new Date(2022, 0, 20),
+//     to: addDays(new Date(2022, 0, 20), 20),
+//   });
 
-  return (
-    <div className={cn("grid gap-2 bg-neutral-700", className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
-            size="sm"
-            className={cn(
-              "w-[200px] justify-start text-left font-normal h-9 text-black",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4 text-black" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "MM/dd/yy")} -{" "}
-                  {format(date.to, "MM/dd/yy")}
-                </>
-              ) : (
-                format(date.from, "MM/dd/yy")
-              )
-            ) : (
-              <span>Pick a date range</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={handleDateChange}
-            numberOfMonths={2}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-}
+//   const handleDateChange = (newDate: DateRange | undefined) => {
+//     setDate(newDate);
+//     onDateRangeChange(newDate);
+//   };
+
+//   return (
+//     <div className={cn("grid gap-2", className)}>
+//       <Popover>
+//         <PopoverTrigger asChild>
+//           <Button
+//             id="date"
+//             variant="outline"
+//             size="sm"
+//             className={cn(
+//               "w-[240px] justify-start text-left font-normal",
+//               !date && "text-muted-foreground"
+//             )}
+//           >
+//             <CalendarIcon className="mr-2 h-4 w-4" />
+//             {date?.from ? (
+//               date.to ? (
+//                 <>
+//                   {format(date.from, "LLL dd, y")} -{" "}
+//                   {format(date.to, "LLL dd, y")}
+//                 </>
+//               ) : (
+//                 format(date.from, "LLL dd, y")
+//               )
+//             ) : (
+//               <span>Pick a date range</span>
+//             )}
+//           </Button>
+//         </PopoverTrigger>
+//         <PopoverContent className="w-auto p-0 bg-forest-600" align="start">
+//           <Calendar
+//             initialFocus
+//             mode="range"
+//             defaultMonth={date?.from}
+//             selected={date}
+//             onSelect={handleDateChange}
+//             numberOfMonths={2}
+//             className="bg-forest-600 text-white"
+//           />
+//         </PopoverContent>
+//       </Popover>
+//     </div>
+//   );
+// }
 
 export default function EventsManagement() {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -146,13 +159,14 @@ export default function EventsManagement() {
   });
   const [visibleProperties, setVisibleProperties] = useState<string[]>([]);
   const [allProperties, setAllProperties] = useState<string[]>([]);
-  const [isCustomizeViewOpen, setIsCustomizeViewOpen] = useState(false);
   const [customProperties, setCustomProperties] = useState<
     { key: string; value: string }[]
   >([]);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [sortBy, setSortBy] = useState<keyof EventData>("timestamp");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { toast } = useToast();
   const router = useRouter();
@@ -173,7 +187,6 @@ export default function EventsManagement() {
       const allPropsArray = Array.from(propertySet);
       setAllProperties(allPropsArray);
 
-      // Set the first 3 properties as visible by default
       setVisibleProperties([
         "name",
         "entity_external_id",
@@ -196,11 +209,6 @@ export default function EventsManagement() {
     );
   };
 
-  const applyCustomView = () => {
-    setVisibleProperties(selectedProperties);
-    setIsCustomizeViewOpen(false);
-  };
-
   const handleError = (error: any) => {
     if (error.response && error.response.status === 401) {
       router.push("/login");
@@ -213,22 +221,29 @@ export default function EventsManagement() {
     }
   };
 
-  const filteredEvents = events.filter((event) => {
-    if (!event.properties) return false;
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      event.name.toLowerCase().includes(searchLower) ||
-      event.entity_external_id.toLowerCase().includes(searchLower) ||
-      Object.values(event.properties).some((value) =>
-        value.toString().toLowerCase().includes(searchLower)
-      )
-    );
-  });
-
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-    // You can add logic here to filter events based on the selected date range
-  };
+  const filteredAndSortedEvents = events
+    .filter((event) => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        event.name.toLowerCase().includes(searchLower) ||
+        event.entity_external_id.toLowerCase().includes(searchLower) ||
+        Object.values(event.properties).some((value) =>
+          value.toString().toLowerCase().includes(searchLower)
+        )
+      );
+    })
+    .sort((a, b) => {
+      const aValue = a[sortBy];
+      const bValue = b[sortBy];
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortOrder === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      return sortOrder === "asc"
+        ? (aValue as number) - (bValue as number)
+        : (bValue as number) - (aValue as number);
+    });
 
   const handleCreateEvent = async () => {
     const allProperties = {
@@ -245,10 +260,8 @@ export default function EventsManagement() {
         properties: allProperties,
       });
 
-      // Update the events state immediately
       setEvents((prevEvents) => [...prevEvents, createdEvent]);
 
-      // Update allProperties and visibleProperties
       const newProps = Object.keys(allProperties);
       setAllProperties((prevProps) => [
         ...prevProps,
@@ -282,22 +295,81 @@ export default function EventsManagement() {
     setCustomProperties(updatedProperties);
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    setSelectedDate(date);
-    // You can add logic here to filter events based on the selected date
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    // Implement date range filtering logic here
   };
 
+  const EventGrid: React.FC = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
+      {filteredAndSortedEvents.map((event) => (
+        <motion.div
+          key={event.id}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          whileHover={{ scale: 1.05 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Card className="bg-forest-600 border-meadow-500 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold text-white">
+                  {event.name}
+                </h3>
+                <Badge
+                  variant="outline"
+                  className="bg-forest-500 text-meadow-500 border-meadow-500"
+                >
+                  {event.entity_external_id}
+                </Badge>
+              </div>
+              <p className="text-gray-300 mb-4">
+                {new Date(event.timestamp).toLocaleString()}
+              </p>
+              <div className="space-y-2">
+                {Object.entries(event.properties)
+                  .slice(0, 3)
+                  .map(([key, value]) => (
+                    <div key={key} className="flex justify-between">
+                      <span className="text-meadow-500">{key}:</span>
+                      <span className="text-white">{value.toString()}</span>
+                    </div>
+                  ))}
+              </div>
+              <div className="mt-4 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedEvent(event)}
+                  className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-500"
+                >
+                  View Details
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center h-64 bg-neutral-900 rounded-lg border border-neutral-800 p-8">
-      <ClipboardX className="w-16 h-16 text-neutral-600 mb-4" />
+    <div className="flex flex-col items-center justify-center h-64 bg-forest-600 rounded-lg border border-meadow-500 p-8">
+      <ClipboardX className="w-16 h-16 text-meadow-500 mb-4" />
       <h2 className="text-2xl font-bold text-white mb-2">No events found</h2>
-      <p className="text-neutral-400 text-center mb-6">
+      <p className="text-gray-300 text-center mb-6">
         It looks like there are no events recorded yet. Start by creating your
         first event!
       </p>
       <Button
         onClick={() => setIsCreateEventOpen(true)}
-        className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
+        className="bg-meadow-500 text-forest-500 hover:bg-meadow-600"
       >
         <Plus className="mr-2 h-4 w-4" /> Record Your First Event
       </Button>
@@ -305,348 +377,297 @@ export default function EventsManagement() {
   );
 
   return (
-    <div className="px-8 py-6 bg-black text-white min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Events</h1>
-        <div className="flex items-center space-x-4">
-          <Dialog
-            open={isCustomizeViewOpen}
-            onOpenChange={setIsCustomizeViewOpen}
+    <div className="px-8 py-6 bg-forest-500 text-white min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">Events</h1>
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={() => setIsCreateEventOpen(true)}
+              className="bg-meadow-500 text-forest-500 hover:bg-meadow-600"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Record Event
+            </Button>
+          </div>
+        </div>
+
+        <div className="mb-6 flex items-center space-x-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-forest-600 text-white border-meadow-500 rounded-md focus:outline-none focus:ring-2 focus:ring-meadow-500 focus:border-transparent"
+            />
+          </div>
+          {/* <DatePickerWithRange onDateRangeChange={handleDateRangeChange} /> */}
+          <Select
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value as keyof EventData)}
           >
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="border-screaminGreen bg-neutral-800 text-white hover:text-black hover:bg-screaminGreen"
+            <SelectTrigger className="w-[180px] bg-forest-600 text-white border-meadow-500">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-forest-600 text-white">
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="entity_external_id">Entity ID</SelectItem>
+              <SelectItem value="timestamp">Timestamp</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+          >
+            {sortOrder === "asc" ? (
+              <SortAsc className="h-4 w-4" />
+            ) : (
+              <SortDesc className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
+            className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+          >
+            {viewMode === "list" ? (
+              <LayoutGrid className="h-4 w-4" />
+            ) : (
+              <List className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <Loading />
+        ) : events.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <AnimatePresence mode="wait">
+            {viewMode === "list" ? (
+              <motion.div
+                key="list"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
               >
-                <Settings className="mr-2 h-4 w-4" />
-                Customize View
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-neutral-900 border-neutral-700 max-w-3xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-white flex items-center">
-                  <Settings className="mr-2 h-6 w-6" />
-                  Customize Event View
-                </DialogTitle>
-              </DialogHeader>
-              <div className="mt-4">
-                <p className="text-neutral-400 mb-6">
-                  Select the properties you want to display in the events table.
-                </p>
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 text-screaminGreen flex items-center">
-                      <Eye className="mr-2 h-5 w-5" />
-                      Visible Properties
-                    </h3>
-                    <ScrollArea className="h-[300px] rounded-md border border-neutral-700 bg-neutral-800 p-4">
-                      {selectedProperties.map((property) => (
-                        <div
-                          key={property}
-                          className="flex items-center justify-between py-2 border-b border-neutral-700 last:border-b-0"
-                        >
-                          <span className="text-white">{property}</span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handlePropertyToggle(property)}
-                                >
-                                  <EyeOff className="h-4 w-4 text-neutral-400" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Hide this property</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      ))}
-                    </ScrollArea>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 text-screaminGreen flex items-center">
-                      <EyeOff className="mr-2 h-5 w-5" />
-                      Hidden Properties
-                    </h3>
-                    <ScrollArea className="h-[300px] rounded-md border border-neutral-700 bg-neutral-800 p-4">
-                      {allProperties
-                        .filter((prop) => !selectedProperties.includes(prop))
-                        .map((property) => (
-                          <div
-                            key={property}
-                            className="flex items-center justify-between py-2 border-b border-neutral-700 last:border-b-0"
-                          >
-                            <span className="text-neutral-400">{property}</span>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handlePropertyToggle(property)
-                                    }
-                                  >
-                                    <Eye className="h-4 w-4 text-neutral-400" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Show this property</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
+                <Card className="bg-forest-600 border-meadow-500">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-forest-700 border-meadow-500">
+                        {visibleProperties.map((prop) => (
+                          <TableHead key={prop} className="text-meadow-500">
+                            {prop.charAt(0).toUpperCase() + prop.slice(1)}
+                          </TableHead>
                         ))}
-                    </ScrollArea>
-                  </div>
-                </div>
-                <div className="mt-6 flex justify-between items-center">
-                  <div>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsCustomizeViewOpen(false)}
-                      className="mr-2"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={applyCustomView}
-                      className="bg-screaminGreen text-black hover:bg-screaminGreen/90"
-                    >
-                      Apply Changes
-                    </Button>
-                  </div>
-                </div>
+                        <TableHead className="text-meadow-500">
+                          Actions
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedEvents.map((event) => (
+                        <TableRow
+                          key={event.id}
+                          className="hover:bg-forest-700 border-meadow-500"
+                        >
+                          {visibleProperties.map((prop) => (
+                            <TableCell key={prop} className="text-white">
+                              {prop === "timestamp"
+                                ? new Date(event[prop]).toLocaleString()
+                                : prop === "properties"
+                                  ? JSON.stringify(event[prop])
+                                  : event[prop] || "-"}
+                            </TableCell>
+                          ))}
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              className="text-meadow-500 hover:text-meadow-400 hover:bg-forest-600"
+                              onClick={() => setSelectedEvent(event)}
+                            >
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </motion.div>
+            ) : (
+              <EventGrid />
+            )}
+          </AnimatePresence>
+        )}
+
+        <Sheet open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
+          <SheetContent className="bg-forest-600 text-white border-l border-meadow-500 w-[600px] sm:max-w-[600px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="text-2xl font-bold text-meadow-500">
+                Record New Event
+              </SheetTitle>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="entity_id" className="text-white">
+                  Entity ID
+                </Label>
+                <Input
+                  id="entity_id"
+                  value={newEventData.entity_external_id || ""}
+                  onChange={(e) =>
+                    setNewEventData({
+                      ...newEventData,
+                      entity_external_id: e.target.value,
+                    })
+                  }
+                  className="bg-forest-700 border-meadow-500 text-white mt-1"
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-          <Sheet open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
-            <SheetTrigger asChild>
-              <Button className="bg-white text-indigo-600 hover:bg-screaminGreen hover:text-black border border-screaminGreen">
-                <Plus className="mr-2 h-4 w-4" /> Record Event
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="bg-neutral-900 text-white border-l border-neutral-700">
-              <SheetHeader>
-                <SheetTitle className="text-white">Record New Event</SheetTitle>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="entity_id">Entity ID</Label>
+              <div>
+                <Label htmlFor="name" className="text-white">
+                  Event Name
+                </Label>
+                <Input
+                  id="name"
+                  value={newEventData.name || ""}
+                  onChange={(e) =>
+                    setNewEventData({
+                      ...newEventData,
+                      name: e.target.value,
+                    })
+                  }
+                  className="bg-forest-700 border-meadow-500 text-white mt-1"
+                />
+              </div>
+              {customProperties.map((prop, index) => (
+                <div key={index} className="flex items-center space-x-2">
                   <Input
-                    id="entity_id"
-                    value={newEventData.entity_external_id || ""}
-                    onChange={(e) => {
-                      console.log(e.target.value);
-                      setNewEventData({
-                        ...newEventData,
-                        entity_external_id: e.target.value,
-                      });
-                    }}
-                    className="bg-neutral-800 border-neutral-700 text-white mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="name">Event Name</Label>
-                  <Input
-                    id="name"
-                    value={newEventData.name || ""}
+                    placeholder="Property Name"
+                    value={prop.key}
                     onChange={(e) =>
-                      setNewEventData({
-                        ...newEventData,
-                        name: e.target.value,
-                      })
+                      updateCustomProperty(index, e.target.value, prop.value)
                     }
-                    className="bg-neutral-800 border-neutral-700 text-white mt-1"
+                    className="bg-forest-700 border-meadow-500 text-white"
                   />
+                  <Input
+                    placeholder="Value"
+                    value={prop.value}
+                    onChange={(e) =>
+                      updateCustomProperty(index, prop.key, e.target.value)
+                    }
+                    className="bg-forest-700 border-meadow-500 text-white"
+                  />
+                  <Button
+                    onClick={() => removeCustomProperty(index)}
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-400"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                {customProperties.map((prop, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Input
-                      placeholder="Property Name"
-                      value={prop.key}
-                      onChange={(e) =>
-                        updateCustomProperty(index, e.target.value, prop.value)
-                      }
-                      className="bg-neutral-800 border-neutral-700 text-white"
-                    />
-                    <Input
-                      placeholder="Value"
-                      value={prop.value}
-                      onChange={(e) =>
-                        updateCustomProperty(index, prop.key, e.target.value)
-                      }
-                      className="bg-neutral-800 border-neutral-700 text-white"
-                    />
-                    <Button
-                      onClick={() => removeCustomProperty(index)}
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-400"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  onClick={addCustomProperty}
-                  variant="outline"
-                  className="mt-2 bg-neutral-800 text-white hover:bg-neutral-700 hover:text-white border border-screaminGreen"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Add Custom Property
-                </Button>
+              ))}
+              <Button
+                onClick={addCustomProperty}
+                variant="outline"
+                className="mt-2 bg-forest-700 text-white hover:bg-forest-600 hover:text-white border border-meadow-500"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Custom Property
+              </Button>
+              <SheetFooter>
                 <Button
                   onClick={handleCreateEvent}
-                  className="bg-neutral-800 text-white hover:bg-neutral-700 border border-screaminGreen mt-4"
+                  className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 mt-4"
                 >
                   Record Event
                 </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-      <div className="mb-6 flex items-center space-x-2">
-        <div className="relative w-64">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Search events..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-2 py-1 h-9 bg-neutral-800 text-white border-neutral-700 rounded-md focus:ring-1 focus:ring-screaminGreen focus:border-transparent"
-          />
-        </div>
-        <DatePickerWithRange onDateRangeChange={handleDateRangeChange} />
-      </div>
-      {isLoading ? (
-        <Loading />
-      ) : events.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <Card className="bg-neutral-900 border-neutral-700">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-neutral-800 border-neutral-700">
-                {visibleProperties.map((prop) => (
-                  <TableHead key={prop} className="text-white font-medium">
-                    {prop.charAt(0).toUpperCase() + prop.slice(1)}
-                  </TableHead>
-                ))}
-                <TableHead className="text-white font-medium">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEvents.map((event) => (
-                <TableRow
-                  key={event.id}
-                  className="hover:bg-neutral-800 border-neutral-700"
-                >
-                  {visibleProperties.map((prop) => (
-                    <TableCell key={prop} className="text-white">
-                      {prop === "timestamp"
-                        ? new Date(event[prop]).toLocaleString()
-                        : prop === "properties"
-                          ? JSON.stringify(event[prop])
-                          : event[prop] || "-"}
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      className="text-screaminGreen hover:text-screaminGreen/80 hover:bg-neutral-800"
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      View Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
-
-      {selectedEvent && (
-        <Sheet
-          open={!!selectedEvent}
-          onOpenChange={() => setSelectedEvent(null)}
-        >
-          <SheetContent className="bg-neutral-900 text-white border-l border-neutral-700 w-[600px] sm:max-w-[600px] overflow-y-auto">
-            <SheetHeader className="flex justify-between items-center mb-6">
-              <SheetTitle className="text-white text-3xl font-bold">
-                Event Details
-              </SheetTitle>
-              <Badge
-                variant="outline"
-                className="text-screaminGreen border-screaminGreen"
-              >
-                {selectedEvent.name}
-              </Badge>
-            </SheetHeader>
-            <div className="space-y-8">
-              <section>
-                <h3 className="text-lg font-semibold mb-4 text-screaminGreen flex items-center">
-                  <Activity className="mr-2 h-5 w-5" />
-                  Basic Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-neutral-800 p-4 rounded-md">
-                    <p className="text-neutral-400 text-sm mb-1">Entity ID</p>
-                    <p className="text-white font-medium">
-                      {selectedEvent.entity_id}
-                    </p>
-                  </div>
-                  <div className="bg-neutral-800 p-4 rounded-md">
-                    <p className="text-neutral-400 text-sm mb-1">Timestamp</p>
-                    <p className="text-white font-medium">
-                      {new Date(selectedEvent.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section>
-                <h3 className="text-lg font-semibold mb-4 text-screaminGreen flex items-center">
-                  <Tag className="mr-2 h-5 w-5" />
-                  Properties
-                </h3>
-                {Object.keys(selectedEvent.properties).length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(selectedEvent.properties).map(
-                      ([key, value]) => (
-                        <div
-                          key={key}
-                          className="bg-neutral-800 p-4 rounded-md"
-                        >
-                          <p className="text-neutral-400 text-sm mb-1">{key}</p>
-                          <p className="text-white font-medium">
-                            {value.toString()}
-                          </p>
-                        </div>
-                      )
-                    )}
-                  </div>
-                ) : (
-                  <Card className="bg-neutral-800 border-neutral-700">
-                    <CardContent className="flex flex-col items-center justify-center py-6">
-                      <AlertCircle className="h-12 w-12 text-neutral-500 mb-2" />
-                      <p className="text-neutral-400 text-center">
-                        No properties found for this event.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </section>
+              </SheetFooter>
             </div>
           </SheetContent>
         </Sheet>
-      )}
+
+        {selectedEvent && (
+          <Sheet
+            open={!!selectedEvent}
+            onOpenChange={() => setSelectedEvent(null)}
+          >
+            <SheetContent className="bg-forest-600 text-white border-l border-meadow-500 w-[600px] sm:max-w-[600px] overflow-y-auto">
+              <SheetHeader className="flex justify-between items-center mb-6">
+                <SheetTitle className="text-white text-3xl font-bold">
+                  Event Details
+                </SheetTitle>
+                <Badge
+                  variant="outline"
+                  className="text-meadow-500 border-meadow-500"
+                >
+                  {selectedEvent.name}
+                </Badge>
+              </SheetHeader>
+              <div className="space-y-8">
+                <section>
+                  <h3 className="text-lg font-semibold mb-4 text-meadow-500 flex items-center">
+                    <Activity className="mr-2 h-5 w-5" />
+                    Basic Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-forest-700 p-4 rounded-md">
+                      <p className="text-gray-300 text-sm mb-1">Entity ID</p>
+                      <p className="text-white font-medium">
+                        {selectedEvent.entity_external_id}
+                      </p>
+                    </div>
+                    <div className="bg-forest-700 p-4 rounded-md">
+                      <p className="text-gray-300 text-sm mb-1">Timestamp</p>
+                      <p className="text-white font-medium">
+                        {new Date(selectedEvent.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="text-lg font-semibold mb-4 text-meadow-500 flex items-center">
+                    <Tag className="mr-2 h-5 w-5" />
+                    Properties
+                  </h3>
+                  {Object.keys(selectedEvent.properties).length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(selectedEvent.properties).map(
+                        ([key, value]) => (
+                          <div
+                            key={key}
+                            className="bg-forest-700 p-4 rounded-md"
+                          >
+                            <p className="text-gray-300 text-sm mb-1">{key}</p>
+                            <p className="text-white font-medium">
+                              {value.toString()}
+                            </p>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <Card className="bg-forest-700 border-meadow-500">
+                      <CardContent className="flex flex-col items-center justify-center py-6">
+                        <AlertCircle className="h-12 w-12 text-gray-500 mb-2" />
+                        <p className="text-gray-300 text-center">
+                          No properties found for this event.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </section>
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
+      </div>
     </div>
   );
 }
