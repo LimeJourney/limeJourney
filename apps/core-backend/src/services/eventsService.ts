@@ -7,17 +7,20 @@ import { EventOccurredEvent, EventQueueService, EventType } from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
 import { RedisManager } from "../lib/redis";
 import { RedisClientType } from "redis";
+import { EntityService } from "./entitiesService";
 type QueryParamsType = Record<string, unknown>;
 
 export class EventService {
   private clickhouse: ClickHouseClient;
   private eventQueueService: EventQueueService;
   private redisManager: RedisManager;
+  private entitiesService: EntityService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
     this.eventQueueService = EventQueueService.getInstance();
     this.redisManager = RedisManager.getInstance();
+    this.entitiesService = new EntityService();
   }
 
   async recordEvent(
@@ -276,6 +279,11 @@ export class EventService {
   ): Promise<void> {
     const eventName = event.eventName;
     try {
+      const entity = await this.entitiesService.getEntity(
+        event.organizationId,
+        event.entityId
+      );
+
       // Get all journeyIds for this event
       const journeyIds = await this.redisManager.sMembers(
         `event:${eventName}:journeys:${event.organizationId}`
@@ -292,6 +300,7 @@ export class EventService {
           eventName: event.eventName,
           eventProperties: event.eventProperties,
           timestamp: new Date().toISOString(),
+          entityData: entity,
         });
         logger.debug(
           "events",

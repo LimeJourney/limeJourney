@@ -16,10 +16,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
-        className={cn(
-          "min-h-screen bg-forest-500 font-sans antialiased",
-          fontSans.variable
-        )}
+        className={cn("min-h-screen font-sans antialiased", fontSans.variable)}
       >
         {children}
         <Toaster />

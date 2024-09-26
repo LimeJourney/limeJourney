@@ -513,7 +513,7 @@ export default function EntityManagement() {
   );
 
   return (
-    <div className="px-8 py-6 bg-forest-700 text-white min-h-screen">
+    <div className="px-8 py-6 bg-forest-500 text-white min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Entities</h1>
         <div className="flex items-center space-x-4">
@@ -852,7 +852,7 @@ sdk.addEntity({
       ) : entities.length === 0 ? (
         <EmptyState />
       ) : (
-        <Card className="bg-forest-600 border-neutral-700">
+        <Card className="bg-forest-600 border-meadow-500">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-forest-700 border-meadow-muted">

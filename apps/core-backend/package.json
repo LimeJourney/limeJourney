@@ -16,6 +16,7 @@
     "start:worker": "ts-node src/worker/index.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
     "@clickhouse/client": "^1.4.1",
     "@lime/config": "*",
     "@lime/errors": "*",

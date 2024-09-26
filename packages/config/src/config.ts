@@ -50,6 +50,9 @@ const configSchema = z.object({
   redis: z.object({
     url: z.string(),
   }),
+  anthropic: z.object({
+    apiKey: z.string(),
+  }),
   temporal: z.object({
     address: z.string(),
     namespace: z.string(),
@@ -105,10 +108,14 @@ const config = {
   redis: {
     url: env("REDIS_URL", "redis://localhost:6379"),
   },
+  anthropic: {
+    apiKey: env("ANTHROPIC_API_KEY"),
+},
   temporal: {
     address: env("TEMPORAL_ADDRESS", "localhost:7233"),
     namespace: env("TEMPORAL_NAMESPACE", "default"),
     taskQueue: env("TEMPORAL_TASK_QUEUE", "default"),
+  },
   },
 };
 // Parse and validate the configuration

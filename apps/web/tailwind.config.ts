@@ -44,6 +44,9 @@ const config = {
           900: "hsl(93, 70%, 78%)",
           muted: "hsl(93, 50%, 90%)",
         },
+        peach: {
+          50: "#fff5f0",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

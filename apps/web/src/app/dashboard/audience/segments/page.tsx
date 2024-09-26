@@ -229,8 +229,11 @@ const CriterionEditor: React.FC<CriterionEditorProps> = ({
   entityProperties,
   eventNames,
 }) => {
-  const allFields = [...entityProperties, ...eventNames];
+  const allFields = [...entityProperties, ...eventNames].filter(
+    (field) => field !== ""
+  );
 
+  console.log("allFields", allFields);
   const operatorsRequiringTimeUnit = [
     SegmentOperator.HAS_DONE_WITHIN,
     SegmentOperator.HAS_NOT_DONE_WITHIN,
@@ -1154,7 +1157,7 @@ export default function SegmentManagement() {
   };
 
   return (
-    <div className="px-8 py-6 bg-forest-700 min-h-screen">
+    <div className="px-8 py-6 bg-forest-500 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white">Segments</h1>
@@ -1193,7 +1196,7 @@ export default function SegmentManagement() {
         {segments.length === 0 ? (
           <EmptyState onCreateSegment={() => setIsCreateDialogOpen(true)} />
         ) : (
-          <Card className="bg-forest-600 border-neutral-700">
+          <Card className="bg-forest-600 border-meadow-500">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-forest-700 border-meadow-muted">

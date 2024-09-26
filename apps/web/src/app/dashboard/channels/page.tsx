@@ -467,8 +467,8 @@ const MessagingProfilesManagement: React.FC = () => {
   }
 
   return (
-    <div className="bg-forest-700 min-h-screen text-meadow-100">
-      <header className="bg-forest-800 shadow-md">
+    <div className="bg-forest-500 min-h-screen text-meadow-100">
+      <header className="bg-forest-700 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-meadow-100">
@@ -587,7 +587,7 @@ const MessagingProfilesManagement: React.FC = () => {
           </div>
         </div>
 
-        <Card className="bg-forest-600 border-meadow-500">
+        <Card className="bg-forest-700 border-meadow-500">
           <Table>
             <TableHeader>
               <TableRow className="border-meadow-500 hover:bg-forest-500">

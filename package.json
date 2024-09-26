@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "@lime/telemetry": "0.0.0",
-    "@types/node": "^22.1.0"
+    "@types/node": "^22.1.0",
+    "react-intersection-observer": "^9.13.1"
   },
   "engines": {
     "node": ">=18"

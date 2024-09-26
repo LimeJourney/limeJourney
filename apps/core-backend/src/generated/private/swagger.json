@@ -1872,6 +1872,183 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"InsightResponse": {
+				"properties": {
+					"insight": {
+						"type": "string"
+					},
+					"confidence": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"insight",
+					"confidence"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_InsightResponse_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/InsightResponse"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"InsightQuery": {
+				"properties": {
+					"query": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"query"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RecentQuery": {
+				"properties": {
+					"query": {
+						"type": "string"
+					},
+					"response": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": [
+					"query",
+					"response",
+					"createdAt"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_OrganizationInsights-at-recentQueries_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/RecentQuery"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"OrganizationInsights": {
+				"properties": {
+					"recentQueries": {
+						"items": {
+							"$ref": "#/components/schemas/RecentQuery"
+						},
+						"type": "array"
+					},
+					"uniqueEvents": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "number",
+							"format": "double"
+						},
+						"type": "object"
+					},
+					"totalEntities": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalEvents": {
+						"type": "number",
+						"format": "double"
+					},
+					"averageEventsPerEntity": {
+						"type": "number",
+						"format": "double"
+					},
+					"activeEntitiesLast30Days": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"recentQueries",
+					"uniqueEvents",
+					"totalEntities",
+					"totalEvents",
+					"averageEventsPerEntity",
+					"activeEntitiesLast30Days"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_OrganizationInsights_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/OrganizationInsights"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"Record_string.any_": {
 				"properties": {},
 				"additionalProperties": {},
@@ -4488,6 +4665,149 @@
 						}
 					}
 				]
+			}
+		},
+		"/insights/query": {
+			"post": {
+				"operationId": "GetInsights",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_InsightResponse_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"AI Insights"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/InsightQuery"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/insights/queries": {
+			"get": {
+				"operationId": "GetRecentQueries",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_OrganizationInsights-at-recentQueries_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"AI Insights"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/insights": {
+			"get": {
+				"operationId": "GetOrganizationInsights",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_OrganizationInsights_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"AI Insights"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
 			}
 		},
 		"/events": {
