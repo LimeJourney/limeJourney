@@ -27,6 +27,7 @@ export interface CreateJourneyDTO {
   organizationId: string;
   definition: JourneyDefinition;
   runMultipleTimes: boolean;
+  status?: "DRAFT" | "ACTIVE" | "PAUSED" | "ARCHIVED";
 }
 
 export interface UpdateJourneyDTO {
@@ -77,6 +78,7 @@ export class JourneyManagementService {
   constructor() {
     this.ochestrationService = new OrchestrationService();
   }
+
   async createJourney(journeyData: CreateJourneyDTO): Promise<Journey> {
     const journey = await prisma.journey.create({
       data: {
@@ -84,12 +86,20 @@ export class JourneyManagementService {
         name: journeyData.name,
         organizationId: journeyData.organizationId,
         definition: JSON.parse(JSON.stringify(journeyData.definition)),
-        status: "DRAFT",
+        status: journeyData.status || "DRAFT",
         runMultipleTimes: journeyData.runMultipleTimes,
       },
     });
 
-    await this.ochestrationService.registerTriggers(journey);
+    // Only register triggers if the status is not DRAFT
+    if (
+      journey.status !== "DRAFT" &&
+      journey.status !== "ARCHIVED" &&
+      journey.status !== "PAUSED"
+    ) {
+      await this.ochestrationService.registerTriggers(journey);
+    }
+
     return journey;
   }
 
@@ -177,7 +187,20 @@ export class JourneyManagementService {
       data: updateData,
     });
 
+    // Handle trigger registration/unregistration based on status change
+    if (journeyData.status) {
+      await this.handleJourneyStatusChange(updatedJourney);
+    }
+
     return updatedJourney;
+  }
+
+  private async handleJourneyStatusChange(journey: Journey): Promise<void> {
+    if (journey.status === "ACTIVE") {
+      await this.ochestrationService.registerTriggers(journey);
+    } else if (journey.status === "PAUSED" || journey.status === "ARCHIVED") {
+      await this.ochestrationService.unregisterTriggers(journey);
+    }
   }
 
   async deleteJourney(journeyId: string): Promise<void> {

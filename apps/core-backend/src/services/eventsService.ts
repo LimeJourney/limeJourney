@@ -237,6 +237,43 @@ export class EventService {
     }
   }
 
+  async unregisterJourneyForEvent(
+    journeyId: string,
+    organizationId: string,
+    eventName: string
+  ): Promise<void> {
+    try {
+      // Remove journeyId from the set of journeys for this event
+      const removed = await this.redisManager.sRem(
+        `event:${eventName}:journeys:${organizationId}`,
+        journeyId
+      );
+
+      if (removed) {
+        logger.debug(
+          "events",
+          `Unregistered journey ${journeyId} for event ${eventName}`
+        );
+      } else {
+        logger.warn(
+          "events",
+          `Journey ${journeyId} was not registered for event ${eventName}`
+        );
+      }
+    } catch (error: any) {
+      logger.error(
+        "events",
+        `Error unregistering journey ${journeyId} for event ${eventName}`,
+        error
+      );
+      throw new AppError(
+        "Failed to unregister journey for event",
+        500,
+        "JOURNEY_UNREGISTRATION_ERROR"
+      );
+    }
+  }
+
   async handleEventForJourneyRegistration(
     event: EventOccurredEvent
   ): Promise<void> {
@@ -251,6 +288,8 @@ export class EventService {
       const journeyIds = await this.redisManager.sMembers(
         `event:${eventName}:journeys:${event.organizationId}`
       );
+
+      console.log("Journey IDs284:", journeyIds);
 
       for (const journeyId of journeyIds) {
         this.eventQueueService.publish({
