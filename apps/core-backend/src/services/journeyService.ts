@@ -266,8 +266,13 @@ export class JourneyManagementService {
       metrics: {
         totalUsers: journey.analytics?.totalUniqueUsers || 0,
         completionRate: journey.analytics?.runCount
-          ? (journey.analytics.completionCount / journey.analytics.runCount) *
-            100
+          ? Number(
+              (
+                (journey.analytics.completionCount /
+                  journey.analytics.runCount) *
+                100
+              ).toFixed(2)
+            )
           : 0,
       },
     }));

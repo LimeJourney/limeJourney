@@ -277,7 +277,7 @@ const JourneyManagement = () => {
             <TableHead className="text-meadow-500">Trigger</TableHead>
             <TableHead className="text-meadow-500">Steps</TableHead>
             {/* <TableHead className="text-meadow-500">Audience</TableHead> */}
-            <TableHead className="text-meadow-500">Completion Rate</TableHead>
+            <TableHead className="text-meadow-500">Run Count</TableHead>
             <TableHead className="text-meadow-500">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -481,9 +481,11 @@ const JourneyManagement = () => {
                       </div>
                       <div className="text-sm text-meadow-500">
                         Conversion:{" "}
-                        {(journeyMetrics?.stepMetrics[node.id]?.completed /
-                          journeyMetrics?.stepMetrics[node.id]?.total) *
-                          100 || 0}
+                        {(
+                          (journeyMetrics?.stepMetrics[node.id]?.completed /
+                            journeyMetrics?.stepMetrics[node.id]?.total) *
+                            100 || 0
+                        ).toFixed(2)}
                         %
                       </div>
                     </div>
