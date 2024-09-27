@@ -124,6 +124,7 @@ export class EventHandler {
             eventName: event.eventName,
             eventProperties: event.eventProperties,
           },
+          entityData: event.entityData,
         });
 
         console.log(

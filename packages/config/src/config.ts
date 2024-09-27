@@ -110,12 +110,11 @@ const config = {
   },
   anthropic: {
     apiKey: env("ANTHROPIC_API_KEY"),
-},
+  },
   temporal: {
     address: env("TEMPORAL_ADDRESS", "localhost:7233"),
     namespace: env("TEMPORAL_NAMESPACE", "default"),
     taskQueue: env("TEMPORAL_TASK_QUEUE", "default"),
-  },
   },
 };
 // Parse and validate the configuration

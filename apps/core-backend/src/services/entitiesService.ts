@@ -210,14 +210,28 @@ export class EntityService {
       throw new ValidationError("Organization ID and Entity ID are required");
     }
 
-    const query = `
-        SELECT * FROM entities
-        WHERE org_id = {organizationId}
-        AND (id = {entityId} OR external_id = {entityId})
-        LIMIT 1
-      `;
+    console.log("orgID", organizationId);
+    console.log("entityID", entityId);
+    // const query = `
+    //   SELECT *
+    //   FROM entities
+    //   WHERE org_id = {org_id:String}
+    //     AND (id = {entity_id:String} OR external_id = {entity_id:String})
+    //   LIMIT 1
+    // `;
 
-    const params = { organizationId, entityId };
+    const query = `
+    SELECT *
+    FROM entities
+    WHERE org_id = {org_id:String}
+      AND id = {entity_id:String} 
+    LIMIT 1
+  `;
+
+    const params = {
+      org_id: organizationId,
+      entity_id: entityId,
+    };
 
     try {
       const result = await this.executeQuery(
@@ -226,12 +240,17 @@ export class EntityService {
         "Failed to retrieve entity"
       );
 
-      if (result.rows === 0) {
-        throw new NotFoundError(`Entity not found for ID: ${entityId}`);
-      }
+      const entity: EntityData = await result.json();
+      console.log("entities", entity);
+      // if (result.rows === 0) {
+      //   throw new NotFoundError(`Entity not found for ID: ${entityId}`);
+      // }
 
-      return result.data[0];
-    } catch (error) {
+      // console.log("result.data", result);
+      // return result.data[0];
+      return entity;
+    } catch (error: any) {
+      logger.error("database", `Failed to retrieve entity: ${error}`, error);
       if (error instanceof NotFoundError || error instanceof DatabaseError) {
         throw error;
       }

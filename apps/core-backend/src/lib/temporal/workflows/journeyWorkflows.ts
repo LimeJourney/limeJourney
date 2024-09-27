@@ -10,7 +10,7 @@ import {
   JourneyDefinition,
   JourneyNode,
 } from "../../../services/journeyService";
-import { logger } from "@lime/telemetry/logger";
+// import { logger } from "@lime/telemetry/logger";
 
 const { fetchJourneyDefinition, executeEmailStep } = proxyActivities<
   typeof activities
@@ -18,11 +18,24 @@ const { fetchJourneyDefinition, executeEmailStep } = proxyActivities<
   startToCloseTimeout: "60000",
 });
 
+class Logger {
+  public debug(message: string, data: any, ...rest: any[]) {
+    console.log(message, data, rest);
+  }
+
+  public warn(message: string, data: any, ...rest: any[]) {
+    console.warn(message, data, rest);
+  }
+}
+
+const logger = new Logger();
+
 export interface JourneyWorkflowParams {
   journeyId: string;
   entityId: string;
   organizationId: string;
   [key: string]: any;
+  entityData: any;
 }
 
 const PAUSE_SIGNAL = defineSignal<[]>("PAUSE_SIGNAL");
@@ -31,7 +44,9 @@ const RESUME_SIGNAL = defineSignal<[]>("RESUME_SIGNAL");
 export async function JourneyWorkflow(
   params: JourneyWorkflowParams
 ): Promise<void> {
+  logger.debug("temporal", "Journey Workflow Params:", { params });
   const rawJourneyDefinition = await fetchJourneyDefinition(params.journeyId);
+  logger.debug("temporal", "rawJourneyDefinition 36", { rawJourneyDefinition });
   logger.debug("temporal", "Raw Journey Definition:", { rawJourneyDefinition });
 
   if (!isJourneyDefinition(rawJourneyDefinition)) {
@@ -134,7 +149,12 @@ async function executeNode(
 
   switch (node.type) {
     case "emailNode":
-      await executeEmailStep(node.data, params.entityId, params.organizationId);
+      await executeEmailStep(
+        node.data,
+        params.entityId,
+        params.organizationId,
+        params.entityData
+      );
       break;
     case "exitNode":
       return;
