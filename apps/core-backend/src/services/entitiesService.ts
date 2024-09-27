@@ -240,15 +240,24 @@ export class EntityService {
         "Failed to retrieve entity"
       );
 
-      const entity: EntityData = await result.json();
-      console.log("entities", entity);
+      const entity: (EntityData & { properties: string })[] =
+        await result.json();
+
+      if (entity.length === 0) {
+        throw new NotFoundError(`Entity not found for ID: ${entityId}`);
+      }
+      const parsedEntity: EntityData = {
+        ...entity[0],
+        properties: JSON.parse(entity[0].properties as string),
+      };
+      console.log("entities248", parsedEntity, entity);
       // if (result.rows === 0) {
       //   throw new NotFoundError(`Entity not found for ID: ${entityId}`);
       // }
 
       // console.log("result.data", result);
       // return result.data[0];
-      return entity;
+      return parsedEntity;
     } catch (error: any) {
       logger.error("database", `Failed to retrieve entity: ${error}`, error);
       if (error instanceof NotFoundError || error instanceof DatabaseError) {

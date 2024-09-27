@@ -14,6 +14,7 @@ export class MessagingProfileService {
 
   constructor() {
     this.encryptionKey = Buffer.from(
+      // TODO: move to env
       process.env.ENCRYPTION_KEY ||
         "5ebe2294ecd0e0f08eab7690d2a6ee69f9e5da618d6fea9f7c3d04c0cb180fc1",
       "hex"
