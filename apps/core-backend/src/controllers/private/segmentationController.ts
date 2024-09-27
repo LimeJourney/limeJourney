@@ -17,19 +17,23 @@ import {
   CreateSegmentDTO,
   UpdateSegmentDTO,
   SegmentAnalytics,
+  SegmentCondition,
 } from "../../models/segmentation";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
 import { SegmentationService } from "../../services/segmentationService";
+import { AIInsightsService } from "../../services/insightService";
 
 @Route("segments")
 @Tags("Segments")
 @Security("jwt")
 export class SegmentController {
   private segmentationService: SegmentationService;
+  private aiInsightsService: AIInsightsService;
 
   constructor() {
     this.segmentationService = new SegmentationService();
+    this.aiInsightsService = new AIInsightsService();
   }
 
   @Post()
@@ -273,6 +277,44 @@ export class SegmentController {
         status: "error",
         data: null,
         message: "An error occurred while retrieving segments for the entity",
+      });
+    }
+  }
+
+  @Post("generate")
+  public async generateSegmentFromNaturalLanguage(
+    @Body() body: { input: string },
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<{ conditions: SegmentCondition[] }>> {
+    try {
+      const user = request.user as JWTAuthenticatedUser;
+      const organizationId = user.currentOrganizationId as string;
+
+      const generatedSegment =
+        await this.aiInsightsService.generateSegmentFromNaturalLanguage(
+          organizationId,
+          body.input
+        );
+
+      return {
+        status: "success",
+        data: generatedSegment,
+        message: "Segment conditions generated successfully",
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while generating segment conditions",
       });
     }
   }

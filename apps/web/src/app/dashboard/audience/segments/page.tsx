@@ -80,7 +80,8 @@ import segmentationService, {
 } from "@/services/segmentationService";
 import { entityService } from "@/services/entitiesService";
 import { eventsService } from "@/services/eventsService";
-
+import ConditionVisualizer from "./components/conditionVisualizer";
+import AIPoweredSegmentCreation from "./components/aiSegmentCreation";
 interface CustomDropdownProps {
   options: { value: string; label: string }[];
   value: string;
@@ -151,69 +152,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   );
 };
 
-const ConditionVisualizer: React.FC<{ conditions: SegmentCondition[] }> = ({
-  conditions,
-}) => {
-  const formatCriterion = (criterion: SegmentCriterion) => {
-    return `${criterion.field} ${criterion.operator} ${criterion.value}`;
-  };
-
-  return (
-    <div className="space-y-4">
-      <Card className="bg-forest-500 border-meadow-500/20">
-        <CardHeader>
-          <CardTitle className="text-meadow-500 text-lg">
-            Segment Conditions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="pl-4">
-            {conditions.map((condition, conditionIndex) => (
-              <div key={conditionIndex} className="mb-4 last:mb-0">
-                <div className="flex items-center mb-2">
-                  <Badge
-                    variant="secondary"
-                    className="bg-meadow-500/20 text-meadow-500 mr-2"
-                  >
-                    {conditionIndex === 0
-                      ? "IF"
-                      : conditions[0].logicalOperator}
-                  </Badge>
-                  <div className="text-white font-semibold">
-                    Condition {conditionIndex + 1}
-                  </div>
-                </div>
-                <div className="pl-4 border-l-2 border-meadow-500/30">
-                  {condition.criteria.map((criterion, criterionIndex) => (
-                    <div
-                      key={criterionIndex}
-                      className="flex items-center mb-2 last:mb-0"
-                    >
-                      <ChevronRight
-                        className="text-meadow-500 mr-2"
-                        size={16}
-                      />
-                      <Badge
-                        variant="outline"
-                        className="border-meadow-500/50 text-meadow-500 mr-2"
-                      >
-                        {criterionIndex === 0 ? "IF" : "AND"}
-                      </Badge>
-                      <span className="text-white">
-                        {formatCriterion(criterion)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
 interface CriterionEditorProps {
   criterion: SegmentCondition["criteria"][0];
   onChange: (updatedCriterion: SegmentCondition["criteria"][0]) => void;
@@ -233,7 +171,6 @@ const CriterionEditor: React.FC<CriterionEditorProps> = ({
     (field) => field !== ""
   );
 
-  console.log("allFields", allFields);
   const operatorsRequiringTimeUnit = [
     SegmentOperator.HAS_DONE_WITHIN,
     SegmentOperator.HAS_NOT_DONE_WITHIN,
@@ -497,168 +434,6 @@ const ConditionEditor: React.FC<{
         <PlusCircle className="mr-2 h-4 w-4" /> Add Condition
       </Button>
     </div>
-  );
-};
-
-const AIPoweredSegmentCreation: React.FC<{
-  onSegmentCreated: (segment: CreateSegmentDTO) => void;
-}> = ({ onSegmentCreated }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [aiInput, setAiInput] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [generatedConditions, setGeneratedConditions] = useState<
-    SegmentCondition[] | null
-  >(null);
-
-  const handleAISegmentCreation = async () => {
-    setIsProcessing(true);
-    try {
-      // Simulated AI processing
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const conditions: SegmentCondition[] = [
-        {
-          criteria: [
-            {
-              type: SegmentCriterionType.PROPERTY,
-              field: "age",
-              operator: SegmentOperator.GREATER_THAN,
-              value: "30",
-            },
-            {
-              type: SegmentCriterionType.PROPERTY,
-              field: "totalPurchases",
-              operator: SegmentOperator.GREATER_THAN,
-              value: "1000",
-            },
-          ],
-          logicalOperator: LogicalOperator.AND,
-        },
-        {
-          criteria: [
-            {
-              type: SegmentCriterionType.PROPERTY,
-              field: "country",
-              operator: SegmentOperator.EQUALS,
-              value: "USA",
-            },
-          ],
-          logicalOperator: LogicalOperator.OR,
-        },
-      ];
-      setGeneratedConditions(conditions);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleConfirmSegment = () => {
-    if (generatedConditions) {
-      onSegmentCreated({
-        name: aiInput.split(" ").slice(0, 3).join(" "),
-        description: aiInput,
-        conditions: generatedConditions,
-      });
-      setAiInput("");
-      setGeneratedConditions(null);
-      setIsExpanded(false);
-    }
-  };
-
-  return (
-    <Card className="bg-white shadow-sm mb-6">
-      <CardContent className="p-6">
-        <div
-          className="flex justify-between items-center cursor-pointer"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <div className="flex items-center space-x-4">
-            <Sparkles className="h-6 w-6 text-yellow-500" />
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                AI-Powered Segment Creation
-              </h2>
-              <p className="text-sm text-gray-600">
-                Create segments effortlessly using natural language
-              </p>
-            </div>
-          </div>
-          <Button className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
-            {isExpanded ? (
-              <>
-                <ChevronUp className="mr-2 h-4 w-4" />
-                Close
-              </>
-            ) : (
-              <>
-                <ChevronDown className="mr-2 h-4 w-4" />
-                Try AI Segment Creation
-              </>
-            )}
-          </Button>
-        </div>
-        {isExpanded && (
-          <div className="mt-4 space-y-4">
-            <Textarea
-              placeholder="Describe your segment in natural language..."
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              className="w-full p-3 bg-gray-200 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-screaminGreen focus:border-transparent placeholder-gray-500 transition-all duration-300"
-              rows={4}
-            />
-            <Button
-              onClick={handleAISegmentCreation}
-              disabled={isProcessing || !aiInput.trim()}
-              className="w-full bg-screaminGreen/60 text-black hover:bg-black hover:text-white transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
-            >
-              {isProcessing ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : (
-                "Generate Segment"
-              )}
-            </Button>
-
-            {generatedConditions && (
-              <div className="space-y-4">
-                <h3 className="text-black text-lg font-semibold">
-                  Generated Conditions:
-                </h3>
-                <ConditionVisualizer conditions={generatedConditions} />
-                <Button
-                  onClick={handleConfirmSegment}
-                  className="w-full bg-green-500 text-white hover:bg-green-600 transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
-                >
-                  Confirm and Create Segment
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 };
 

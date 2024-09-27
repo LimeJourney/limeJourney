@@ -1035,88 +1035,94 @@ sdk.addEntity({
           <SheetHeader>
             <SheetTitle className="text-white">Edit Entity</SheetTitle>
           </SheetHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <Label htmlFor="external_id">External ID (read-only)</Label>
-              <Input
-                id="external_id"
-                value={editingEntity?.external_id || ""}
-                readOnly
-                className="bg-forest-700 border-neutral-700 text-white mt-1"
-              />
-            </div>
-            {allProperties.map((prop, index) => (
-              <div key={index}>
-                <Label htmlFor={prop}>{prop}</Label>
+          <ScrollArea className="h-[calc(100vh-300px)] pr-4">
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="external_id">External ID (read-only)</Label>
                 <Input
-                  id={prop}
-                  value={editingEntity?.properties?.[prop] || ""}
-                  onChange={(e) =>
-                    setEditingEntity({
-                      ...editingEntity!,
-                      properties: {
-                        ...editingEntity!.properties,
-                        [prop]: e.target.value,
-                      },
-                    })
-                  }
-                  className={`bg-forest-700 border-neutral-700 text-white mt-1 ${
-                    formErrors[prop] ? "border-red-500" : ""
-                  }`}
+                  id="external_id"
+                  value={editingEntity?.external_id || ""}
+                  readOnly
+                  className="bg-forest-700 border-neutral-700 text-white mt-1"
                 />
-                {formErrors[prop] && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {formErrors[prop]}
-                  </p>
-                )}
               </div>
-            ))}
-            {customProperties.map((prop, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div className="flex-1">
+              {allProperties.map((prop, index) => (
+                <div key={index}>
+                  <Label htmlFor={prop}>{prop}</Label>
                   <Input
-                    placeholder="Property Name"
-                    value={prop.key}
+                    id={prop}
+                    value={editingEntity?.properties?.[prop] || ""}
                     onChange={(e) =>
-                      updateCustomProperty(index, e.target.value, prop.value)
+                      setEditingEntity({
+                        ...editingEntity!,
+                        properties: {
+                          ...editingEntity!.properties,
+                          [prop]: e.target.value,
+                        },
+                      })
                     }
-                    className={`bg-forest-700 border-neutral-700 text-white ${
-                      formErrors[`customKey${index}`] ? "border-red-500" : ""
+                    className={`bg-forest-700 border-neutral-700 text-white mt-1 ${
+                      formErrors[prop] ? "border-red-500" : ""
                     }`}
                   />
-                  {formErrors[`customKey${index}`] && (
+                  {formErrors[prop] && (
                     <p className="text-red-500 text-sm mt-1">
-                      {formErrors[`customKey${index}`]}
+                      {formErrors[prop]}
                     </p>
                   )}
                 </div>
-                <div className="flex-1">
-                  <Input
-                    placeholder="Value"
-                    value={prop.value}
-                    onChange={(e) =>
-                      updateCustomProperty(index, prop.key, e.target.value)
-                    }
-                    className={`bg-forest-700 border-neutral-700 text-white ${
-                      formErrors[`customValue${index}`] ? "border-red-500" : ""
-                    }`}
-                  />
-                  {formErrors[`customValue${index}`] && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {formErrors[`customValue${index}`]}
-                    </p>
-                  )}
+              ))}
+              {customProperties.map((prop, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Property Name"
+                      value={prop.key}
+                      onChange={(e) =>
+                        updateCustomProperty(index, e.target.value, prop.value)
+                      }
+                      className={`bg-forest-700 border-neutral-700 text-white ${
+                        formErrors[`customKey${index}`] ? "border-red-500" : ""
+                      }`}
+                    />
+                    {formErrors[`customKey${index}`] && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formErrors[`customKey${index}`]}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Value"
+                      value={prop.value}
+                      onChange={(e) =>
+                        updateCustomProperty(index, prop.key, e.target.value)
+                      }
+                      className={`bg-forest-700 border-neutral-700 text-white ${
+                        formErrors[`customValue${index}`]
+                          ? "border-red-500"
+                          : ""
+                      }`}
+                    />
+                    {formErrors[`customValue${index}`] && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {formErrors[`customValue${index}`]}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => removeCustomProperty(index)}
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-400"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  onClick={() => removeCustomProperty(index)}
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:text-red-400"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="mt-6 space-y-4 grid gap-4 py-4">
             <Button
               onClick={addCustomProperty}
               variant="outline"

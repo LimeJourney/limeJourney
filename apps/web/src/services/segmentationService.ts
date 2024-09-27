@@ -117,6 +117,16 @@ export const segmentationService = {
   async getSegmentsForEntity(entityId: string): Promise<Segment[]> {
     return apiCall<Segment[]>("get", `/segments/entity/${entityId}`);
   },
+
+  async generateSegmentFromNaturalLanguage(
+    input: string
+  ): Promise<{ conditions: SegmentCondition[] }> {
+    return apiCall<{ conditions: SegmentCondition[] }>(
+      "post",
+      "/segments/generate",
+      { input }
+    );
+  },
 };
 
 export default segmentationService;
