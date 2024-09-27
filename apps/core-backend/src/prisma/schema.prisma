@@ -24,7 +24,6 @@ model User {
   role              UserRole  @default(MEMBER)
   currentOrganizationId String?
   currentOrganization Organization? @relation("CurrentOrganization", fields: [currentOrganizationId], references: [id])
-  journeyEvents    JourneyEvent[]
 }
 
 model Segment {
@@ -192,28 +191,31 @@ model JourneyEvent {
   id               String           @id @default(uuid())
   journeyId        String
   journey          Journey          @relation(fields: [journeyId], references: [id])
-  userId           String
-  user             User             @relation(fields: [userId], references: [id])
+  entityId         String
   nodeId           String
   type             EventType
   status           EventStatus
   data             Json?
+  error            String?
   timestamp        DateTime         @default(now())
 
   @@index([journeyId])
-  @@index([userId])
+  @@index([entityId])
   @@index([timestamp])
 }
 
 model JourneyAnalytics {
-  id               String           @id @default(uuid())
-  journeyId        String           @unique
-  journey          Journey          @relation(fields: [journeyId], references: [id])
-  totalParticipants Int             @default(0)
-  completionCount  Int              @default(0)
+  id                   String           @id @default(uuid())
+  journeyId            String           @unique
+  journey              Journey          @relation(fields: [journeyId], references: [id])
+  totalUniqueUsers     Int              @default(0)
+  runCount             Int              @default(0)
+  completionCount      Int              @default(0)
   averageCompletionTime Float?
-  stepConversionRates Json?
-  updatedAt        DateTime         @updatedAt
+  stepConversionRates  Json?
+  errorCount           Int              @default(0)
+  stepCompletions      Json             @default("{}")
+  lastUpdated          DateTime         @updatedAt
 
   @@index([journeyId])
 }
@@ -229,19 +231,21 @@ enum EventType {
   JOURNEY_STARTED
   JOURNEY_COMPLETED
   JOURNEY_EXITED
-  EMAIL_SENT
-  SMS_SENT
-  PUSH_NOTIFICATION_SENT
+  EMAIL_COMPLETED
+  SMS_COMPLETED
+  PUSH_NOTIFICATION_COMPLETED
   WAIT_STARTED
   WAIT_COMPLETED
   SPLIT_EVALUATED
   ACTION_PERFORMED
+  ERROR_OCCURRED
 }
 
 enum EventStatus {
   SUCCESS
   FAILURE
   PENDING
+  ERROR
 }
 
 enum ChannelType {

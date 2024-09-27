@@ -7,17 +7,20 @@ import { EventOccurredEvent, EventQueueService, EventType } from "../lib/queue";
 import { v4 as uuidv4 } from "uuid";
 import { RedisManager } from "../lib/redis";
 import { RedisClientType } from "redis";
+import { EntityService } from "./entitiesService";
 type QueryParamsType = Record<string, unknown>;
 
 export class EventService {
   private clickhouse: ClickHouseClient;
   private eventQueueService: EventQueueService;
   private redisManager: RedisManager;
+  private entitiesService: EntityService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
     this.eventQueueService = EventQueueService.getInstance();
     this.redisManager = RedisManager.getInstance();
+    this.entitiesService = new EntityService();
   }
 
   async recordEvent(
@@ -234,15 +237,59 @@ export class EventService {
     }
   }
 
+  async unregisterJourneyForEvent(
+    journeyId: string,
+    organizationId: string,
+    eventName: string
+  ): Promise<void> {
+    try {
+      // Remove journeyId from the set of journeys for this event
+      const removed = await this.redisManager.sRem(
+        `event:${eventName}:journeys:${organizationId}`,
+        journeyId
+      );
+
+      if (removed) {
+        logger.debug(
+          "events",
+          `Unregistered journey ${journeyId} for event ${eventName}`
+        );
+      } else {
+        logger.warn(
+          "events",
+          `Journey ${journeyId} was not registered for event ${eventName}`
+        );
+      }
+    } catch (error: any) {
+      logger.error(
+        "events",
+        `Error unregistering journey ${journeyId} for event ${eventName}`,
+        error
+      );
+      throw new AppError(
+        "Failed to unregister journey for event",
+        500,
+        "JOURNEY_UNREGISTRATION_ERROR"
+      );
+    }
+  }
+
   async handleEventForJourneyRegistration(
     event: EventOccurredEvent
   ): Promise<void> {
     const eventName = event.eventName;
     try {
+      const entity = await this.entitiesService.getEntity(
+        event.organizationId,
+        event.entityId
+      );
+
       // Get all journeyIds for this event
       const journeyIds = await this.redisManager.sMembers(
         `event:${eventName}:journeys:${event.organizationId}`
       );
+
+      console.log("Journey IDs284:", journeyIds);
 
       for (const journeyId of journeyIds) {
         this.eventQueueService.publish({
@@ -253,6 +300,7 @@ export class EventService {
           eventName: event.eventName,
           eventProperties: event.eventProperties,
           timestamp: new Date().toISOString(),
+          entityData: entity,
         });
         logger.debug(
           "events",

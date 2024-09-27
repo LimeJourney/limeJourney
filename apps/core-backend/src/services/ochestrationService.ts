@@ -70,6 +70,29 @@ export class OrchestrationService {
     }
   }
 
+  async unregisterTriggers(journey: Journey): Promise<void> {
+    const triggers = this.extractTriggers(journey);
+    for (const trigger of triggers) {
+      switch (trigger.type) {
+        case TriggerType.EVENT:
+          await this.unregisterEventTrigger(
+            journey.id,
+            journey.organizationId,
+            trigger
+          );
+          break;
+        // case TriggerType.SEGMENT:
+        //   await this.unregisterSegmentTrigger(journey.id, trigger);
+        //   break;
+        // case TriggerType.TIME:
+        //   await this.unregisterTimeTrigger(journey.id, trigger);
+        //   break;
+        default:
+          throw new Error(`Unsupported trigger type: ${(trigger as any).type}`);
+      }
+    }
+  }
+
   private extractTriggers(journey: Journey): Trigger[] {
     console.log("journey", journey.definition);
 
@@ -125,6 +148,18 @@ export class OrchestrationService {
     );
   }
 
+  private async unregisterEventTrigger(
+    journeyId: string,
+    organizationId: string,
+    trigger: EventTrigger
+  ): Promise<void> {
+    await this.eventService.unregisterJourneyForEvent(
+      journeyId,
+      organizationId,
+      trigger.eventName
+    );
+  }
+
   //   private async registerSegmentTrigger(
   //     journeyId: string,
   //     trigger: SegmentTrigger
@@ -135,4 +170,26 @@ export class OrchestrationService {
   //       trigger.action
   //     );
   //   }
+
+  // private async unregisterSegmentTrigger(
+  //   journeyId: string,
+  //   trigger: SegmentTrigger
+  // ): Promise<void> {
+  //   await this.segmentationService.unregisterJourneyForSegment(
+  //     journeyId,
+  //     trigger.segmentId,
+  //     trigger.action
+  //   );
+  // }
+
+  private async unregisterTimeTrigger(
+    journeyId: string,
+    trigger: TimeTrigger
+  ): Promise<void> {
+    // Implement time trigger unregistration logic here
+    // This might involve removing scheduled jobs or tasks
+    console.log(`Unregistering time trigger for journey ${journeyId}`);
+  }
+
+  // ... existing code ...
 }

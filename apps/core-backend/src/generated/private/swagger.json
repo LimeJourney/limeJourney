@@ -1469,6 +1469,15 @@
 					"name": {
 						"type": "string"
 					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"DRAFT",
+							"ACTIVE",
+							"ARCHIVED",
+							"PAUSED"
+						]
+					},
 					"definition": {
 						"$ref": "#/components/schemas/JourneyDefinition"
 					},

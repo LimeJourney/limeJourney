@@ -57,6 +57,19 @@ export class RedisManager {
     }
   }
 
+  public async sRem(key: string, member: string): Promise<number> {
+    try {
+      return await this.client.sRem(key, member);
+    } catch (error: any) {
+      logger.error("redis", `Error removing member from set: ${key}`, error);
+      throw new AppError(
+        "Failed to remove member from set",
+        500,
+        "REDIS_SREM_ERROR"
+      );
+    }
+  }
+
   public async sMembers(key: string): Promise<string[]> {
     try {
       return await this.client.sMembers(key);

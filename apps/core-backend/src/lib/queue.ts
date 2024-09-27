@@ -2,6 +2,7 @@ import { Kafka, Producer, Consumer, KafkaMessage, logLevel } from "kafkajs";
 import { EventEmitter } from "events";
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
+import { EntityData } from "../services/entitiesService";
 
 export enum EventType {
   ENTITY_CREATED = "ENTITY_CREATED",
@@ -49,6 +50,7 @@ export interface TriggerJourneyEvent extends BaseEvent {
   journeyId: string;
   eventName: string;
   eventProperties: Record<string, any>;
+  entityData: EntityData;
 }
 
 export type Event =
