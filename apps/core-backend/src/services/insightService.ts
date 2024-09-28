@@ -36,6 +36,12 @@ export interface UniqueEvent {
   count: number;
 }
 
+interface GeneratedSegment {
+  title: string;
+  description: string;
+  conditions: SegmentCondition[];
+}
+
 export interface OrganizationInsights {
   recentQueries: RecentQuery[];
   uniqueEvents: { [eventName: string]: number };
@@ -257,7 +263,7 @@ export class AIInsightsService {
   async generateSegmentFromNaturalLanguage(
     organizationId: string,
     input: string
-  ): Promise<{ conditions: SegmentCondition[] }> {
+  ): Promise<GeneratedSegment> {
     const entityProperties =
       await this.entityService.listUniqueProperties(organizationId);
     const eventNames =
@@ -275,11 +281,7 @@ export class AIInsightsService {
       messages: [{ role: "user", content: input }],
     });
 
-    const conditions = this.parseAIResponseToSegmentConditions(
-      response.content[0].text
-    );
-
-    return { conditions };
+    return this.parseAIResponseForSegmentGeneration(response.content[0].text);
   }
 
   private prepareContextForSegmentGeneration(
@@ -297,24 +299,30 @@ export class AIInsightsService {
 
   private constructSystemPromptForSegmentGeneration(context: string): string {
     return `
-      You are an AI assistant specializing in creating segment conditions for a customer data platform.
-      Your task is to generate segment conditions based on the user's natural language input.
+      You are an AI assistant specializing in creating segments for a customer data platform.
+      Your task is to generate a segment title, description, and conditions based on the user's natural language input.
       You have access to the following data:
 
       ${context}
 
-      Please analyze the user's input and generate appropriate segment conditions.
-      Respond with a JSON array of SegmentCondition objects. Each SegmentCondition should have the following structure:
+      Please analyze the user's input and generate an appropriate segment.
+      Respond with a JSON object containing the following fields:
       {
-        "criteria": [
+        "title": "A concise, descriptive title for the segment",
+        "description": "A brief description of what this segment represents and why it's useful",
+        "conditions": [
           {
-            "type": "property" or "event",
-            "field": "property or event name",
-            "operator": "one of the valid operators",
-            "value": "the comparison value"
+            "criteria": [
+              {
+                "type": "property" or "event",
+                "field": "property or event name",
+                "operator": "one of the valid operators",
+                "value": "the comparison value"
+              }
+            ],
+            "logicalOperator": "and" or "or"
           }
-        ],
-        "logicalOperator": "and" or "or"
+        ]
       }
 
       Available SegmentCriterionType values:
@@ -323,24 +331,9 @@ export class AIInsightsService {
 
       Available SegmentOperator values:
       - For properties:
-        - "equals": Exact match
-        - "not_equals": Not an exact match
-        - "greater_than": Greater than a value
-        - "less_than": Less than a value
-        - "contains": String contains
-        - "not_contains": String does not contain
-        - "in": Value is in a list
-        - "not_in": Value is not in a list
-        - "between": Value is between two numbers
-        - "not_between": Value is not between two numbers
+        - "equals", "not_equals", "greater_than", "less_than", "contains", "not_contains", "in", "not_in", "between", "not_between"
       - For events:
-        - "has_done": Event has occurred
-        - "has_not_done": Event has not occurred
-        - "has_done_times": Event has occurred a specific number of times
-        - "has_done_first_time": Event occurred for the first time
-        - "has_done_last_time": Event occurred for the last time
-        - "has_done_within": Event occurred within a time period
-        - "has_not_done_within": Event has not occurred within a time period
+        - "has_done", "has_not_done", "has_done_times", "has_done_first_time", "has_done_last_time", "has_done_within", "has_not_done_within"
 
       LogicalOperator values:
       - "and": All criteria must be true
@@ -352,45 +345,60 @@ export class AIInsightsService {
       When using time-based operators (e.g., "has_done_within"), include a "timeUnit" field in the criterion with one of the following values: "seconds", "minutes", "hours", "days", "weeks", or "months".
 
       Example response:
-      [
-        {
-          "criteria": [
-            {
-              "type": "property",
-              "field": "age",
-              "operator": "greater_than",
-              "value": 30
-            },
-            {
-              "type": "event",
-              "field": "purchase",
-              "operator": "has_done_within",
-              "value": 30,
-              "timeUnit": "days"
-            }
-          ],
-          "logicalOperator": "and"
-        }
-      ]
+      {
+        "title": "High-Value Recent Customers",
+        "description": "Customers who have made a purchase over $500 in the last 30 days. This segment is useful for targeting retention campaigns and upselling opportunities.",
+        "conditions": [
+          {
+            "criteria": [
+              {
+                "type": "event",
+                "field": "purchase",
+                "operator": "has_done_within",
+                "value": 30,
+                "timeUnit": "days"
+              },
+              {
+                "type": "property",
+                "field": "last_purchase_amount",
+                "operator": "greater_than",
+                "value": 500
+              }
+            ],
+            "logicalOperator": "and"
+          }
+        ]
+      }
 
       Always validate that the properties and events you use in the conditions are available in the provided context.
       If you need to make assumptions or if there's ambiguity in the user's request, explain your reasoning in a comment before the JSON response.
     `;
   }
 
-  private parseAIResponseToSegmentConditions(
+  private parseAIResponseForSegmentGeneration(
     aiResponse: string
-  ): SegmentCondition[] {
+  ): GeneratedSegment {
     try {
       // Extract the JSON part of the response
-      const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error("No valid JSON found in the AI response");
       }
 
       const parsedResponse = JSON.parse(jsonMatch[0]);
-      if (Array.isArray(parsedResponse)) {
-        return parsedResponse.map((condition) => ({
+
+      if (
+        !parsedResponse.title ||
+        !parsedResponse.description ||
+        !Array.isArray(parsedResponse.conditions)
+      ) {
+        throw new Error("Invalid AI response format");
+      }
+
+      return {
+        title: parsedResponse.title,
+        description: parsedResponse.description,
+        conditions: parsedResponse.conditions.map((condition: any) => ({
           ...condition,
           criteria: condition.criteria.map((criterion: any) => ({
             ...criterion,
@@ -398,9 +406,8 @@ export class AIInsightsService {
             operator: criterion.operator as SegmentOperator,
           })),
           logicalOperator: condition.logicalOperator as LogicalOperator,
-        }));
-      }
-      throw new Error("Invalid AI response format");
+        })),
+      };
     } catch (error) {
       console.error("Error parsing AI response:", error);
       throw new Error("Failed to parse AI response");

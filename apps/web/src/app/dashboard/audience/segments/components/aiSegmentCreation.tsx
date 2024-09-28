@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   CreateSegmentDTO,
   SegmentCondition,
@@ -11,15 +12,20 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import ConditionVisualizer from "../components/conditionVisualizer";
 import segmentationService from "@/services/segmentationService";
 
+interface GeneratedSegment {
+  title: string;
+  description: string;
+  conditions: SegmentCondition[];
+}
+
 const AIPoweredSegmentCreation: React.FC<{
   onSegmentCreated: (segment: CreateSegmentDTO) => void;
 }> = ({ onSegmentCreated }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [generatedConditions, setGeneratedConditions] = useState<
-    SegmentCondition[] | null
-  >(null);
+  const [generatedSegment, setGeneratedSegment] =
+    useState<GeneratedSegment | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleAISegmentCreation = async () => {
@@ -28,7 +34,7 @@ const AIPoweredSegmentCreation: React.FC<{
     try {
       const response =
         await segmentationService.generateSegmentFromNaturalLanguage(aiInput);
-      setGeneratedConditions(response.conditions);
+      setGeneratedSegment(response);
     } catch (err) {
       console.error(err);
       setError(
@@ -42,14 +48,14 @@ const AIPoweredSegmentCreation: React.FC<{
   };
 
   const handleConfirmSegment = () => {
-    if (generatedConditions) {
+    if (generatedSegment) {
       onSegmentCreated({
-        name: aiInput.split(" ").slice(0, 3).join(" "),
-        description: aiInput,
-        conditions: generatedConditions,
+        name: generatedSegment.title,
+        description: generatedSegment.description,
+        conditions: generatedSegment.conditions,
       });
       setAiInput("");
-      setGeneratedConditions(null);
+      setGeneratedSegment(null);
       setIsExpanded(false);
       setError(null);
     }
@@ -137,12 +143,43 @@ const AIPoweredSegmentCreation: React.FC<{
               </Alert>
             )}
 
-            {generatedConditions && (
+            {generatedSegment && (
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Segment Title
+                  </label>
+                  <Input
+                    value={generatedSegment.title}
+                    onChange={(e) =>
+                      setGeneratedSegment({
+                        ...generatedSegment,
+                        title: e.target.value,
+                      })
+                    }
+                    className="mt-1 w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Segment Description
+                  </label>
+                  <Textarea
+                    value={generatedSegment.description}
+                    onChange={(e) =>
+                      setGeneratedSegment({
+                        ...generatedSegment,
+                        description: e.target.value,
+                      })
+                    }
+                    className="mt-1 w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md"
+                    rows={3}
+                  />
+                </div>
                 <h3 className="text-black text-lg font-semibold">
                   Generated Conditions:
                 </h3>
-                <ConditionVisualizer conditions={generatedConditions} />
+                <ConditionVisualizer conditions={generatedSegment.conditions} />
                 <Button
                   onClick={handleConfirmSegment}
                   className="w-full bg-green-500 text-white hover:bg-green-600 transition duration-300 ease-in-out font-semibold py-3 rounded-lg"
