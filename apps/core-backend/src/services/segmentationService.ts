@@ -19,6 +19,10 @@ import {
   EventOccurredEvent,
   EventType,
 } from "../lib/queue";
+import Anthropic from "@anthropic-ai/sdk";
+import { EntityService } from "./entitiesService";
+import { AppConfig } from "@lime/config";
+import { EventService } from "./eventsService";
 const prisma = new PrismaClient();
 
 interface SegmentSizeResult {
