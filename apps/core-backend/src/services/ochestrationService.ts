@@ -1,4 +1,4 @@
-import { Journey } from "@prisma/client";
+import { Journey } from "../models/journey";
 import { EventService } from "./eventsService";
 import { SegmentationService } from "./segmentationService";
 // import {

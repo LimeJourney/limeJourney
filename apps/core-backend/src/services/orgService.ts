@@ -1,13 +1,72 @@
-import {
-  PrismaClient,
-  User,
-  Organization,
-  OrganizationMember,
-  Invitation,
-} from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { AcceptInvitationDto } from "../models/organisation";
 
+// Define types identical to Prisma client types
+export type User = {
+  id: string;
+  email: string;
+  password?: string | null;
+  name?: string | null;
+  googleId?: string | null;
+  isEmailVerified: boolean;
+  lastLoginAt?: Date | null;
+  profilePictureUrl?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  role: UserRole;
+  currentOrganizationId?: string | null;
+};
+
+export type Organization = {
+  id: string;
+  name: string;
+  subscriptionId?: string | null;
+  subscriptionStatus: SubscriptionStatus;
+  planId?: string | null;
+  subscriptionPeriodStart?: Date | null;
+  subscriptionPeriodEnd?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type OrganizationMember = {
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: UserRole;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Invitation = {
+  id: string;
+  email: string;
+  organizationId: string;
+  invitedBy: string;
+  status: InvitationStatus;
+  expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export enum UserRole {
+  ADMIN = "ADMIN",
+  MEMBER = "MEMBER",
+}
+
+export enum InvitationStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  PAST_DUE = "PAST_DUE",
+  CANCELLED = "CANCELLED",
+}
 export class OrganizationService {
   private prisma: PrismaClient;
 
@@ -20,7 +79,11 @@ export class OrganizationService {
       where: { userId },
       include: { organization: true },
     });
-    return memberships.map((membership) => membership.organization);
+    return memberships.map((membership) => ({
+      ...membership.organization,
+      subscriptionStatus: membership.organization
+        .subscriptionStatus as SubscriptionStatus,
+    }));
   }
 
   async switchOrganization(
@@ -40,10 +103,17 @@ export class OrganizationService {
       throw new Error("User is not a member of this organization");
     }
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: { currentOrganizationId: organizationId },
     });
+
+    const resp: User = {
+      ...updatedUser,
+      role: updatedUser.role as UserRole,
+    };
+
+    return resp;
   }
 
   async createOrganization(
@@ -62,17 +132,24 @@ export class OrganizationService {
       },
     });
 
-    return organization;
+    return {
+      ...organization,
+      subscriptionStatus: organization.subscriptionStatus as SubscriptionStatus,
+    };
   }
 
   async updateOrganization(
     organizationId: string,
     name: string
   ): Promise<Organization> {
-    return this.prisma.organization.update({
+    const updatedOrg = await this.prisma.organization.update({
       where: { id: organizationId },
       data: { name },
     });
+    return {
+      ...updatedOrg,
+      subscriptionStatus: updatedOrg.subscriptionStatus as SubscriptionStatus,
+    };
   }
 
   async inviteUser(
@@ -100,7 +177,10 @@ export class OrganizationService {
     const invitationLink = `http://yourdomain.com/invitation/${invitation.id}`;
     // TODO: Send email with invitationLink
 
-    return invitation;
+    return {
+      ...invitation,
+      status: invitation.status as InvitationStatus,
+    };
   }
 
   async acceptInvitation(
@@ -124,7 +204,7 @@ export class OrganizationService {
     }
 
     // Use a transaction to ensure atomicity
-    return this.prisma.$transaction(async (prisma) => {
+    const member = await this.prisma.$transaction(async (prisma) => {
       let user = await prisma.user.findUnique({ where: { email: data.email } });
 
       if (!user) {
@@ -179,5 +259,10 @@ export class OrganizationService {
 
       return member;
     });
+
+    return {
+      ...member,
+      role: member.role as UserRole,
+    };
   }
 }

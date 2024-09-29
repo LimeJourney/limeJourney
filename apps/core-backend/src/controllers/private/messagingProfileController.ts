@@ -1,10 +1,9 @@
 import { MessagingProfileService } from "../../services/messagingProfileService";
 import { ApiResponse } from "../../models/apiResponse";
-import { MessagingIntegration, MessagingProfile, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { MessagingIntegrationService } from "../../services/messagingIntegrationService";
 import { MessageLogService } from "../../services/messageLogService";
-import { MessageLog } from "@prisma/client";
 import {
   Body,
   Get,
@@ -22,6 +21,29 @@ import {
   TsoaResponse,
   Res,
 } from "tsoa";
+import { MessagingIntegration } from "../../models/messagingIntegration";
+import { JsonValue } from "../../models/json";
+
+type MessagingProfile = {
+  id: string;
+  name: string;
+  organizationId: string;
+  integrationId: string;
+  requiredFields: JsonValue;
+  credentials: JsonValue;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type MessageLog = {
+  id: string;
+  messagingProfileId: string;
+  event: string;
+  status: string;
+  metadata: JsonValue | null;
+  createdAt: Date;
+};
 
 type CreateMessagingProfileInput = Omit<
   MessagingProfile,
@@ -71,7 +93,7 @@ export class MessagingProfileController {
     console.log("integrations", integrations);
     return {
       status: "success",
-      data: integrations,
+      data: integrations as MessagingIntegration[],
       message: "Messaging integrations retrieved successfully",
     };
   }
