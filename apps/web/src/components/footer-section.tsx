@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { title } from "process";
+import Image from "next/image";
 
 const FooterSection = () => {
   const footerLinks = [
@@ -63,7 +64,7 @@ const FooterSection = () => {
         </div>
         <div className="mt-16 border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
-            <img
+            <Image
               src="/LimeJourney-logo.svg"
               alt="LimeJourney"
               className="h-10 w-auto"

@@ -15,6 +15,7 @@ import { Menu } from "lucide-react";
 import FeatureShowcase from "@/components/feature-showcase";
 import GetStartedSection from "@/components/get-started-section";
 import FooterSection from "@/components/footer-section";
+import Image from "next/image";
 
 const HeroBackground = ({ height = "100vh" }) => {
   return (
@@ -78,7 +79,7 @@ const CompanyDisplay = () => {
               key={index}
               className="flex items-center space-x-3 flex-shrink-0"
             >
-              <img
+              <Image
                 src={company.logo}
                 alt={`${company.name} logo`}
                 className="w-8 h-8 object-contain"
@@ -171,7 +172,7 @@ const NavBar = () => {
         )}
       >
         <div className="flex items-center space-x-4 min-w-[180px]">
-          <img
+          <Image
             src="/LimeJourney-logo.svg"
             alt="LimeJourney"
             className="w-8 h-8"

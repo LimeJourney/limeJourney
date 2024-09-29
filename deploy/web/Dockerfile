@@ -14,6 +14,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # First install dependencies (as they change less often)
+COPY tsconfig.base.json ./tsconfig.base.json
 COPY .gitignore .gitignore
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/package-lock.json ./package-lock.json
@@ -33,6 +34,7 @@ USER nextjs
 
 COPY --from=installer /app/apps/web/next.config.js .
 COPY --from=installer /app/apps/web/package.json .
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/src ./apps/web/src
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

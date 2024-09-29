@@ -16,7 +16,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy the base TypeScript config
-COPY --from=builder /app/tsconfig.base.json .
+# COPY --from=builder /app/tsconfig.base.json .
+COPY tsconfig.base.json ./tsconfig.base.json
+# COPY tsoa.private.json ./tsoa.private.json
+# COPY tsoa.public.json ./tsoa.public.json
 
 # Echo contents after copying tsconfig.base.json
 RUN echo "Contents of /app after copying tsconfig.base.json:"

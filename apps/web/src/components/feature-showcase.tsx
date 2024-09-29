@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { Plus, ArrowRight } from "lucide-react";
 import { useInView } from "react-intersection-observer";
+import Image from "next/image";
 
 interface FeatureItemProps {
   title: string;
@@ -416,7 +417,7 @@ const FeatureItem = ({
       className="lg:w-1/2 mb-10 lg:mb-0 relative"
       variants={itemVariants}
     >
-      <img
+      <Image
         src={image}
         alt={alt}
         className="w-full h-auto rounded-lg shadow-2xl"

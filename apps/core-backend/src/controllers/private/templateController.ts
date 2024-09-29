@@ -15,49 +15,14 @@ import {
   TsoaResponse,
   Res,
 } from "tsoa";
-import { TemplateService } from "../../services/templateService";
+import {
+  TemplateService,
+  Template,
+  ChannelType,
+  TemplateStatus,
+} from "../../services/templateService";
 import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
-import {
-  Prisma,
-  ChannelType as PrismaChannelType,
-  TemplateStatus as PrismaTemplateStatus,
-  Template,
-} from "@prisma/client";
-// import { Template  } from "@prisma/client";
-
-// Define ChannelType and TemplateStatus to match Prisma's types
-
-export type ChannelType = PrismaChannelType;
-export const ChannelType = {
-  EMAIL: "EMAIL" as const,
-  SMS: "SMS" as const,
-  PUSH: "PUSH" as const,
-};
-
-export type TemplateStatus = PrismaTemplateStatus;
-export const TemplateStatus = {
-  DRAFT: "DRAFT" as const,
-  ACTIVE: "ACTIVE" as const,
-  ARCHIVED: "ARCHIVED" as const,
-};
-
-// Define Template interface to match Prisma's Template model
-// interface Template {
-//   id: string;
-//   name: string;
-//   channel: ChannelType;
-//   subjectLine: string | null;
-//   previewText: string | null;
-//   content: string;
-//   tags: string[];
-//   status: TemplateStatus;
-//   messagingProfileId: string | null;
-//   organizationId: string;
-//   createdAt: Date;
-//   updatedAt: Date;
-// }
-
 interface CreateTemplateRequest {
   name: string;
   channel: ChannelType;

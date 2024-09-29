@@ -7,7 +7,7 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"_36_Enums.ChannelType": {
+			"ChannelType": {
 				"type": "string",
 				"enum": [
 					"EMAIL",
@@ -15,7 +15,7 @@
 					"PUSH"
 				]
 			},
-			"_36_Enums.TemplateStatus": {
+			"TemplateStatus": {
 				"type": "string",
 				"enum": [
 					"DRAFT",
@@ -23,24 +23,27 @@
 					"ARCHIVED"
 				]
 			},
-			"DefaultSelection_Prisma._36_TemplatePayload_": {
+			"Template": {
 				"properties": {
-					"updatedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"createdAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"messagingProfileId": {
+					"id": {
 						"type": "string"
 					},
-					"organizationId": {
+					"name": {
 						"type": "string"
 					},
-					"status": {
-						"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
+					"channel": {
+						"$ref": "#/components/schemas/ChannelType"
+					},
+					"subjectLine": {
+						"type": "string",
+						"nullable": true
+					},
+					"previewText": {
+						"type": "string",
+						"nullable": true
+					},
+					"content": {
+						"type": "string"
 					},
 					"tags": {
 						"items": {
@@ -48,44 +51,41 @@
 						},
 						"type": "array"
 					},
-					"content": {
+					"status": {
+						"$ref": "#/components/schemas/TemplateStatus"
+					},
+					"messagingProfileId": {
+						"type": "string",
+						"nullable": true
+					},
+					"organizationId": {
 						"type": "string"
 					},
-					"previewText": {
-						"type": "string"
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
 					},
-					"subjectLine": {
-						"type": "string"
-					},
-					"channel": {
-						"$ref": "#/components/schemas/_36_Enums.ChannelType"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
 					}
 				},
 				"required": [
-					"updatedAt",
-					"createdAt",
+					"id",
+					"name",
+					"channel",
+					"subjectLine",
+					"previewText",
+					"content",
+					"tags",
+					"status",
 					"messagingProfileId",
 					"organizationId",
-					"status",
-					"tags",
-					"content",
-					"previewText",
-					"subjectLine",
-					"channel",
-					"name",
-					"id"
+					"createdAt",
+					"updatedAt"
 				],
-				"type": "object"
-			},
-			"Template": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_TemplatePayload_",
-				"description": "Model Template"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"ApiResponse_Template_": {
 				"properties": {
@@ -138,18 +138,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"PrismaChannelType": {
-				"$ref": "#/components/schemas/_36_Enums.ChannelType"
-			},
-			"ChannelType": {
-				"$ref": "#/components/schemas/PrismaChannelType"
-			},
-			"PrismaTemplateStatus": {
-				"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
-			},
-			"TemplateStatus": {
-				"$ref": "#/components/schemas/PrismaTemplateStatus"
 			},
 			"CreateTemplateRequest": {
 				"properties": {

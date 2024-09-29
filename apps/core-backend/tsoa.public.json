@@ -18,5 +18,13 @@
       "in": "header"
     }
   },
-  "useMethodResponseInterface": true
+  "useMethodResponseInterface": true,
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@lime/*": ["../../packages/*"],
+      "@prisma/client": ["./node_modules/.prisma/client"]
+    }
+  }
 }
