@@ -898,7 +898,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Prisma.JsonValue": {
+			"JsonValue": {
 				"anyOf": [
 					{
 						"type": "string"
@@ -911,24 +911,24 @@
 						"type": "boolean"
 					},
 					{
-						"$ref": "#/components/schemas/Prisma.JsonObject"
+						"$ref": "#/components/schemas/JsonObject"
 					},
 					{
-						"$ref": "#/components/schemas/Prisma.JsonArray"
+						"$ref": "#/components/schemas/JsonArray"
 					}
 				],
 				"nullable": true,
 				"description": "From https://github.com/sindresorhus/type-fest/\nMatches any valid JSON value."
 			},
-			"Prisma.JsonObject": {
+			"JsonObject": {
 				"properties": {},
 				"additionalProperties": {
-					"$ref": "#/components/schemas/Prisma.JsonValue"
+					"$ref": "#/components/schemas/JsonValue"
 				},
 				"type": "object",
 				"description": "From https://github.com/sindresorhus/type-fest/\nMatches a JSON object.\nThis type can be useful to enforce some input to be JSON-compatible or as a super-type to be extended from."
 			},
-			"Prisma.JsonArray": {
+			"JsonArray": {
 				"description": "From https://github.com/sindresorhus/type-fest/\nMatches a JSON array.",
 				"properties": {},
 				"type": "object",
@@ -948,10 +948,10 @@
 						"type": "string"
 					},
 					"credentials": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"requiredFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"integrationId": {
 						"type": "string"
@@ -1016,10 +1016,10 @@
 						"type": "string"
 					},
 					"requiredFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"credentials": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"status": {
 						"type": "string"
@@ -1175,7 +1175,7 @@
 					"requiredFields": {
 						"allOf": [
 							{
-								"$ref": "#/components/schemas/Prisma.JsonValue"
+								"$ref": "#/components/schemas/JsonValue"
 							},
 							{
 								"$ref": "#/components/schemas/Record_string.string_"
@@ -1185,7 +1185,7 @@
 					"credentials": {
 						"allOf": [
 							{
-								"$ref": "#/components/schemas/Prisma.JsonValue"
+								"$ref": "#/components/schemas/JsonValue"
 							},
 							{
 								"$ref": "#/components/schemas/Record_string.string_"
@@ -1199,14 +1199,19 @@
 				"type": "object",
 				"description": "Make all properties in T optional"
 			},
-			"DefaultSelection_Prisma._36_MessageLogPayload_": {
+			"MessageLog": {
 				"properties": {
 					"createdAt": {
 						"type": "string",
 						"format": "date-time"
 					},
 					"metadata": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/JsonValue"
+							}
+						],
+						"nullable": true
 					},
 					"status": {
 						"type": "string"
@@ -1230,10 +1235,6 @@
 					"id"
 				],
 				"type": "object"
-			},
-			"MessageLog": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessageLogPayload_",
-				"description": "Model MessageLog"
 			},
 			"ApiResponse_MessageLog-Array_": {
 				"properties": {
@@ -1487,55 +1488,8 @@
 				"$ref": "#/components/schemas/Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__",
 				"description": "Construct a type with the properties of T except for those in type K."
 			},
-			"_36_Enums.JourneyStatus": {
-				"type": "string",
-				"enum": [
-					"DRAFT",
-					"ACTIVE",
-					"ARCHIVED",
-					"PAUSED"
-				]
-			},
-			"DefaultSelection_Prisma._36_JourneyPayload_": {
-				"properties": {
-					"runMultipleTimes": {
-						"type": "boolean"
-					},
-					"updatedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"createdAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"status": {
-						"$ref": "#/components/schemas/_36_Enums.JourneyStatus"
-					},
-					"definition": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
-					},
-					"organizationId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"runMultipleTimes",
-					"updatedAt",
-					"createdAt",
-					"status",
-					"definition",
-					"organizationId",
-					"name",
-					"id"
-				],
-				"type": "object"
+			"JourneyStatus": {
+				"type": "string"
 			},
 			"JourneyWithMetrics": {
 				"properties": {
@@ -1551,10 +1505,10 @@
 						"format": "date-time"
 					},
 					"status": {
-						"$ref": "#/components/schemas/_36_Enums.JourneyStatus"
+						"$ref": "#/components/schemas/JourneyStatus"
 					},
 					"definition": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"organizationId": {
 						"type": "string"

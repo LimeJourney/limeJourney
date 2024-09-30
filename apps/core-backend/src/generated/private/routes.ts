@@ -348,17 +348,17 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Prisma.JsonValue": {
+    "JsonValue": {
         "dataType": "refAlias",
-        "type": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"},{"dataType":"boolean"},{"ref":"Prisma.JsonObject"},{"ref":"Prisma.JsonArray"},{"dataType":"enum","enums":[null]}],"validators":{}},
+        "type": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"},{"dataType":"boolean"},{"ref":"JsonObject"},{"ref":"JsonArray"},{"dataType":"enum","enums":[null]}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Prisma.JsonObject": {
+    "JsonObject": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"Prisma.JsonValue"},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"ref":"JsonValue"},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Prisma.JsonArray": {
+    "JsonArray": {
         "dataType": "refObject",
         "properties": {
         },
@@ -367,7 +367,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "MessagingProfile": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"status":{"dataType":"string","required":true},"credentials":{"ref":"Prisma.JsonValue","required":true},"requiredFields":{"ref":"Prisma.JsonValue","required":true},"integrationId":{"dataType":"string","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"status":{"dataType":"string","required":true},"credentials":{"ref":"JsonValue","required":true},"requiredFields":{"ref":"JsonValue","required":true},"integrationId":{"dataType":"string","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApiResponse_MessagingProfile_": {
@@ -382,7 +382,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Pick_MessagingProfile.Exclude_keyofMessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId__": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string","required":true},"integrationId":{"dataType":"string","required":true},"requiredFields":{"ref":"Prisma.JsonValue","required":true},"credentials":{"ref":"Prisma.JsonValue","required":true},"status":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string","required":true},"integrationId":{"dataType":"string","required":true},"requiredFields":{"ref":"JsonValue","required":true},"credentials":{"ref":"JsonValue","required":true},"status":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Omit_MessagingProfile.id-or-createdAt-or-updatedAt-or-organizationId_": {
@@ -427,17 +427,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Partial_CreateMessagingProfileInput_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string"},"integrationId":{"dataType":"string"},"requiredFields":{"dataType":"intersection","subSchemas":[{"ref":"Prisma.JsonValue"},{"ref":"Record_string.string_"}]},"credentials":{"dataType":"intersection","subSchemas":[{"ref":"Prisma.JsonValue"},{"ref":"Record_string.string_"}]},"status":{"dataType":"string"}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DefaultSelection_Prisma._36_MessageLogPayload_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"createdAt":{"dataType":"datetime","required":true},"metadata":{"ref":"Prisma.JsonValue","required":true},"status":{"dataType":"string","required":true},"event":{"dataType":"string","required":true},"messagingProfileId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"name":{"dataType":"string"},"integrationId":{"dataType":"string"},"requiredFields":{"dataType":"intersection","subSchemas":[{"ref":"JsonValue"},{"ref":"Record_string.string_"}]},"credentials":{"dataType":"intersection","subSchemas":[{"ref":"JsonValue"},{"ref":"Record_string.string_"}]},"status":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "MessageLog": {
         "dataType": "refAlias",
-        "type": {"ref":"DefaultSelection_Prisma._36_MessageLogPayload_","validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"createdAt":{"dataType":"datetime","required":true},"metadata":{"dataType":"union","subSchemas":[{"ref":"JsonValue"},{"dataType":"enum","enums":[null]}],"required":true},"status":{"dataType":"string","required":true},"event":{"dataType":"string","required":true},"messagingProfileId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApiResponse_MessageLog-Array_": {
@@ -543,14 +538,9 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "_36_Enums.JourneyStatus": {
+    "JourneyStatus": {
         "dataType": "refAlias",
-        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["DRAFT"]},{"dataType":"enum","enums":["ACTIVE"]},{"dataType":"enum","enums":["ARCHIVED"]},{"dataType":"enum","enums":["PAUSED"]}],"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DefaultSelection_Prisma._36_JourneyPayload_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"runMultipleTimes":{"dataType":"boolean","required":true},"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"status":{"ref":"_36_Enums.JourneyStatus","required":true},"definition":{"ref":"Prisma.JsonValue","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"string","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "JourneyWithMetrics": {
@@ -559,8 +549,8 @@ const models: TsoaRoute.Models = {
             "runMultipleTimes": {"dataType":"boolean","required":true},
             "updatedAt": {"dataType":"datetime","required":true},
             "createdAt": {"dataType":"datetime","required":true},
-            "status": {"ref":"_36_Enums.JourneyStatus","required":true},
-            "definition": {"ref":"Prisma.JsonValue","required":true},
+            "status": {"ref":"JourneyStatus","required":true},
+            "definition": {"ref":"JsonValue","required":true},
             "organizationId": {"dataType":"string","required":true},
             "name": {"dataType":"string","required":true},
             "id": {"dataType":"string","required":true},
