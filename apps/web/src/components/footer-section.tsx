@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  ChevronRight,
-  Facebook,
-  Twitter,
-  Instagram,
-  Linkedin,
-} from "lucide-react";
+import { ChevronRight, Facebook, Github, Linkedin } from "lucide-react";
 
 const FooterSection = () => {
   const footerLinks = [
@@ -25,8 +19,7 @@ const FooterSection = () => {
 
   const socialLinks = [
     { icon: Facebook, href: "#" },
-    { icon: Twitter, href: "#" },
-    { icon: Instagram, href: "#" },
+    { icon: Github, href: "#" },
     { icon: Linkedin, href: "#" },
   ];
 
