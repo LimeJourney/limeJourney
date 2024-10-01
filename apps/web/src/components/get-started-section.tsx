@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-
 const GetStartedSection = () => {
   return (
     <section className="py-56 bg-white">
@@ -43,5 +42,4 @@ const GetStartedSection = () => {
     </section>
   );
 };
-
 export default GetStartedSection;

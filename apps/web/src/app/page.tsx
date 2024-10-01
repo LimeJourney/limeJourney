@@ -364,6 +364,7 @@ const Home = () => {
       </section>
 
       <FeatureShowcase />
+      <div className="w-full h-1 bg-gradient-to-r from-transparent via-forest-400 to-transparent" />
       <GetStartedSection />
       <FooterSection />
     </div>
