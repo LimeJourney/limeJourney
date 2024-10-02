@@ -18,9 +18,9 @@ const FooterSection = () => {
   ];
 
   const socialLinks = [
-    { icon: Facebook, href: "#" },
-    { icon: Github, href: "#" },
-    { icon: Linkedin, href: "#" },
+    { icon: Facebook, href: "https://www.linkedin.com/company/limejourney/" },
+    { icon: Github, href: "https://github.com/LimeJourney" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/limejourney/" },
   ];
 
   return (

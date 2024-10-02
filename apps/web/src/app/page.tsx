@@ -42,17 +42,9 @@ const HeroBackground = ({ height = "100vh" }) => {
 
 const CompanyDisplay = () => {
   const companies = [
-    { name: "TechNova", logo: "/logos/technova.svg" },
-    { name: "GreenLeaf Solutions", logo: "/logos/greenleaf.svg" },
-    { name: "Quantum Dynamics", logo: "/logos/quantum.svg" },
-    { name: "AeroSpace Innovations", logo: "/logos/aerospace.svg" },
-    { name: "OceanTech Research", logo: "/logos/oceantech.svg" },
-    // Duplicates for seamless loop
-    { name: "TechNova", logo: "/logos/technova.svg" },
-    { name: "GreenLeaf Solutions", logo: "/logos/greenleaf.svg" },
-    { name: "Quantum Dynamics", logo: "/logos/quantum.svg" },
-    { name: "AeroSpace Innovations", logo: "/logos/aerospace.svg" },
-    { name: "OceanTech Research", logo: "/logos/oceantech.svg" },
+    { name: "Teal", logo: "/Intersect.png" },
+    { name: "Tev AI", logo: "/Teal.png" },
+    { name: "Split Technolgies", logo: "/Wave.png" },
   ];
 
   return (
@@ -132,6 +124,7 @@ const NavBar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const calendarLink = "https://cal.com/tobi-limejourney/product-demo";
   const ListItem = React.forwardRef(
     ({ className, title, children, ...props }, ref) => {
       return (
@@ -204,11 +197,11 @@ const NavBar = () => {
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    <ListItem href="/case-studies" title="Case Studies">
-                      See how others succeed with LimeJourney
+                    <ListItem href="/" title="Case Studies">
+                      See how others succeed with LimeJourney(coming soon)
                     </ListItem>
-                    <ListItem href="/testimonials" title="Testimonials">
-                      Hear from our satisfied customers
+                    <ListItem href="/" title="Testimonials">
+                      Hear from our satisfied customers(coming soon)
                     </ListItem>
                   </ul>
                 </NavigationMenuContent>
@@ -216,9 +209,9 @@ const NavBar = () => {
               <NavigationMenuItem>
                 <NavigationMenuLink
                   className="text-gray-800 hover:text-black bg-transparent"
-                  href="/customers"
+                  href="/about"
                 >
-                  Customers
+                  About
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
@@ -228,9 +221,12 @@ const NavBar = () => {
                 <NavigationMenuContent>
                   <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                     <ListItem href="/blog" title="Blog">
-                      Latest insights and tips
+                      Latest insights and tips(coming soon)
                     </ListItem>
-                    <ListItem href="/docs" title="Documentation">
+                    <ListItem
+                      href="https://docs.limejourney.com"
+                      title="Documentation"
+                    >
                       Comprehensive guides and API references
                     </ListItem>
                   </ul>
@@ -244,10 +240,14 @@ const NavBar = () => {
           <Button
             variant="ghost"
             className="text-forest-500 hover:text-forest-600 hover:bg-meadow-200"
+            onClick={() => window.open(calendarLink, "_blank")}
           >
             Login
           </Button>
-          <Button className="bg-forest-500 hover:bg-meadow-500 text-white transition-colors duration-300">
+          <Button
+            onClick={() => window.open(calendarLink, "_blank")}
+            className="bg-forest-500 hover:bg-meadow-500 hover:text-forest-500 text-white transition-colors duration-300"
+          >
             Book a demo
           </Button>
         </div>
@@ -268,10 +268,7 @@ const NavBar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-meadow-100 shadow-lg mt-2 rounded-lg">
           <nav className="flex flex-col p-4">
-            <a
-              href="/features"
-              className="py-2 text-forest-500 hover:text-forest-600"
-            >
+            <a href="/" className="py-2 text-forest-500 hover:text-forest-600">
               Features
             </a>
             <a
@@ -286,22 +283,13 @@ const NavBar = () => {
             >
               Case Studies
             </a>
-            <a
-              href="/testimonials"
-              className="py-2 text-forest-500 hover:text-forest-600"
-            >
+            <a href="/" className="py-2 text-forest-500 hover:text-forest-600">
               Testimonials
             </a>
-            <a
-              href="/customers"
-              className="py-2 text-forest-500 hover:text-forest-600"
-            >
+            <a href="/" className="py-2 text-forest-500 hover:text-forest-600">
               Customers
             </a>
-            <a
-              href="/blog"
-              className="py-2 text-forest-500 hover:text-forest-600"
-            >
+            <a href="/" className="py-2 text-forest-500 hover:text-forest-600">
               Blog
             </a>
             <a
@@ -311,12 +299,16 @@ const NavBar = () => {
               Documentation
             </a>
             <Button
+              onClick={() => window.open(calendarLink, "_blank")}
               variant="ghost"
               className="justify-start px-0 text-forest-500 hover:text-forest-600 hover:bg-transparent"
             >
               Login
             </Button>
-            <Button className="mt-2 bg-forest-500 hover:bg-meadow-500 text-white transition-colors duration-300">
+            <Button
+              onClick={() => window.open(calendarLink, "_blank")}
+              className="mt-2 bg-forest-500 hover:bg-meadow-500 text-white transition-colors duration-300"
+            >
               Book a demo
             </Button>
           </nav>
@@ -327,6 +319,7 @@ const NavBar = () => {
 };
 
 const Home = () => {
+  const calendarLink = "https://cal.com/tobi-limejourney/product-demo";
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       <NavBar />
@@ -352,7 +345,7 @@ const Home = () => {
           </motion.div>
 
           <BorderSpotlightButton
-            onClick={() => console.log("Get Started clicked")}
+            onClick={() => window.open(calendarLink, "_blank")}
           >
             Get Started
           </BorderSpotlightButton>

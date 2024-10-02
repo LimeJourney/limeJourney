@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 const GetStartedSection = () => {
+  const calendarLink = "https://cal.com/tobi-limejourney/product-demo";
   return (
     <section className="py-56 bg-white">
       <div className="container mx-auto px-4">
@@ -9,10 +10,16 @@ const GetStartedSection = () => {
             <h2 className="text-4xl font-bold mb-4">Get Started</h2>
             <p className="text-xl mb-8">Customer Engagement for Modern Teams</p>
             <div className="flex justify-center space-x-4">
-              <Button className="bg-black text-white hover:bg-forest-500 hover:text-meadow-600">
+              <Button
+                onClick={() => window.open(calendarLink, "_blank")}
+                className="bg-black text-white hover:bg-forest-500 hover:text-meadow-600"
+              >
                 Get Started →
               </Button>
-              <Button className="bg-white text-black hover:bg-forest-500 hover:text-meadow-600">
+              <Button
+                onClick={() => window.open(calendarLink, "_blank")}
+                className="bg-white text-black hover:bg-forest-500 hover:text-meadow-600"
+              >
                 Try Demo →
               </Button>
             </div>

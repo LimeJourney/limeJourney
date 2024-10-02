@@ -4,11 +4,11 @@ import { Check, Zap, ArrowRight, Server } from "lucide-react";
 const PricingPage = () => {
   const pricingPlan = {
     name: "Pro",
-    price: 29,
+    price: 50,
     billingPeriod: "month",
     features: [
       "Unlimited projects",
-      "50 GB storage",
+      "20,000 unique entities",
       "Priority support",
       "API access",
       "Advanced analytics",
