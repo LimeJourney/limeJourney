@@ -444,6 +444,7 @@ const FeatureItem = ({
     </motion.div>
   );
 
+  const calendarLink = "https://cal.com/tobi-limejourney/product-demo";
   const ContentSection = () => (
     <motion.div className="lg:w-1/2 lg:pl-16" variants={containerVariants}>
       <motion.div className="mb-6" variants={itemVariants}>
@@ -476,6 +477,7 @@ const FeatureItem = ({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         variants={itemVariants}
+        onClick={() => window.open(calendarLink, "_blank")}
       >
         <span>Start {title}</span>
         <ArrowRight size={20} />
