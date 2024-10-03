@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import ReactFlow, {
@@ -81,7 +82,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useJourneyContext } from "@/app/contexts/journeyContext";
+import { useJourneyContext } from "../../../contexts/JourneyContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

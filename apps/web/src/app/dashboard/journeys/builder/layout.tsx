@@ -1,4 +1,4 @@
-import { JourneyProvider } from "../../contexts/JourneyContext";
+import { JourneyProvider } from "../../../contexts/JourneyContext";
 
 export default function JourneysLayout({
   children,

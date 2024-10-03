@@ -74,7 +74,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
-import { useJourneyContext } from "@/app/contexts/journeyContext";
+import { useJourneyContext } from "@/app/contexts/JourneyContext";
 import {
   journeyManagementService,
   JourneyMetrics,
