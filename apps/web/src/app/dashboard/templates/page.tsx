@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "react-quill/dist/quill.snow.css";
 import {
@@ -60,7 +61,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { entityService } from "@/services/entitiesService";
-import EmailTemplateEditor from "./components/editor";
+// import EmailTemplateEditor from "./components/editor";
 import {
   templateService,
   Template,
@@ -73,6 +74,25 @@ import {
   messagingProfileService,
   MessagingProfile,
 } from "@/services/messagingProfileService";
+
+import dynamic from "next/dynamic";
+
+// const DynamicEmailTemplateEditor = useMemo(
+//   () =>
+//     dynamic(() => import("./components/editor"), {
+//       ssr: false,
+//       loading: () => <p>Loading editor...</p>,
+//     }),
+//   []
+// );
+
+const DynamicEmailTemplateEditor = dynamic(
+  () => import("./components/editor"),
+  {
+    ssr: false,
+    loading: () => <p>Loading editor...</p>,
+  }
+);
 
 const TemplateManagement: React.FC = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -689,7 +709,7 @@ const TemplateManagement: React.FC = () => {
               </SheetDescription>
             </SheetHeader>
             <div className={`h-[calc(100vh-200px)]`}>
-              <EmailTemplateEditor
+              <DynamicEmailTemplateEditor
                 currentTemplate={currentTemplate}
                 setCurrentTemplate={setCurrentTemplate}
                 selectedProfile={selectedProfile}
