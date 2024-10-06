@@ -8,7 +8,7 @@ import { AuthData, AuthRequest } from "../models/auth";
 
 const prisma = new PrismaClient();
 
-export class TestAuthService {
+export class AuthService {
   // constructor() {
   //   // this.initializeGoogleStrategy();
   // }
