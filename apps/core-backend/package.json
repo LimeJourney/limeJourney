@@ -9,7 +9,7 @@
     "start:worker:dev": "ts-node src/worker/index.ts",
     "start:worker": "node dist/worker/index.js",
     "lint": "eslint .",
-    "migrate:dev": "npx prisma migrate dev --schema=./src/prisma/schema.prisma",
+    "migrate:dev": "DATABASE_URL=\"$DATABASE_URL\" npx prisma migrate dev --schema=./src/prisma/schema.prisma",
     "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
     "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
