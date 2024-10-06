@@ -20,6 +20,14 @@
     "test": {
       "cache": false,
       "persistent": true
+    },
+    "migrate:dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "migrate:deploy": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
