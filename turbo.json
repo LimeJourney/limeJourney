@@ -23,7 +23,8 @@
     },
     "migrate:dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["DATABASE_URL"]
     },
     "migrate:deploy": {
       "cache": false,
