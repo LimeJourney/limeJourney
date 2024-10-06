@@ -594,6 +594,41 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ApiResponse__conditions-SegmentCondition-Array__": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"properties": {
+							"conditions": {
+								"items": {
+									"$ref": "#/components/schemas/SegmentCondition"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"conditions"
+						],
+						"type": "object",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"SubscriptionStatus": {
 				"enum": [
 					"ACTIVE",
@@ -3408,6 +3443,70 @@
 						}
 					}
 				]
+			}
+		},
+		"/segments/generate": {
+			"post": {
+				"operationId": "GenerateSegmentFromNaturalLanguage",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__conditions-SegmentCondition-Array__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Segments"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"input": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"input"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/organizations": {

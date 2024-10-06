@@ -82,6 +82,12 @@ export interface SegmentAnalytics {
   conversionRate?: number;
 }
 
+interface GeneratedSegment {
+  title: string;
+  description: string;
+  conditions: SegmentCondition[];
+}
+
 export const segmentationService = {
   async createSegment(data: CreateSegmentDTO): Promise<Segment> {
     return apiCall<Segment>("post", "/segments", data);
@@ -116,6 +122,12 @@ export const segmentationService = {
 
   async getSegmentsForEntity(entityId: string): Promise<Segment[]> {
     return apiCall<Segment[]>("get", `/segments/entity/${entityId}`);
+  },
+
+  async generateSegmentFromNaturalLanguage(
+    input: string
+  ): Promise<GeneratedSegment> {
+    return apiCall<GeneratedSegment>("post", "/segments/generate", { input });
   },
 };
 

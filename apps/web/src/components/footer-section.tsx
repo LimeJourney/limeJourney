@@ -1,46 +1,59 @@
 import React from "react";
-import { ChevronRight } from "lucide-react";
-import { title } from "process";
 import Image from "next/image";
+import { ChevronRight, Facebook, Github, Linkedin } from "lucide-react";
 
 const FooterSection = () => {
   const footerLinks = [
     {
-      title: "Features",
-      links: ["Something", "Something", "Something"],
-    },
-    {
-      title: "Use Cases",
-      links: ["Something", "Something", "Something"],
-    },
-    {
       title: "Developers",
-      links: [
-        "Documentation",
-        "Demo",
-        "API Status",
-        "Libraries and SDKs",
-        "Changelog",
-      ],
+      links: ["Documentation", "API Status", "Changelog"],
     },
     {
       title: "Legal",
       links: ["Terms of Service", "Privacy Policy"],
     },
     {
-      title: "Resources",
-      links: ["Blog", "Press"],
-    },
-    {
       title: "Company",
-      links: ["About", "Careers", "Contact"],
+      links: ["About", "Contact"],
     },
+  ];
+
+  const socialLinks = [
+    { icon: Facebook, href: "https://www.linkedin.com/company/limejourney/" },
+    { icon: Github, href: "https://github.com/LimeJourney" },
+    { icon: Linkedin, href: "https://www.linkedin.com/company/limejourney/" },
   ];
 
   return (
     <footer className="bg-forest-500 text-white py-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-1">
+            <div className="flex items-center space-x-4 mb-6">
+              <img
+                src="/LimeJourney-logo.svg"
+                alt="LimeJourney"
+                className="h-12 w-auto"
+              />
+              <span className="text-2xl font-bold text-meadow-700">
+                LimeJourney
+              </span>
+            </div>
+            <p className="text-gray-300 mb-6">
+              Empowering your journey through innovative solutions.
+            </p>
+            <div className="flex space-x-4">
+              {socialLinks.map((social, index) => (
+                <a
+                  key={index}
+                  href={social.href}
+                  className="text-gray-300 hover:text-meadow-700 transition-colors"
+                >
+                  <social.icon className="w-6 h-6" />
+                </a>
+              ))}
+            </div>
+          </div>
           {footerLinks.map((column, index) => (
             <div key={index} className="space-y-4">
               <h3 className="text-lg font-semibold text-meadow-700">
@@ -53,7 +66,6 @@ const FooterSection = () => {
                       href="#"
                       className="text-gray-300 hover:text-white transition-colors flex items-center"
                     >
-                      <ChevronRight className="w-4 h-4 mr-1 text-meadow-700 opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span>{link}</span>
                     </a>
                   </li>
@@ -74,10 +86,12 @@ const FooterSection = () => {
             </span>
           </div>
           <div className="text-gray-400 text-sm text-center md:text-right">
-            <p>
-              © {new Date().getFullYear()} LimeJourney Corporation. All rights
-              reserved.
-            </p>
+            <div className="text-gray-400 text-sm mb-4 md:mb-0">
+              <p>
+                © {new Date().getFullYear()} LimeJourney Corporation. All
+                rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </div>
