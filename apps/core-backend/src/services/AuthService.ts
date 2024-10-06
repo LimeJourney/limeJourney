@@ -8,27 +8,10 @@ import { AuthData, AuthRequest } from "../models/auth";
 
 const prisma = new PrismaClient();
 
-// export interface AuthRequest {
-//   email: string;
-//   password?: string;
-//   name?: string;
-// }
-
-// export type AuthData = {
-//   user: {
-//     id: string;
-//     email: string;
-//     name: string;
-//     organizationId: string;
-//     role: string;
-//   };
-//   token: string;
-// };
-
 export class AuthService {
-  constructor() {
-    // this.initializeGoogleStrategy();
-  }
+  // constructor() {
+  //   // this.initializeGoogleStrategy();
+  // }
 
   private initializeGoogleStrategy() {
     passport.use(
