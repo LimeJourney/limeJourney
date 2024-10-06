@@ -10,7 +10,7 @@ import {
   Res,
   TsoaResponse,
 } from "tsoa";
-import { AuthService } from "@/services/authService";
+import { TestAuthService as AuthService } from "../../services/testAuthService";
 import { ApiResponse } from "../../models/apiResponse";
 import { AuthData, AuthRequest } from "../../models/auth";
 
