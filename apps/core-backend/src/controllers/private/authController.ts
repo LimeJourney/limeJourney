@@ -10,9 +10,10 @@ import {
   Res,
   TsoaResponse,
 } from "tsoa";
-import { AuthService, AuthRequest, AuthData } from "../../services/authService";
+import { AuthService } from "../../services/authService";
 import { ApiResponse } from "../../models/apiResponse";
 import { Response as expressResponse } from "express";
+import { AuthData, AuthRequest } from "../../models/auth";
 
 @Route("auth")
 @Tags("Authentication")

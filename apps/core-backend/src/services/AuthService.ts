@@ -4,25 +4,26 @@ import jwt from "jsonwebtoken";
 import { AppConfig } from "@lime/config";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import passport from "passport";
+import { AuthData, AuthRequest } from "../models/auth";
 
 const prisma = new PrismaClient();
 
-export interface AuthRequest {
-  email: string;
-  password?: string;
-  name?: string;
-}
+// export interface AuthRequest {
+//   email: string;
+//   password?: string;
+//   name?: string;
+// }
 
-export interface AuthData {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    organizationId: string;
-    role: string;
-  };
-  token: string;
-}
+// export type AuthData = {
+//   user: {
+//     id: string;
+//     email: string;
+//     name: string;
+//     organizationId: string;
+//     role: string;
+//   };
+//   token: string;
+// };
 
 export class AuthService {
   constructor() {
@@ -45,6 +46,7 @@ export class AuthService {
   async authenticate(data: AuthRequest): Promise<AuthData> {
     let user = await prisma.user.findUnique({ where: { email: data.email } });
 
+    const userCurrentOrganizationId = user?.currentOrganizationId;
     if (!user) {
       // User doesn't exist, create a new account
       const organization = await prisma.organization.create({
@@ -86,7 +88,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name || "",
-        organizationId: user.currentOrganizationId || "",
+        currentOrganizationId: user.currentOrganizationId || "",
         role: user.role,
       },
     };

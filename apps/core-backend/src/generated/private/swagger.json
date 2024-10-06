@@ -2393,16 +2393,20 @@
 			},
 			"AuthData": {
 				"properties": {
+					"token": {
+						"type": "string"
+					},
 					"user": {
 						"properties": {
 							"role": {
 								"type": "string"
 							},
-							"organizationId": {
+							"currentOrganizationId": {
 								"type": "string"
 							},
 							"name": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -2413,20 +2417,17 @@
 						},
 						"required": [
 							"role",
-							"organizationId",
+							"currentOrganizationId",
 							"name",
 							"email",
 							"id"
 						],
 						"type": "object"
-					},
-					"token": {
-						"type": "string"
 					}
 				},
 				"required": [
-					"user",
-					"token"
+					"token",
+					"user"
 				],
 				"type": "object",
 				"additionalProperties": false

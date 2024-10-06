@@ -863,8 +863,8 @@ const models: TsoaRoute.Models = {
     "AuthData": {
         "dataType": "refObject",
         "properties": {
-            "user": {"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string","required":true},"organizationId":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"email":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true},
             "token": {"dataType":"string","required":true},
+            "user": {"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string","required":true},"currentOrganizationId":{"dataType":"string","required":true},"name":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"email":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true},
         },
         "additionalProperties": false,
     },
