@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { ChevronRight, Facebook, Github, Linkedin } from "lucide-react";
 
 const FooterSection = () => {
@@ -74,11 +75,23 @@ const FooterSection = () => {
           ))}
         </div>
         <div className="mt-16 border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="text-gray-400 text-sm mb-4 md:mb-0">
-            <p>
-              © {new Date().getFullYear()} LimeJourney Corporation. All rights
-              reserved.
-            </p>
+          <div className="flex items-center space-x-4 mb-4 md:mb-0">
+            <Image
+              src="/LimeJourney-logo.svg"
+              alt="LimeJourney"
+              className="h-10 w-auto"
+            />
+            <span className="text-2xl font-bold text-meadow-700">
+              LimeJourney
+            </span>
+          </div>
+          <div className="text-gray-400 text-sm text-center md:text-right">
+            <div className="text-gray-400 text-sm mb-4 md:mb-0">
+              <p>
+                © {new Date().getFullYear()} LimeJourney Corporation. All
+                rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </div>

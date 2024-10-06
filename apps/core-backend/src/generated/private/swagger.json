@@ -7,7 +7,7 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"_36_Enums.ChannelType": {
+			"ChannelType": {
 				"type": "string",
 				"enum": [
 					"EMAIL",
@@ -15,7 +15,7 @@
 					"PUSH"
 				]
 			},
-			"_36_Enums.TemplateStatus": {
+			"TemplateStatus": {
 				"type": "string",
 				"enum": [
 					"DRAFT",
@@ -23,24 +23,27 @@
 					"ARCHIVED"
 				]
 			},
-			"DefaultSelection_Prisma._36_TemplatePayload_": {
+			"Template": {
 				"properties": {
-					"updatedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"createdAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"messagingProfileId": {
+					"id": {
 						"type": "string"
 					},
-					"organizationId": {
+					"name": {
 						"type": "string"
 					},
-					"status": {
-						"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
+					"channel": {
+						"$ref": "#/components/schemas/ChannelType"
+					},
+					"subjectLine": {
+						"type": "string",
+						"nullable": true
+					},
+					"previewText": {
+						"type": "string",
+						"nullable": true
+					},
+					"content": {
+						"type": "string"
 					},
 					"tags": {
 						"items": {
@@ -48,44 +51,41 @@
 						},
 						"type": "array"
 					},
-					"content": {
+					"status": {
+						"$ref": "#/components/schemas/TemplateStatus"
+					},
+					"messagingProfileId": {
+						"type": "string",
+						"nullable": true
+					},
+					"organizationId": {
 						"type": "string"
 					},
-					"previewText": {
-						"type": "string"
+					"createdAt": {
+						"type": "string",
+						"format": "date-time"
 					},
-					"subjectLine": {
-						"type": "string"
-					},
-					"channel": {
-						"$ref": "#/components/schemas/_36_Enums.ChannelType"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time"
 					}
 				},
 				"required": [
-					"updatedAt",
-					"createdAt",
+					"id",
+					"name",
+					"channel",
+					"subjectLine",
+					"previewText",
+					"content",
+					"tags",
+					"status",
 					"messagingProfileId",
 					"organizationId",
-					"status",
-					"tags",
-					"content",
-					"previewText",
-					"subjectLine",
-					"channel",
-					"name",
-					"id"
+					"createdAt",
+					"updatedAt"
 				],
-				"type": "object"
-			},
-			"Template": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_TemplatePayload_",
-				"description": "Model Template"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"ApiResponse_Template_": {
 				"properties": {
@@ -138,18 +138,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"PrismaChannelType": {
-				"$ref": "#/components/schemas/_36_Enums.ChannelType"
-			},
-			"ChannelType": {
-				"$ref": "#/components/schemas/PrismaChannelType"
-			},
-			"PrismaTemplateStatus": {
-				"$ref": "#/components/schemas/_36_Enums.TemplateStatus"
-			},
-			"TemplateStatus": {
-				"$ref": "#/components/schemas/PrismaTemplateStatus"
 			},
 			"CreateTemplateRequest": {
 				"properties": {
@@ -641,16 +629,16 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"_36_Enums.SubscriptionStatus": {
-				"type": "string",
+			"SubscriptionStatus": {
 				"enum": [
 					"ACTIVE",
 					"INACTIVE",
 					"PAST_DUE",
 					"CANCELLED"
-				]
+				],
+				"type": "string"
 			},
-			"DefaultSelection_Prisma._36_OrganizationPayload_": {
+			"Organization": {
 				"properties": {
 					"updatedAt": {
 						"type": "string",
@@ -662,20 +650,24 @@
 					},
 					"subscriptionPeriodEnd": {
 						"type": "string",
-						"format": "date-time"
+						"format": "date-time",
+						"nullable": true
 					},
 					"subscriptionPeriodStart": {
 						"type": "string",
-						"format": "date-time"
+						"format": "date-time",
+						"nullable": true
 					},
 					"planId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"subscriptionStatus": {
-						"$ref": "#/components/schemas/_36_Enums.SubscriptionStatus"
+						"$ref": "#/components/schemas/SubscriptionStatus"
 					},
 					"subscriptionId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"name": {
 						"type": "string"
@@ -687,19 +679,11 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
-					"subscriptionPeriodEnd",
-					"subscriptionPeriodStart",
-					"planId",
 					"subscriptionStatus",
-					"subscriptionId",
 					"name",
 					"id"
 				],
 				"type": "object"
-			},
-			"Organization": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_OrganizationPayload_",
-				"description": "Model Organization"
 			},
 			"ApiResponse_Organization-Array_": {
 				"properties": {
@@ -779,15 +763,15 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"_36_Enums.InvitationStatus": {
-				"type": "string",
+			"InvitationStatus": {
 				"enum": [
 					"PENDING",
 					"ACCEPTED",
 					"REJECTED"
-				]
+				],
+				"type": "string"
 			},
-			"DefaultSelection_Prisma._36_InvitationPayload_": {
+			"Invitation": {
 				"properties": {
 					"updatedAt": {
 						"type": "string",
@@ -802,7 +786,7 @@
 						"format": "date-time"
 					},
 					"status": {
-						"$ref": "#/components/schemas/_36_Enums.InvitationStatus"
+						"$ref": "#/components/schemas/InvitationStatus"
 					},
 					"invitedBy": {
 						"type": "string"
@@ -828,10 +812,6 @@
 					"id"
 				],
 				"type": "object"
-			},
-			"Invitation": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_InvitationPayload_",
-				"description": "Model Invitation"
 			},
 			"ApiResponse_Invitation_": {
 				"properties": {
@@ -861,14 +841,14 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"_36_Enums.UserRole": {
-				"type": "string",
+			"UserRole": {
 				"enum": [
 					"ADMIN",
 					"MEMBER"
-				]
+				],
+				"type": "string"
 			},
-			"DefaultSelection_Prisma._36_OrganizationMemberPayload_": {
+			"OrganizationMember": {
 				"properties": {
 					"updatedAt": {
 						"type": "string",
@@ -879,7 +859,7 @@
 						"format": "date-time"
 					},
 					"role": {
-						"$ref": "#/components/schemas/_36_Enums.UserRole"
+						"$ref": "#/components/schemas/UserRole"
 					},
 					"organizationId": {
 						"type": "string"
@@ -900,10 +880,6 @@
 					"id"
 				],
 				"type": "object"
-			},
-			"OrganizationMember": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_OrganizationMemberPayload_",
-				"description": "Model OrganizationMember"
 			},
 			"ApiResponse_OrganizationMember_": {
 				"properties": {
@@ -957,7 +933,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Prisma.JsonValue": {
+			"JsonValue": {
 				"anyOf": [
 					{
 						"type": "string"
@@ -970,30 +946,30 @@
 						"type": "boolean"
 					},
 					{
-						"$ref": "#/components/schemas/Prisma.JsonObject"
+						"$ref": "#/components/schemas/JsonObject"
 					},
 					{
-						"$ref": "#/components/schemas/Prisma.JsonArray"
+						"$ref": "#/components/schemas/JsonArray"
 					}
 				],
 				"nullable": true,
 				"description": "From https://github.com/sindresorhus/type-fest/\nMatches any valid JSON value."
 			},
-			"Prisma.JsonObject": {
+			"JsonObject": {
 				"properties": {},
 				"additionalProperties": {
-					"$ref": "#/components/schemas/Prisma.JsonValue"
+					"$ref": "#/components/schemas/JsonValue"
 				},
 				"type": "object",
 				"description": "From https://github.com/sindresorhus/type-fest/\nMatches a JSON object.\nThis type can be useful to enforce some input to be JSON-compatible or as a super-type to be extended from."
 			},
-			"Prisma.JsonArray": {
+			"JsonArray": {
 				"description": "From https://github.com/sindresorhus/type-fest/\nMatches a JSON array.",
 				"properties": {},
 				"type": "object",
 				"additionalProperties": false
 			},
-			"DefaultSelection_Prisma._36_MessagingProfilePayload_": {
+			"MessagingProfile": {
 				"properties": {
 					"updatedAt": {
 						"type": "string",
@@ -1007,10 +983,10 @@
 						"type": "string"
 					},
 					"credentials": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"requiredFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"integrationId": {
 						"type": "string"
@@ -1037,10 +1013,6 @@
 					"id"
 				],
 				"type": "object"
-			},
-			"MessagingProfile": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessagingProfilePayload_",
-				"description": "Model MessagingProfile"
 			},
 			"ApiResponse_MessagingProfile_": {
 				"properties": {
@@ -1075,25 +1047,25 @@
 					"name": {
 						"type": "string"
 					},
-					"status": {
-						"type": "string"
-					},
 					"integrationId": {
 						"type": "string"
 					},
 					"requiredFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"credentials": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
+					},
+					"status": {
+						"type": "string"
 					}
 				},
 				"required": [
 					"name",
-					"status",
 					"integrationId",
 					"requiredFields",
-					"credentials"
+					"credentials",
+					"status"
 				],
 				"type": "object",
 				"description": "From T, pick a set of properties whose keys are in the union K"
@@ -1132,7 +1104,7 @@
 					}
 				]
 			},
-			"DefaultSelection_Prisma._36_MessagingIntegrationPayload_": {
+			"MessagingIntegration": {
 				"properties": {
 					"updatedAt": {
 						"type": "string",
@@ -1143,10 +1115,10 @@
 						"format": "date-time"
 					},
 					"confidentialFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/Record_string.string_"
 					},
 					"requiredFields": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/Record_string.string_"
 					},
 					"providerName": {
 						"type": "string"
@@ -1172,10 +1144,6 @@
 					"id"
 				],
 				"type": "object"
-			},
-			"MessagingIntegration": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessagingIntegrationPayload_",
-				"description": "Model MessagingIntegration"
 			},
 			"ApiResponse_MessagingIntegration-Array_": {
 				"properties": {
@@ -1236,16 +1204,13 @@
 					"name": {
 						"type": "string"
 					},
-					"status": {
-						"type": "string"
-					},
 					"integrationId": {
 						"type": "string"
 					},
 					"requiredFields": {
 						"allOf": [
 							{
-								"$ref": "#/components/schemas/Prisma.JsonValue"
+								"$ref": "#/components/schemas/JsonValue"
 							},
 							{
 								"$ref": "#/components/schemas/Record_string.string_"
@@ -1255,25 +1220,33 @@
 					"credentials": {
 						"allOf": [
 							{
-								"$ref": "#/components/schemas/Prisma.JsonValue"
+								"$ref": "#/components/schemas/JsonValue"
 							},
 							{
 								"$ref": "#/components/schemas/Record_string.string_"
 							}
 						]
+					},
+					"status": {
+						"type": "string"
 					}
 				},
 				"type": "object",
 				"description": "Make all properties in T optional"
 			},
-			"DefaultSelection_Prisma._36_MessageLogPayload_": {
+			"MessageLog": {
 				"properties": {
 					"createdAt": {
 						"type": "string",
 						"format": "date-time"
 					},
 					"metadata": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/JsonValue"
+							}
+						],
+						"nullable": true
 					},
 					"status": {
 						"type": "string"
@@ -1297,10 +1270,6 @@
 					"id"
 				],
 				"type": "object"
-			},
-			"MessageLog": {
-				"$ref": "#/components/schemas/DefaultSelection_Prisma._36_MessageLogPayload_",
-				"description": "Model MessageLog"
 			},
 			"ApiResponse_MessageLog-Array_": {
 				"properties": {
@@ -1554,55 +1523,8 @@
 				"$ref": "#/components/schemas/Pick_UpdateJourneyDTO.Exclude_keyofUpdateJourneyDTO.organizationId-or-id__",
 				"description": "Construct a type with the properties of T except for those in type K."
 			},
-			"_36_Enums.JourneyStatus": {
-				"type": "string",
-				"enum": [
-					"DRAFT",
-					"ACTIVE",
-					"ARCHIVED",
-					"PAUSED"
-				]
-			},
-			"DefaultSelection_Prisma._36_JourneyPayload_": {
-				"properties": {
-					"runMultipleTimes": {
-						"type": "boolean"
-					},
-					"updatedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"createdAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"status": {
-						"$ref": "#/components/schemas/_36_Enums.JourneyStatus"
-					},
-					"definition": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
-					},
-					"organizationId": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"runMultipleTimes",
-					"updatedAt",
-					"createdAt",
-					"status",
-					"definition",
-					"organizationId",
-					"name",
-					"id"
-				],
-				"type": "object"
+			"JourneyStatus": {
+				"type": "string"
 			},
 			"JourneyWithMetrics": {
 				"properties": {
@@ -1618,10 +1540,10 @@
 						"format": "date-time"
 					},
 					"status": {
-						"$ref": "#/components/schemas/_36_Enums.JourneyStatus"
+						"$ref": "#/components/schemas/JourneyStatus"
 					},
 					"definition": {
-						"$ref": "#/components/schemas/Prisma.JsonValue"
+						"$ref": "#/components/schemas/JsonValue"
 					},
 					"organizationId": {
 						"type": "string"

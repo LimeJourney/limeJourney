@@ -9,9 +9,13 @@ import {
   Security,
   Request,
 } from "tsoa";
-import { OrganizationService } from "../../services/orgService";
+import {
+  OrganizationService,
+  Organization,
+  OrganizationMember,
+  Invitation,
+} from "../../services/orgService";
 import { ApiResponse } from "../../models/apiResponse";
-import { Organization, OrganizationMember, Invitation } from "@prisma/client";
 import { AcceptInvitationDto } from "../../models/organisation";
 
 @Route("organizations")

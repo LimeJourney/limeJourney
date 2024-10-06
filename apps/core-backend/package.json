@@ -6,6 +6,8 @@
     "build": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json && tsc",
     "dev": "concurrently \"tsoa spec-and-routes --watch --configuration tsoa.public.json\" \"tsoa spec-and-routes --watch --configuration tsoa.private.json\" \"ts-node-dev --respawn --transpile-only src/index.ts\"",
     "start": "node dist/index.js",
+    "start:worker:dev": "ts-node src/worker/index.ts",
+    "start:worker": "node dist/worker/index.js",
     "lint": "eslint .",
     "migrate:dev": "npx prisma migrate dev --schema=./src/prisma/schema.prisma",
     "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
@@ -13,7 +15,6 @@
     "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
     "clickhouse": "ts-node src/cli/clickhouse.ts",
     "route:generate": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json",
-    "start:worker": "ts-node src/worker/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

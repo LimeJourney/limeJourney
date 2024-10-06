@@ -15,8 +15,7 @@ import {
   MessagingIntegrationService,
 } from "../../services/messagingIntegrationService";
 import { ApiResponse } from "../../models/apiResponse";
-import { MessagingIntegration, Prisma } from "@prisma/client";
-
+import { MessagingIntegration } from "../../models/messagingIntegration";
 // Define interfaces for create and update inputs
 interface CreateMessagingIntegrationInput {
   name: string;
@@ -55,7 +54,7 @@ export class AdminMessagingController {
     });
     return {
       status: "success",
-      data: integration,
+      data: integration as MessagingIntegration,
       message: "Messaging integration created successfully",
     };
   }
@@ -66,7 +65,7 @@ export class AdminMessagingController {
     const integrations = await this.integrationService.getIntegrations();
     return {
       status: "success",
-      data: integrations,
+      data: integrations as MessagingIntegration[],
       message: "Messaging integrations retrieved successfully",
     };
   }
@@ -93,7 +92,7 @@ export class AdminMessagingController {
     );
     return {
       status: "success",
-      data: integration,
+      data: integration as MessagingIntegration,
       message: "Messaging integration updated successfully",
     };
   }

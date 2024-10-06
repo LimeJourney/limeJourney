@@ -5,6 +5,7 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
+    "test": "turbo test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "docker:up": "docker-compose -f deploy/docker-compose.yml up",
     "docker:up:dev": "docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.override.yml up",

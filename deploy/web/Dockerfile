@@ -21,6 +21,7 @@ RUN npm ci
 
 # Build the project
 COPY --from=builder /app/out/full/ .
+
 RUN npx turbo run build --filter=web...
 
 FROM base AS runner
@@ -33,6 +34,8 @@ USER nextjs
 
 COPY --from=installer /app/apps/web/next.config.js .
 COPY --from=installer /app/apps/web/package.json .
+COPY --from=installer /app/apps/web/tsconfig.json .
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/src ./apps/web/src
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

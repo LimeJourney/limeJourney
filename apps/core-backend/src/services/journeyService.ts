@@ -1,7 +1,7 @@
-import { PrismaClient, Journey } from "@prisma/client";
+import { Prisma, PrismaClient, JourneyStatus } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { OrchestrationService } from "./ochestrationService";
-import { json } from "stream/consumers";
+import { Journey } from "../models/journey";
 
 const prisma = new PrismaClient();
 
@@ -215,7 +215,10 @@ export class JourneyManagementService {
 
     const updatedJourney = await prisma.journey.update({
       where: { id: journeyData.id, organizationId: journeyData.organizationId },
-      data: updateData,
+      data: {
+        ...updateData,
+        status: updateData.status as JourneyStatus,
+      },
     });
 
     // Handle trigger registration/unregistration based on status change

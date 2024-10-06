@@ -1,14 +1,59 @@
-import {
-  PrismaClient,
-  Template,
-  Prisma,
-  ChannelType,
-  TemplateStatus,
-} from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { AppError } from "@lime/errors";
 import { logger } from "@lime/telemetry/logger";
 
 const prisma = new PrismaClient();
+
+export type ChannelType = "EMAIL" | "SMS" | "PUSH";
+export const ChannelType = {
+  EMAIL: "EMAIL" as const,
+  SMS: "SMS" as const,
+  PUSH: "PUSH" as const,
+};
+
+export type TemplateStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
+export const TemplateStatus = {
+  DRAFT: "DRAFT" as const,
+  ACTIVE: "ACTIVE" as const,
+  ARCHIVED: "ARCHIVED" as const,
+};
+
+export interface Template {
+  id: string;
+  name: string;
+  channel: ChannelType;
+  subjectLine: string | null;
+  previewText: string | null;
+  content: string;
+  tags: string[];
+  status: TemplateStatus;
+  messagingProfileId: string | null;
+  organizationId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateTemplateRequest {
+  name: string;
+  channel: ChannelType;
+  subjectLine: string;
+  previewText: string;
+  content: string;
+  tags: string[];
+  status: TemplateStatus;
+  messagingProfileId: string;
+}
+
+export interface UpdateTemplateRequest {
+  name?: string;
+  channel?: ChannelType;
+  subjectLine?: string | null;
+  previewText?: string | null;
+  content?: string;
+  tags?: string[];
+  status?: TemplateStatus;
+  messagingProfileId?: string | null;
+}
 
 export class TemplateService {
   async createTemplate(
