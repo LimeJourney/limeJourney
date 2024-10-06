@@ -23,8 +23,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@lime/*": ["../../packages/*"],
-      "@prisma/client": ["./node_modules/.prisma/client"]
+      "@lime/*": ["../../packages/*"]
     }
   }
 }
