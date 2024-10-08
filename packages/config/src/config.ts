@@ -57,6 +57,13 @@ const configSchema = z.object({
     address: z.string(),
     namespace: z.string(),
     taskQueue: z.string(),
+    cloud: z
+      .object({
+        serverUrl: z.string(),
+        namespace: z.string(),
+        apiKey: z.string(),
+      })
+      .optional(),
   }),
 });
 
@@ -115,6 +122,14 @@ const config = {
     address: env("TEMPORAL_ADDRESS", "localhost:7233"),
     namespace: env("TEMPORAL_NAMESPACE", "default"),
     taskQueue: env("TEMPORAL_TASK_QUEUE", "default"),
+    cloud:
+      env("NODE_ENV") !== "development"
+        ? {
+            serverUrl: env("TEMPORAL_CLOUD_SERVER_URL"),
+            namespace: env("TEMPORAL_CLOUD_NAMESPACE"),
+            apiKey: env("TEMPORAL_CLOUD_API_KEY"),
+          }
+        : undefined,
   },
 };
 // Parse and validate the configuration

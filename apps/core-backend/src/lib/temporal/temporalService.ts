@@ -30,12 +30,32 @@ export class TemporalService {
 
   private async initClient(): Promise<void> {
     try {
-      const connection = await Connection.connect({
-        address: AppConfig.temporal.address,
-      });
+      let connection: Connection;
+      let namespace: string;
+
+      if (AppConfig.nodeEnv === "development") {
+        connection = await Connection.connect({
+          address: AppConfig.temporal.address,
+        });
+        namespace = AppConfig.temporal.namespace;
+        logger.info("temporal", "Connected to local Temporal server");
+      } else {
+        const {
+          serverUrl,
+          namespace: cloudNamespace,
+          apiKey,
+        } = AppConfig.temporal.cloud!;
+        connection = await Connection.connect({
+          address: serverUrl,
+          apiKey,
+        });
+        namespace = cloudNamespace;
+        logger.info("temporal", "Connected to Temporal Cloud");
+      }
+
       this.client = new Client({
         connection,
-        namespace: AppConfig.temporal.namespace,
+        namespace,
       });
       logger.info("temporal", "Temporal client initialized successfully");
     } catch (error) {

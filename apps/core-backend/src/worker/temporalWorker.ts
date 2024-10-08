@@ -4,6 +4,7 @@ import * as workflows from "../lib/temporal/workflows";
 import { AppConfig } from "@lime/config";
 import { BaseWorker } from "./baseWorker";
 import { logger } from "@lime/telemetry/logger";
+import { Connection } from "@temporalio/client";
 
 export class TemporalWorker extends BaseWorker {
   private worker!: Worker;
@@ -13,13 +14,31 @@ export class TemporalWorker extends BaseWorker {
   }
 
   async setup(): Promise<void> {
-    const connection = await NativeConnection.connect({
-      address: AppConfig.temporal.address,
-    });
+    let connection: NativeConnection;
+
+    if (AppConfig.nodeEnv === "development") {
+      connection = await NativeConnection.connect({
+        address: AppConfig.temporal.address,
+      });
+      logger.info("temporal", "Connected to local Temporal server");
+    } else {
+      const { serverUrl, apiKey } = AppConfig.temporal.cloud!;
+
+      connection = await NativeConnection.connect({
+        address: serverUrl,
+        tls: {},
+        apiKey,
+      });
+
+      logger.info("temporal", "Connected to Temporal Cloud");
+    }
 
     this.worker = await Worker.create({
       connection,
-      namespace: AppConfig.temporal.namespace,
+      namespace:
+        AppConfig.nodeEnv === "development"
+          ? AppConfig.temporal.namespace
+          : AppConfig.temporal.cloud!.namespace,
       taskQueue: AppConfig.temporal.taskQueue,
       workflowsPath: require.resolve("../lib/temporal/workflows"),
       activities,
