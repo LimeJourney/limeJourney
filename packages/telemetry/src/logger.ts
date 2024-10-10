@@ -1,6 +1,6 @@
 import winston from "winston";
 import * as Sentry from "@sentry/node";
-import { isArray, isObject, isString } from "lodash";
+// import { isArray, isObject, isString } from "lodash";
 import { IncomingMessage } from "http";
 import { Metrics } from "./metrics";
 import { Tracer } from "./tracer";
@@ -108,50 +108,50 @@ class Logger {
   ) {
     this.winston.log(level, message, {
       category,
-      ...this.sanitize(extra),
+      // ...this.sanitize(extra),
     });
   }
 
-  private sanitize(input: any, level = 0): any {
-    if (!config.isProduction) return input;
+  // private sanitize(input: any, level = 0): any {
+  //   if (!config.isProduction) return input;
 
-    const sensitiveFields = [
-      "password",
-      "token",
-      "accessToken",
-      "refreshToken",
-      "secret",
-    ];
+  //   const sensitiveFields = [
+  //     "password",
+  //     "token",
+  //     "accessToken",
+  //     "refreshToken",
+  //     "secret",
+  //   ];
 
-    if (level > 3) return "[…]";
+  //   if (level > 3) return "[…]";
 
-    if (isString(input)) {
-      if (
-        sensitiveFields.some((field) => input.toLowerCase().includes(field))
-      ) {
-        return "[Filtered]";
-      }
-      return input;
-    }
+  //   if (isString(input)) {
+  //     if (
+  //       sensitiveFields.some((field) => input.toLowerCase().includes(field))
+  //     ) {
+  //       return "[Filtered]";
+  //     }
+  //     return input;
+  //   }
 
-    if (isArray(input)) {
-      return input.map((item) => this.sanitize(item, level + 1));
-    }
+  //   if (isArray(input)) {
+  //     return input.map((item) => this.sanitize(item, level + 1));
+  //   }
 
-    if (isObject(input)) {
-      const sanitized: Record<string, any> = {};
-      for (const [key, value] of Object.entries(input)) {
-        if (sensitiveFields.includes(key.toLowerCase())) {
-          sanitized[key] = "[Filtered]";
-        } else {
-          sanitized[key] = this.sanitize(value, level + 1);
-        }
-      }
-      return sanitized;
-    }
+  //   if (isObject(input)) {
+  //     const sanitized: Record<string, any> = {};
+  //     for (const [key, value] of Object.entries(input)) {
+  //       if (sensitiveFields.includes(key.toLowerCase())) {
+  //         sanitized[key] = "[Filtered]";
+  //       } else {
+  //         sanitized[key] = this.sanitize(value, level + 1);
+  //       }
+  //     }
+  //     return sanitized;
+  //   }
 
-    return input;
-  }
+  //   return input;
+  // }
 
   public startTrace(name: string): string {
     return this.tracer.startTrace(name);

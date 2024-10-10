@@ -5,7 +5,8 @@
     "rootDir": "src",
     "module": "Node16",
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "types": ["lodash"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
