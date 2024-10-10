@@ -7,7 +7,6 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.10",
     "@types/node": "^20.5.2",
     "eslint": "^8.48.0",
     "typescript": "^5.2.2"
@@ -30,7 +29,6 @@
     "@lime/config": "*",
     "@sentry/node": "^8.20.0",
     "@sentry/tracing": "^7.114.0",
-    "lodash": "^4.17.21",
     "winston": "^3.13.1"
   }
 }
