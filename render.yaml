@@ -1,0 +1,60 @@
+databases:
+  - name: limedb
+    databaseName: limedb
+    user: limedb_user
+    region: oregon
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: limeJourney
+    runtime: node
+    repo: https://github.com/LimeJourney/limeJourney
+    plan: starter
+    region: oregon
+    buildCommand: "npm install; echo $NODE_VERSION; echo $DATABASE_URL; npx turbo run migrate:dev --filter=core-backend; npx turbo run build --filter=core-backend... "
+    startCommand: node apps/core-backend/dist/index.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: limedb
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: Redis-Prod
+          property: connectionString
+      - fromGroup: LimeJourneyProd
+
+  - type: worker
+    name: limeJourney-worker
+    runtime: node
+    repo: https://github.com/LimeJourney/limeJourney
+    plan: starter
+    envVars:
+      - key: TEMPORAL_CLOUD_API_KEY
+        sync: false
+      - key: TEMPORAL_CLOUD_NAMESPACE
+        sync: false
+      - key: TEMPORAL_CLOUD_SERVER_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: limedb
+          property: connectionString
+      - fromGroup: LimeJourneyProd
+    region: oregon
+    buildCommand: npm install; echo $NODE_VERSION; echo $DATABASE_URL; npx turbo run migrate:dev --filter=core-backend; npx turbo run build --filter=core-backend...
+    startCommand: node apps/core-backend/dist/worker/index.js
+
+  - type: redis
+    name: Redis-Prod
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+version: "1"
