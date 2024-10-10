@@ -3,9 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "module": "Node16"
+    "module": "Node16",
+    "esModuleInterop": true,
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist"],
-  "allowJs": false
+  "exclude": ["node_modules", "dist"]
 }
