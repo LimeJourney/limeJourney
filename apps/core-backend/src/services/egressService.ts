@@ -188,6 +188,7 @@ export class EgressService {
     const placeholderMap: Record<string, string> = {};
 
     placeholders.forEach((placeholder) => {
+      // @ts-ignore
       const key = placeholder.replace(/{{|}}/g, "");
       if (key in properties) {
         placeholderMap[placeholder] = String(properties[key]);
@@ -200,6 +201,7 @@ export class EgressService {
     // Replace placeholders in the template
     let populatedTemplate = template;
     for (const [placeholder, value] of Object.entries(placeholderMap)) {
+      // @ts-ignore
       populatedTemplate = populatedTemplate.replace(
         new RegExp(placeholder, "g"),
         value
