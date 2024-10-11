@@ -8,7 +8,8 @@ class ClickHouseManager {
 
   private constructor() {
     this.client = createClient({
-      host: AppConfig.clickhouse.host,
+      url: AppConfig.clickhouse.host,
+
       username: AppConfig.clickhouse.user,
       password: AppConfig.clickhouse.password,
       database: AppConfig.clickhouse.name,
