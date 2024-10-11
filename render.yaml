@@ -16,8 +16,7 @@ services:
     plan: starter
     region: oregon
     buildCommand: "npm install; echo $NODE_VERSION; echo $DATABASE_URL; npx turbo run migrate:dev --filter=core-backend; npx turbo run build --filter=core-backend..."
-    preDeployCommand: "npx turbo run clickhouse --filter=core-backend -- setup"
-    startCommand: node apps/core-backend/dist/index.js
+    startCommand: node apps/core-backend/dist/cli/clickhouse.js -- setup; node apps/core-backend/dist/index.js
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
