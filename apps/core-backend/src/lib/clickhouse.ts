@@ -7,9 +7,10 @@ class ClickHouseManager {
   private client: ClickHouseClient;
 
   private constructor() {
+    console.log("AppConfig.clickhouse.host", AppConfig.clickhouse.host);
     this.client = createClient({
       url: AppConfig.clickhouse.host,
-
+      host: AppConfig.clickhouse.host,
       username: AppConfig.clickhouse.user,
       password: AppConfig.clickhouse.password,
       database: AppConfig.clickhouse.name,
