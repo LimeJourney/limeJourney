@@ -10,9 +10,12 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "sourceMap": true,
-    "declaration": false,
+    "declaration": true,
     "noEmitOnError": true,
     "removeComments": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
     "outDir": "./dist"
   }
 }
