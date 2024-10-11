@@ -29,6 +29,10 @@
     "migrate:deploy": {
       "cache": false,
       "persistent": true
+    },
+    "clickhouse": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
