@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2022",
+    "target": "ES2015",
     "module": "commonjs",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
