@@ -1,26 +1,15 @@
-import {
-  Body,
-  Get,
-  Path,
-  Post,
-  Query,
-  Route,
-  Security,
-  Tags,
-  Request,
-  Response,
-  SuccessResponse,
-  TsoaResponse,
-  Res,
-} from "tsoa";
+import * as tsoa from "tsoa";
 import { EventService } from "../../services/eventsService";
-import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
+import type {
+  AuthenticatedRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
-import { EventData, RecordEventRequest } from "../../models/events";
+import type { EventData, RecordEventRequest } from "../../models/events";
 
-@Route("events")
-@Tags("Events")
-@Security("jwt")
+@tsoa.Route("events")
+@tsoa.Tags("Events")
+@tsoa.Security("jwt")
 export class EventController {
   private eventService: EventService;
 
@@ -28,15 +17,15 @@ export class EventController {
     this.eventService = new EventService();
   }
 
-  @Post()
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
-  @SuccessResponse("201", "Created")
+  @tsoa.Post()
+  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.SuccessResponse("201", "Created")
   public async recordEvent(
-    @Body() body: RecordEventRequest,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Body() body: RecordEventRequest,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EventData> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -63,15 +52,15 @@ export class EventController {
     }
   }
 
-  @Get()
-  @Response<ApiResponse<EventData[]>>(200, "Retrieved events")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get()
+  @tsoa.Response<ApiResponse<EventData[]>>(200, "Retrieved events")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEvents(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() entityId?: string,
-    @Query() limit?: number,
-    @Query() offset?: number
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() entityId?: string,
+    @tsoa.Query() limit?: number,
+    @tsoa.Query() offset?: number
   ): Promise<ApiResponse<EventData[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -96,16 +85,16 @@ export class EventController {
     }
   }
 
-  @Get("search")
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get("search")
+  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async searchEvents(
-    @Request() request: AuthenticatedRequest,
-    @Query() searchQuery: string,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() limit?: number,
-    @Query() offset?: number
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Query() searchQuery: string,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() limit?: number,
+    @tsoa.Query() offset?: number
   ): Promise<ApiResponse<EventData[]> | void> {
     try {
       if (!searchQuery) {
@@ -137,12 +126,12 @@ export class EventController {
     }
   }
 
-  @Get("names")
-  @Response<ApiResponse<string[]>>(200, "Retrieved unique event names")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get("names")
+  @tsoa.Response<ApiResponse<string[]>>(200, "Retrieved unique event names")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getUniqueEventNames(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<string[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;

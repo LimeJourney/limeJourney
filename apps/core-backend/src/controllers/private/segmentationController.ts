@@ -1,32 +1,22 @@
-import {
-  Body,
-  Get,
-  Path,
-  Post,
-  Put,
-  Delete,
-  Route,
-  Security,
-  Tags,
-  Request,
-  Res,
-  TsoaResponse,
-} from "tsoa";
-import {
+import * as tsoa from "tsoa";
+import type {
   Segment,
   CreateSegmentDTO,
   UpdateSegmentDTO,
   SegmentAnalytics,
   SegmentCondition,
 } from "../../models/segmentation";
-import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
+import type {
+  AuthenticatedRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
 import { SegmentationService } from "../../services/segmentationService";
 import { AIInsightsService } from "../../services/insightService";
 
-@Route("segments")
-@Tags("Segments")
-@Security("jwt")
+@tsoa.Route("segments")
+@tsoa.Tags("Segments")
+@tsoa.Security("jwt")
 export class SegmentController {
   private segmentationService: SegmentationService;
   private aiInsightsService: AIInsightsService;
@@ -36,12 +26,12 @@ export class SegmentController {
     this.aiInsightsService = new AIInsightsService();
   }
 
-  @Post()
+  @tsoa.Post()
   public async createSegment(
-    @Body() body: CreateSegmentDTO,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Body() body: CreateSegmentDTO,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -71,12 +61,12 @@ export class SegmentController {
     }
   }
 
-  @Get("{segmentId}")
+  @tsoa.Get("{segmentId}")
   public async getSegment(
-    @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() segmentId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -106,13 +96,13 @@ export class SegmentController {
     }
   }
 
-  @Put("{segmentId}")
+  @tsoa.Put("{segmentId}")
   public async updateSegment(
-    @Path() segmentId: string,
-    @Body() body: UpdateSegmentDTO,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() segmentId: string,
+    @tsoa.Body() body: UpdateSegmentDTO,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -143,12 +133,12 @@ export class SegmentController {
     }
   }
 
-  @Delete("{segmentId}")
+  @tsoa.Delete("{segmentId}")
   public async deleteSegment(
-    @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() segmentId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<boolean>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -173,10 +163,10 @@ export class SegmentController {
     }
   }
 
-  @Get()
+  @tsoa.Get()
   public async listSegments(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -197,12 +187,12 @@ export class SegmentController {
     }
   }
 
-  @Get("{segmentId}/entities")
+  @tsoa.Get("{segmentId}/entities")
   public async getEntitiesInSegment(
-    @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() segmentId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<string[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -225,12 +215,12 @@ export class SegmentController {
     }
   }
 
-  @Get("{segmentId}/analytics")
+  @tsoa.Get("{segmentId}/analytics")
   public async getSegmentAnalytics(
-    @Path() segmentId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() segmentId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<SegmentAnalytics>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -253,12 +243,12 @@ export class SegmentController {
     }
   }
 
-  @Get("entity/{entityId}")
+  @tsoa.Get("entity/{entityId}")
   public async getSegmentsForEntity(
-    @Path() entityId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() entityId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Segment[]>> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -281,12 +271,12 @@ export class SegmentController {
     }
   }
 
-  @Post("generate")
+  @tsoa.Post("generate")
   public async generateSegmentFromNaturalLanguage(
-    @Body() body: { input: string },
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Body() body: { input: string },
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<{ conditions: SegmentCondition[] }>> {
     try {
       const user = request.user as JWTAuthenticatedUser;

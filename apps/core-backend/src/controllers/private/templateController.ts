@@ -1,27 +1,14 @@
-import {
-  Body,
-  Get,
-  Path,
-  Post,
-  Put,
-  Delete,
-  Query,
-  Route,
-  Security,
-  Tags,
-  Request,
-  Response,
-  SuccessResponse,
-  TsoaResponse,
-  Res,
-} from "tsoa";
+import * as tsoa from "tsoa";
 import {
   TemplateService,
   Template,
   ChannelType,
   TemplateStatus,
 } from "../../services/templateService";
-import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
+import type {
+  AuthenticatedRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
 interface CreateTemplateRequest {
   name: string;
@@ -52,9 +39,9 @@ type EnumFilter<T> = {
   notIn?: T[];
   not?: T;
 };
-@Route("templates")
-@Tags("Templates")
-@Security("jwt")
+@tsoa.Route("templates")
+@tsoa.Tags("Templates")
+@tsoa.Security("jwt")
 export class TemplateController {
   private templateService: TemplateService;
 
@@ -62,15 +49,15 @@ export class TemplateController {
     this.templateService = new TemplateService();
   }
 
-  @Post()
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
-  @SuccessResponse("201", "Created")
+  @tsoa.Post()
+  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.SuccessResponse("201", "Created")
   public async createTemplate(
-    @Body() body: CreateTemplateRequest,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Body() body: CreateTemplateRequest,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Template> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -100,14 +87,14 @@ export class TemplateController {
     }
   }
 
-  @Get("{templateId}")
-  @Response<ApiResponse<null>>(404, "Not Found")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get("{templateId}")
+  @tsoa.Response<ApiResponse<null>>(404, "Not Found")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getTemplate(
-    @Path() templateId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() templateId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<404, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Template> | void> {
     try {
       const template = await this.templateService.getTemplate(templateId);
@@ -132,17 +119,17 @@ export class TemplateController {
     }
   }
 
-  @Put("{templateId}")
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(404, "Not Found")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Put("{templateId}")
+  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
+  @tsoa.Response<ApiResponse<null>>(404, "Not Found")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async updateTemplate(
-    @Path() templateId: string,
-    @Body() body: UpdateTemplateRequest,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() templateId: string,
+    @tsoa.Body() body: UpdateTemplateRequest,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<404, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Template> | void> {
     try {
       const updatedTemplate = await this.templateService.updateTemplate(
@@ -179,17 +166,17 @@ export class TemplateController {
     }
   }
 
-  @Get()
-  @Response<ApiResponse<Template[]>>(200, "Retrieved templates")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get()
+  @tsoa.Response<ApiResponse<Template[]>>(200, "Retrieved templates")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getTemplates(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() limit?: number,
-    @Query() offset?: number,
-    @Query() channel?: ChannelType,
-    @Query() status?: TemplateStatus,
-    @Query() search?: string
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() limit?: number,
+    @tsoa.Query() offset?: number,
+    @tsoa.Query() channel?: ChannelType,
+    @tsoa.Query() status?: TemplateStatus,
+    @tsoa.Query() search?: string
   ): Promise<ApiResponse<Template[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -218,14 +205,14 @@ export class TemplateController {
     }
   }
 
-  @Delete("{templateId}")
-  @Response<ApiResponse<null>>(404, "Not Found")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Delete("{templateId}")
+  @tsoa.Response<ApiResponse<null>>(404, "Not Found")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async deleteTemplate(
-    @Path() templateId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() templateId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<404, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<null> | void> {
     try {
       await this.templateService.deleteTemplate(templateId);
@@ -250,14 +237,14 @@ export class TemplateController {
     }
   }
 
-  @Post("{templateId}/duplicate")
-  @Response<ApiResponse<null>>(404, "Not Found")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Post("{templateId}/duplicate")
+  @tsoa.Response<ApiResponse<null>>(404, "Not Found")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async duplicateTemplate(
-    @Path() templateId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() templateId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<404, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<Template> | void> {
     try {
       const duplicatedTemplate =

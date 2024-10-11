@@ -1,7 +1,10 @@
 import { MessagingProfileService } from "../../services/messagingProfileService";
 import { ApiResponse } from "../../models/apiResponse";
 import { Prisma } from "@prisma/client";
-import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
+import type {
+  AuthenticatedRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
 import { MessagingIntegrationService } from "../../services/messagingIntegrationService";
 import { MessageLogService } from "../../services/messageLogService";
 import {

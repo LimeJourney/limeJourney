@@ -1,19 +1,4 @@
-import {
-  Body,
-  Get,
-  Path,
-  Post,
-  Put,
-  Query,
-  Route,
-  Security,
-  Tags,
-  Request,
-  Response,
-  SuccessResponse,
-  TsoaResponse,
-  Res,
-} from "tsoa";
+import * as tsoa from "tsoa";
 import {
   JourneyManagementService,
   CreateJourneyDTO,
@@ -22,14 +7,17 @@ import {
   JourneyActivity,
   JourneyWithMetrics,
 } from "../../services/journeyService";
-import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
+import type {
+  AuthenticatedRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
 import { logger } from "@lime/telemetry/logger";
 //   import { CreateJourneyDTO, UpdateJourneyDTO, JourneyMetrics, JourneyActivity } from "../../models/journey";
 
-@Route("journeys")
-@Tags("Journeys")
-@Security("jwt")
+@tsoa.Route("journeys")
+@tsoa.Tags("Journeys")
+@tsoa.Security("jwt")
 export class JourneyManagementController {
   private journeyService: JourneyManagementService;
 
@@ -37,15 +25,15 @@ export class JourneyManagementController {
     this.journeyService = new JourneyManagementService();
   }
 
-  @Post()
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
-  @SuccessResponse("201", "Created")
+  @tsoa.Post()
+  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.SuccessResponse("201", "Created")
   public async createJourney(
-    @Body() body: Omit<CreateJourneyDTO, "organizationId">,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Body() body: Omit<CreateJourneyDTO, "organizationId">,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<any> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -76,15 +64,15 @@ export class JourneyManagementController {
     }
   }
 
-  @Put("{journeyId}")
-  @Response<ApiResponse<null>>(400, "Bad Request")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Put("{journeyId}")
+  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async updateJourney(
-    @Path() journeyId: string,
-    @Body() body: Omit<UpdateJourneyDTO, "organizationId" | "id">,
-    @Request() request: AuthenticatedRequest,
-    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() journeyId: string,
+    @tsoa.Body() body: Omit<UpdateJourneyDTO, "organizationId" | "id">,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<any> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -117,13 +105,13 @@ export class JourneyManagementController {
     }
   }
 
-  @Get()
-  @Response<ApiResponse<JourneyWithMetrics[]>>(200, "Retrieved journeys")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get()
+  @tsoa.Response<ApiResponse<JourneyWithMetrics[]>>(200, "Retrieved journeys")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async listJourneys(
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() status?: string
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() status?: string
   ): Promise<ApiResponse<JourneyWithMetrics[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -146,13 +134,13 @@ export class JourneyManagementController {
     }
   }
 
-  @Get("{journeyId}/metrics")
-  @Response<ApiResponse<JourneyMetrics>>(200, "Retrieved journey metrics")
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get("{journeyId}/metrics")
+  @tsoa.Response<ApiResponse<JourneyMetrics>>(200, "Retrieved journey metrics")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getJourneyMetrics(
-    @Path() journeyId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+    @tsoa.Path() journeyId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<JourneyMetrics> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -172,17 +160,17 @@ export class JourneyManagementController {
     }
   }
 
-  @Get("{journeyId}/activity/recent")
-  @Response<ApiResponse<JourneyActivity[]>>(
+  @tsoa.Get("{journeyId}/activity/recent")
+  @tsoa.Response<ApiResponse<JourneyActivity[]>>(
     200,
     "Retrieved recent journey activity"
   )
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getRecentJourneyActivity(
-    @Path() journeyId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() limit?: number
+    @tsoa.Path() journeyId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() limit?: number
   ): Promise<ApiResponse<JourneyActivity[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -205,18 +193,17 @@ export class JourneyManagementController {
     }
   }
 
-  @Get("{journeyId}/activity/feed")
-  @Response<ApiResponse<{ activities: JourneyActivity[]; totalCount: number }>>(
-    200,
-    "Retrieved journey activity feed"
-  )
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Get("{journeyId}/activity/feed")
+  @tsoa.Response<
+    ApiResponse<{ activities: JourneyActivity[]; totalCount: number }>
+  >(200, "Retrieved journey activity feed")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getJourneyActivityFeed(
-    @Path() journeyId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() page?: number,
-    @Query() pageSize?: number
+    @tsoa.Path() journeyId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() page?: number,
+    @tsoa.Query() pageSize?: number
   ): Promise<ApiResponse<{
     activities: JourneyActivity[];
     totalCount: number;
@@ -244,17 +231,17 @@ export class JourneyManagementController {
     }
   }
 
-  @Get("{journeyId}/activity/summary")
-  @Response<ApiResponse<{ [key: string]: number }>>(
+  @tsoa.Get("{journeyId}/activity/summary")
+  @tsoa.Response<ApiResponse<{ [key: string]: number }>>(
     200,
     "Retrieved journey activity summary"
   )
-  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getJourneyActivitySummary(
-    @Path() journeyId: string,
-    @Request() request: AuthenticatedRequest,
-    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-    @Query() timeframe?: "day" | "week" | "month"
+    @tsoa.Path() journeyId: string,
+    @tsoa.Request() request: AuthenticatedRequest,
+    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>,
+    @tsoa.Query() timeframe?: "day" | "week" | "month"
   ): Promise<ApiResponse<{ [key: string]: number }> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;

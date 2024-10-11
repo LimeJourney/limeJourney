@@ -9,9 +9,13 @@ import {
   Tags,
   Request,
 } from "tsoa";
-import { ApiKey, ApiKeyService } from "../../services/apiKeyService";
-import { AuthenticatedRequest, JWTAuthenticatedUser } from "../../models/auth";
-import { ApiResponse } from "../../models/apiResponse";
+import { ApiKeyService } from "../../services/apiKeyService";
+import type { ApiKey } from "../../services/apiKeyService";
+import type {
+  AuthenticatedRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
+import type { ApiResponse } from "../../models/apiResponse";
 
 interface GenerateApiKeyRequest {
   name: string;

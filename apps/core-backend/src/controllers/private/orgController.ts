@@ -16,7 +16,7 @@ import {
   Invitation,
 } from "../../services/orgService";
 import { ApiResponse } from "../../models/apiResponse";
-import { AcceptInvitationDto } from "../../models/organisation";
+import type { AcceptInvitationDto } from "../../models/organisation";
 
 @Route("organizations")
 @Tags("Organizations")
