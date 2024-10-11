@@ -1,20 +1,20 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "composite": false,
+    "declaration": true,
+    "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "inlineSources": false,
+    "isolatedModules": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "preserveWatchOutput": true,
     "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "sourceMap": true,
-    "declaration": true,
-    "noEmitOnError": true,
-    "removeComments": true,
-    "resolveJsonModule": true,
-    "moduleDetection": "force",
-    "outDir": "./dist"
-  }
+    "strict": false
+  },
+  "exclude": ["node_modules"]
 }

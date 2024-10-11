@@ -1,9 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
+    "lib": ["ES2015"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "outDir": "dist",
