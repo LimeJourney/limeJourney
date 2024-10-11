@@ -10,10 +10,8 @@
     "resolveJsonModule": true,
     "baseUrl": "src",
     "paths": {
-      "@prisma/client": ["./node_modules/.prisma/client"],
-      "@/*": ["./*"]
-    },
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
+      "@prisma/client": ["./node_modules/.prisma/client"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts", "dist"]

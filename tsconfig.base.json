@@ -15,7 +15,6 @@
     "removeComments": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
-    "isolatedModules": true,
     "outDir": "./dist"
   }
 }
