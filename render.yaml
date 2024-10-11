@@ -12,7 +12,7 @@ services:
   - type: web
     name: limeJourney
     runtime: node
-    repo: https://github.com/Ghvstcode/LJDebug
+    repo: https://github.com/LimeJourney/limeJourney
     plan: starter
     region: oregon
     buildCommand: "npm install; echo $NODE_VERSION; echo $DATABASE_URL; npx turbo run migrate:dev --filter=core-backend; npx turbo run build --filter=core-backend..."
@@ -35,7 +35,7 @@ services:
   - type: worker
     name: limeJourney-worker
     runtime: node
-    repo: https://github.com/Ghvstcode/LJDebug
+    repo: https://github.com/LimeJourney/limeJourney
     plan: starter
     envVars:
       # - key: TEMPORAL_CLOUD_API_KEY
