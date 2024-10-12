@@ -1,4 +1,16 @@
-import * as tsoa from "tsoa";
+import {
+  Body,
+  Get,
+  Post,
+  Route,
+  Security,
+  Tags,
+  Request,
+  Response,
+  SuccessResponse,
+  Res,
+} from "tsoa";
+import type { TsoaResponse } from "tsoa";
 import {
   AIInsightsService,
   InsightResponse,
@@ -14,9 +26,9 @@ interface InsightQuery {
   query: string;
 }
 
-@tsoa.Route("insights")
-@tsoa.Tags("AI Insights")
-@tsoa.Security("jwt")
+@Route("insights")
+@Tags("AI Insights")
+@Security("jwt")
 export class AIInsightsController {
   private aiInsightsService: AIInsightsService;
 
@@ -24,15 +36,15 @@ export class AIInsightsController {
     this.aiInsightsService = new AIInsightsService();
   }
 
-  @tsoa.Post("query")
-  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
-  @tsoa.SuccessResponse("200", "Success")
+  @Post("query")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @SuccessResponse("200", "Success")
   public async getInsights(
-    @tsoa.Body() body: InsightQuery,
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Body() body: InsightQuery,
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<InsightResponse> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -62,11 +74,11 @@ export class AIInsightsController {
     }
   }
 
-  @tsoa.Get("queries")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get("queries")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getRecentQueries(
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<OrganizationInsights["recentQueries"]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -87,11 +99,11 @@ export class AIInsightsController {
     }
   }
 
-  @tsoa.Get("")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get("")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getOrganizationInsights(
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<OrganizationInsights> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;

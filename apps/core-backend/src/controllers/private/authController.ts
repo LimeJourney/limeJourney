@@ -1,10 +1,21 @@
-import * as tsoa from "tsoa";
+import {
+  Body,
+  Post,
+  Route,
+  Tags,
+  Response,
+  Get,
+  Request,
+  SuccessResponse,
+  Res,
+} from "tsoa";
+import type { TsoaResponse } from "tsoa";
 import { AuthService } from "../../services/authenticationService";
-import type { ApiResponse } from "../../models/apiResponse";
+import { ApiResponse } from "../../models/apiResponse";
 import type { AuthData, AuthRequest } from "../../models/auth";
 
-@tsoa.Route("auth")
-@tsoa.Tags("Authentication")
+@Route("auth")
+@Tags("Authentication")
 export class AuthController {
   private authService: AuthService;
 
@@ -12,14 +23,14 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
-  @tsoa.Post("/authenticate")
-  @tsoa.Response<ApiResponse<AuthData>>(200, "Authentication successful")
-  @tsoa.Response<ApiResponse<null>>(400, "Bad request")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal server error")
+  @Post("/authenticate")
+  @Response<ApiResponse<AuthData>>(200, "Authentication successful")
+  @Response<ApiResponse<null>>(400, "Bad request")
+  @Response<ApiResponse<null>>(500, "Internal server error")
   public async authenticate(
-    @tsoa.Body() body: AuthRequest,
-    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Body() body: AuthRequest,
+    @Res() notFoundResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<AuthData> | void> {
     try {
       const authData = await this.authService.authenticate(body);
@@ -52,10 +63,10 @@ export class AuthController {
     }
   }
 
-  @tsoa.Get("/google")
-  @tsoa.SuccessResponse("302", "Redirect to Google")
-  @tsoa.Response("400", "Bad Request")
-  public googleAuth(@tsoa.Request() req: any): Promise<void> {
+  @Get("/google")
+  @SuccessResponse("302", "Redirect to Google")
+  @Response("400", "Bad Request")
+  public googleAuth(@Request() req: any): Promise<void> {
     return new Promise((resolve, reject) => {
       const res = {
         redirect: (url: string) => {
@@ -70,10 +81,10 @@ export class AuthController {
     });
   }
 
-  @tsoa.Get("/google/callback")
-  @tsoa.SuccessResponse("302", "Redirect after Google authentication")
-  @tsoa.Response("400", "Bad Request")
-  public async googleAuthCallback(@tsoa.Request() req: any): Promise<void> {
+  @Get("/google/callback")
+  @SuccessResponse("302", "Redirect after Google authentication")
+  @Response("400", "Bad Request")
+  public async googleAuthCallback(@Request() req: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
       const res = {
         redirect: (url: string) => {
@@ -82,6 +93,7 @@ export class AuthController {
       };
       try {
         const data = await this.authService.handleGoogleCallback(req, res);
+
         res.redirect(`/login/success?token=${data.token}`);
       } catch (error) {
         res.redirect("/login?error=Google authentication failed");

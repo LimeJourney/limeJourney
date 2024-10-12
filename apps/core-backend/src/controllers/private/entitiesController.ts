@@ -1,4 +1,18 @@
-import * as tsoa from "tsoa";
+import {
+  Body,
+  Get,
+  Path,
+  Post,
+  Query,
+  Route,
+  Security,
+  Tags,
+  Request,
+  Response,
+  SuccessResponse,
+  Res,
+} from "tsoa";
+import type { TsoaResponse } from "tsoa";
 import { EntityService, EntityData } from "../../services/entitiesService";
 import type {
   AuthenticatedRequest,
@@ -21,9 +35,9 @@ interface EntityWithSegments extends EntityData {
   }[];
 }
 
-@tsoa.Route("entities")
-@tsoa.Tags("Entities")
-@tsoa.Security("jwt")
+@Route("entities")
+@Tags("Entities")
+@Security("jwt")
 export class EntityController {
   private entityService: EntityService;
 
@@ -31,11 +45,11 @@ export class EntityController {
     this.entityService = new EntityService();
   }
 
-  @tsoa.Get("list/entity_properties")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get("list/entity_properties")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityProperties(
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<string[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -57,15 +71,15 @@ export class EntityController {
     }
   }
 
-  @tsoa.Post()
-  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
-  @tsoa.SuccessResponse("201", "Created")
+  @Post()
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  @SuccessResponse("201", "Created")
   public async createOrUpdateEntity(
-    @tsoa.Body() body: CreateOrUpdateEntityRequest,
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Body() body: CreateOrUpdateEntityRequest,
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EntityData> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -95,14 +109,14 @@ export class EntityController {
     }
   }
 
-  @tsoa.Get(":entityId")
-  @tsoa.Response<ApiResponse<null>>(404, "Not Found")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get(":entityId")
+  @Response<ApiResponse<null>>(404, "Not Found")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntity(
-    @tsoa.Path() entityId: string,
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<404, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Path() entityId: string,
+    @Request() request: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EntityWithSegments> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -132,14 +146,14 @@ export class EntityController {
     }
   }
 
-  @tsoa.Get()
-  @tsoa.Response<ApiResponse<EntityWithSegments>>(200, "Retrieved entities")
-  @tsoa.Response<ApiResponse<null>>(400, "Bad request")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get()
+  @Response<ApiResponse<EntityWithSegments>>(200, "Retrieved entities")
+  @Response<ApiResponse<null>>(400, "Bad request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async listEntities(
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Request() request: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EntityWithSegments[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -215,14 +229,14 @@ export class EntityController {
   //   }
   // }
 
-  @tsoa.Get("{entityId}/events")
-  @tsoa.Response<ApiResponse<null>>(404, "Not Found")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get("{entityId}/events")
+  @Response<ApiResponse<null>>(404, "Not Found")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityEvents(
-    @tsoa.Path() entityId: string,
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() notFoundResponse: tsoa.TsoaResponse<404, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Path() entityId: string,
+    @Request() request: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EventData[]> | void> {
     try {
       const user = request.user as JWTAuthenticatedUser;
@@ -245,14 +259,14 @@ export class EntityController {
     }
   }
 
-  @tsoa.Get("search")
-  @tsoa.Response<ApiResponse<null>>(400, "Bad Request")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get("search")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async searchEntities(
-    @tsoa.Query() searchQuery: string,
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() badRequestResponse: tsoa.TsoaResponse<400, ApiResponse<null>>,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Query() searchQuery: string,
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<EntityData[]> | void> {
     try {
       if (!searchQuery) {
@@ -282,12 +296,12 @@ export class EntityController {
     }
   }
 
-  @tsoa.Get("stats")
-  @tsoa.Response<ApiResponse<string[]>>(200, "Retrieved unique properties")
-  @tsoa.Response<ApiResponse<null>>(500, "Internal Server Error")
+  @Get("stats")
+  @Response<ApiResponse<string[]>>(200, "Retrieved unique properties")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async getEntityStats(
-    @tsoa.Request() request: AuthenticatedRequest,
-    @tsoa.Res() serverErrorResponse: tsoa.TsoaResponse<500, ApiResponse<null>>
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<{
     totalEntities: number;
     oldestEntity: string;
