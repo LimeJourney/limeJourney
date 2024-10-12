@@ -268,4 +268,137 @@ export class OrganizationController {
       });
     }
   }
+
+  @Get("current")
+  @Response<ApiResponse<null>>(404, "Not Found")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getCurrentOrganization(
+    @Request() req: AuthenticatedRequest,
+    @Res() notFoundResponse: TsoaResponse<404, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<Organization> | void> {
+    try {
+      const user = req.user as JWTAuthenticatedUser;
+      const organization =
+        await this.organizationService.getCurrentOrganization(user.id);
+
+      if (!organization) {
+        return notFoundResponse(404, {
+          status: "error",
+          data: null,
+          message: "Current organization not found",
+        });
+      }
+
+      return {
+        status: "success",
+        data: organization,
+        message: "Current organization retrieved successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving the current organization",
+      });
+    }
+  }
+
+  @Get("{organizationId}/invitations")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(403, "Forbidden")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getOrganizationInvitations(
+    @Request() req: AuthenticatedRequest,
+    organizationId: string,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() forbiddenResponse: TsoaResponse<403, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<Invitation[]> | void> {
+    try {
+      const user = req.user as JWTAuthenticatedUser;
+
+      // Check if user is a member of the organization
+      // const isMember = await this.organizationService.isUserMemberOfOrganization(user.id, organizationId);
+      // if (!isMember) {
+      //   return forbiddenResponse(403, {
+      //     status: "error",
+      //     data: null,
+      //     message: "User is not a member of this organization",
+      //   });
+      // }
+
+      const invitations =
+        await this.organizationService.getOrganizationInvitations(
+          organizationId
+        );
+
+      return {
+        status: "success",
+        data: invitations,
+        message: "Organization invitations retrieved successfully",
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving organization invitations",
+      });
+    }
+  }
+
+  @Get("{organizationId}/members")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(403, "Forbidden")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getOrganizationMembers(
+    @Request() req: AuthenticatedRequest,
+    organizationId: string,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() forbiddenResponse: TsoaResponse<403, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<OrganizationMember[]> | void> {
+    try {
+      const user = req.user as JWTAuthenticatedUser;
+
+      // Check if user is a member of the organization
+      // const isMember = await this.organizationService.isUserMemberOfOrganization(user.id, organizationId);
+      // if (!isMember) {
+      //   return forbiddenResponse(403, {
+      //     status: "error",
+      //     data: null,
+      //     message: "User is not a member of this organization",
+      //   });
+      // }
+
+      const members =
+        await this.organizationService.getOrganizationMembers(organizationId);
+
+      return {
+        status: "success",
+        data: members,
+        message: "Organization members retrieved successfully",
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving organization members",
+      });
+    }
+  }
 }

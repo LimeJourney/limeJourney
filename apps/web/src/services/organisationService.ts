@@ -182,4 +182,15 @@ export const OrganizationService = {
       { planId }
     );
   },
+
+  async getCurrentOrganization(): Promise<Organization | null> {
+    try {
+      return await apiCall<Organization>("get", "/organizations/current");
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
 };

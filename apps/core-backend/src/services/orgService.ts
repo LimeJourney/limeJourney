@@ -287,4 +287,59 @@ export class OrganizationService {
       email: invitation.email,
     };
   }
+
+  async getCurrentOrganization(userId: string): Promise<Organization | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { currentOrganization: true },
+    });
+
+    if (!user || !user.currentOrganization) {
+      return null;
+    }
+
+    return {
+      ...user.currentOrganization,
+      subscriptionStatus: user.currentOrganization
+        .subscriptionStatus as SubscriptionStatus,
+    };
+  }
+
+  async getOrganizationInvitations(
+    organizationId: string
+  ): Promise<Invitation[]> {
+    const invitations = await this.prisma.invitation.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return invitations.map((invitation) => ({
+      ...invitation,
+      status: invitation.status as InvitationStatus,
+    }));
+  }
+
+  async getOrganizationMembers(
+    organizationId: string
+  ): Promise<OrganizationMember[]> {
+    const members = await this.prisma.organizationMember.findMany({
+      where: { organizationId },
+      include: { user: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return members.map((member) => ({
+      id: member.id,
+      userId: member.userId,
+      organizationId: member.organizationId,
+      role: member.role as UserRole,
+      createdAt: member.createdAt,
+      updatedAt: member.updatedAt,
+      user: {
+        id: member.user.id,
+        email: member.user.email,
+        name: member.user.name,
+      },
+    }));
+  }
 }
