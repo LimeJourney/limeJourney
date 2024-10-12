@@ -1,13 +1,25 @@
 import Link from "next/link";
 import { UserAuthForm } from "@/components/user-auth-form";
+import { useRouter } from "next/router";
 export const metadata = {
   title: "Authentication",
   description: "Sign in to your Lime Journey account",
 };
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AuthenticationPage() {
+  const router = useRouter();
+  const { invitationId } = router.query;
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black px-4 py-8">
+      {invitationId && (
+        <Alert className="mb-6 bg-meadow-500 text-forest-900 border-none">
+          <AlertTitle>Organization Invitation</AlertTitle>
+          <AlertDescription>
+            Please sign in or create an account to accept the invitation.
+          </AlertDescription>
+        </Alert>
+      )}
       <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-white mb-6 text-center">
         Start Your <span className="text-screaminGreen">Lime Journey</span>
       </h1>

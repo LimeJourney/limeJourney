@@ -90,7 +90,7 @@ const config = {
     clientSecret: env("GOOGLE_CLIENT_SECRET"),
   },
   jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
-  appUrl: env("APP_URL"),
+  appUrl: env("APP_URL", "http://localhost:3000"),
   enforceSubscriptions: env("ENFORCE_SUBSCRIPTIONS"),
   clickhouse: {
     host: env("CLICKHOUSE_HOST", "http://localhost:8123"),

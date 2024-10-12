@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EyeClosedIcon, EyeOpenIcon, CubeIcon } from "@radix-ui/react-icons";
 import { authService } from "@/services/authService";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import { useToast } from "@/components/ui/use-toast";
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -21,6 +22,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   });
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
@@ -29,6 +31,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const toast = useToast();
   const formRef = React.useRef<HTMLFormElement>(null);
 
+  const invitationId = searchParams.get("invitationId");
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
@@ -38,7 +41,11 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         formState.email,
         formState.password
       );
-      router.push("/dashboard/audience/entities");
+      if (invitationId) {
+        router.push(`/invitations/?invitationId=${invitationId}`);
+      } else {
+        router.push("/dashboard/audience/entities");
+      }
     } catch (error) {
       toast.toast({
         variant: "destructive",
