@@ -20,25 +20,28 @@ const InvitationAcceptancePage = () => {
 
   useEffect(() => {
     const checkAuthAndInvitation = async () => {
-      if (invitationId) {
-        setLoading(true);
-        try {
-          console.log("Checking auth status");
-          const authStatus = await authService.isAuthenticated();
-          console.log(authStatus);
-          setIsAuthenticated(authStatus);
+      if (!invitationId) {
+        setError("No invitation ID provided.");
+        setLoading(false);
+        return;
+      }
 
-          const details = await OrganizationService.getInvitationDetails(
-            invitationId as string
-          );
+      try {
+        console.log("Checking auth status");
+        const authStatus = await authService.isAuthenticated();
+        setIsAuthenticated(authStatus);
+
+        if (authStatus) {
+          console.log("Fetching invitation details");
+          const details =
+            await OrganizationService.getInvitationDetails(invitationId);
           setInvitationDetails(details);
-        } catch (err) {
-          console.log("Error checking auth status", err);
-          setError("Invalid or expired invitation.");
-        } finally {
-          console.log("Finished checking auth status");
-          setLoading(false);
         }
+      } catch (err) {
+        console.log("Error:", err);
+        setError("An error occurred while processing your invitation.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -49,7 +52,7 @@ const InvitationAcceptancePage = () => {
     setLoading(true);
     try {
       await OrganizationService.acceptInvitation({
-        invitationId: invitationId as string,
+        invitationId: invitationId,
         email: invitationDetails.email,
       });
       router.push("/dashboard/audience/entities");
@@ -88,13 +91,13 @@ const InvitationAcceptancePage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {invitationDetails && (
-            <>
-              <p className="text-white mb-4">
-                You've been invited to join {invitationDetails.organizationName}
-                .
-              </p>
-              {isAuthenticated ? (
+          {isAuthenticated ? (
+            invitationDetails ? (
+              <>
+                <p className="text-white mb-4">
+                  You've been invited to join{" "}
+                  {invitationDetails.organizationName}.
+                </p>
                 <Button
                   className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full"
                   onClick={handleAcceptInvitation}
@@ -105,20 +108,24 @@ const InvitationAcceptancePage = () => {
                   ) : null}
                   Accept Invitation
                 </Button>
-              ) : (
-                <div>
-                  <p className="text-white mb-4">
-                    Please sign in or create an account to accept this
-                    invitation.
-                  </p>
-                  <Link href={`/auth?invitationId=${invitationId}`} passHref>
-                    <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full">
-                      Sign In / Sign Up
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </>
+              </>
+            ) : (
+              <p className="text-white">
+                Unable to fetch invitation details. Please try again.
+              </p>
+            )
+          ) : (
+            <div>
+              <p className="text-white mb-4">
+                Please sign in or create an account to view and accept this
+                invitation.
+              </p>
+              <Link href={`/auth?invitationId=${invitationId}`} passHref>
+                <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full">
+                  Sign In / Sign Up
+                </Button>
+              </Link>
+            </div>
           )}
         </CardContent>
       </Card>

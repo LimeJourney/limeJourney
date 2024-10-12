@@ -1,6 +1,6 @@
 // apps/web/src/lib/apiInstance.ts
 
-import axios, { AxiosError, AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import Router from "next/router";
 export const API_CONFIG = {
   BASE_URL:
@@ -80,14 +80,31 @@ apiInstance.interceptors.request.use(
   (error: any) => Promise.reject(error)
 );
 
+const noRedirectUrlPatterns = [/\/organizations\/invitations\/[\w-]+$/];
+
 // Response interceptor
 apiInstance.interceptors.response.use(
-  (response: any) => response,
-  async (error: { response: { status: number } }) => {
-    if (error.response.status === 401) {
-      localStorage.removeItem("auth_token");
-      window.location.href = "/auth";
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    console.log("error87", error.response);
+
+    if (error.response?.status === 401) {
+      const requestUrl = error.config?.url;
+
+      console.log("requestUrl", requestUrl);
+
+      if (requestUrl) {
+        const shouldRedirect = !noRedirectUrlPatterns.some((pattern) =>
+          pattern.test(requestUrl)
+        );
+
+        if (shouldRedirect) {
+          localStorage.removeItem("auth_token");
+          window.location.href = "/auth";
+        }
+      }
     }
+
     return Promise.reject(error);
   }
 );

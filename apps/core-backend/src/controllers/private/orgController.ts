@@ -222,6 +222,7 @@ export class OrganizationController {
         message: "Invitation accepted successfully",
       };
     } catch (error) {
+      console.log("Error accepting invitation225:", error);
       if (error instanceof Error) {
         return badRequestResponse(400, {
           status: "error",

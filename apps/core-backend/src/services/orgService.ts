@@ -207,31 +207,18 @@ export class OrganizationService {
     const member = await this.prisma.$transaction(async (prisma) => {
       let user = await prisma.user.findUnique({ where: { email: data.email } });
 
-      if (!user) {
-        // Create a new user if they don't exist
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        user = await prisma.user.create({
-          data: {
-            email: data.email,
-            name: data.name,
-            password: hashedPassword,
-            currentOrganizationId: invitation.organizationId,
+      // Check if the user is already a member of the organization
+      const existingMembership = await prisma.organizationMember.findUnique({
+        where: {
+          userId_organizationId: {
+            userId: user.id,
+            organizationId: invitation.organizationId,
           },
-        });
-      } else {
-        // Check if the user is already a member of the organization
-        const existingMembership = await prisma.organizationMember.findUnique({
-          where: {
-            userId_organizationId: {
-              userId: user.id,
-              organizationId: invitation.organizationId,
-            },
-          },
-        });
+        },
+      });
 
-        if (existingMembership) {
-          throw new Error("User is already a member of this organization");
-        }
+      if (existingMembership) {
+        throw new Error("User is already a member of this organization");
       }
 
       // Create the organization membership
