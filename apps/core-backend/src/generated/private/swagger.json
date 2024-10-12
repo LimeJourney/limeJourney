@@ -916,19 +916,11 @@
 					},
 					"email": {
 						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"password": {
-						"type": "string"
 					}
 				},
 				"required": [
 					"invitationId",
-					"email",
-					"name",
-					"password"
+					"email"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -3927,7 +3919,7 @@
 				}
 			}
 		},
-		"/organizations/accept-invitation": {
+		"/organizations/invite/accept": {
 			"post": {
 				"operationId": "AcceptInvitation",
 				"responses": {

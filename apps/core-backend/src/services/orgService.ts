@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { AcceptInvitationDto } from "../models/organisation";
+import { AppConfig } from "@lime/config";
 
 // Define types identical to Prisma client types
 export type User = {
@@ -174,7 +175,7 @@ export class OrganizationService {
       },
     });
 
-    const invitationLink = `http://yourdomain.com/invitation/${invitation.id}`;
+    const invitationLink = `${AppConfig.appUrl}invitation/?invitationId=${invitation.id}`;
     // TODO: Send email with invitationLink
 
     return {
@@ -186,71 +187,84 @@ export class OrganizationService {
   async acceptInvitation(
     data: AcceptInvitationDto
   ): Promise<OrganizationMember> {
-    const invitation = await this.prisma.invitation.findUnique({
-      where: { id: data.invitationId },
-      include: { organization: true },
-    });
-
-    if (
-      !invitation ||
-      invitation.status !== "PENDING" ||
-      invitation.expiresAt < new Date()
-    ) {
-      throw new Error("Invalid or expired invitation");
-    }
-
-    if (invitation.email !== data.email) {
-      throw new Error("Email does not match the invitation");
-    }
-
-    // Use a transaction to ensure atomicity
-    const member = await this.prisma.$transaction(async (prisma) => {
-      let user = await prisma.user.findUnique({ where: { email: data.email } });
-
-      // Check if the user is already a member of the organization
-      const existingMembership = await prisma.organizationMember.findUnique({
-        where: {
-          userId_organizationId: {
-            userId: user.id,
-            organizationId: invitation.organizationId,
-          },
-        },
+    try {
+      const invitation = await this.prisma.invitation.findUnique({
+        where: { id: data.invitationId },
+        include: { organization: true },
       });
 
-      if (existingMembership) {
-        throw new Error("User is already a member of this organization");
+      if (
+        !invitation ||
+        invitation.status !== "PENDING" ||
+        invitation.expiresAt < new Date()
+      ) {
+        throw new Error("Invalid or expired invitation");
       }
 
-      // Create the organization membership
-      const member = await prisma.organizationMember.create({
-        data: {
-          userId: user.id,
-          organizationId: invitation.organizationId,
-          role: "MEMBER",
-        },
+      if (invitation.email !== data.email) {
+        throw new Error("Email does not match the invitation");
+      }
+
+      // Use a transaction to ensure atomicity
+      const member = await this.prisma.$transaction(async (prisma) => {
+        try {
+          let user = await prisma.user.findUnique({
+            where: { email: data.email },
+          });
+
+          // Check if the user is already a member of the organization
+          const existingMembership = await prisma.organizationMember.findUnique(
+            {
+              where: {
+                userId_organizationId: {
+                  userId: user.id,
+                  organizationId: invitation.organizationId,
+                },
+              },
+            }
+          );
+
+          if (existingMembership) {
+            throw new Error("User is already a member of this organization");
+          }
+
+          // Create the organization membership
+          const member = await prisma.organizationMember.create({
+            data: {
+              userId: user.id,
+              organizationId: invitation.organizationId,
+              role: "MEMBER",
+            },
+          });
+
+          // Update the invitation status
+          await prisma.invitation.update({
+            where: { id: data.invitationId },
+            data: { status: "ACCEPTED" },
+          });
+
+          // If the user didn't have a current organization, set this one as current
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { currentOrganizationId: invitation.organizationId },
+          });
+
+          return member;
+        } catch (error) {
+          // If an error occurs during the transaction, it will be automatically rolled back
+          throw error;
+        }
       });
 
-      // Update the invitation status
-      await prisma.invitation.update({
-        where: { id: data.invitationId },
-        data: { status: "ACCEPTED" },
-      });
-
-      // If the user didn't have a current organization, set this one as current
-      // if (!user.currentOrganizationId) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { currentOrganizationId: invitation.organizationId },
-      });
-      // }
-
-      return member;
-    });
-
-    return {
-      ...member,
-      role: member.role as UserRole,
-    };
+      return {
+        ...member,
+        role: member.role as UserRole,
+      };
+    } catch (error) {
+      // Handle or rethrow the error as needed
+      console.error("Error in acceptInvitation:", error);
+      throw error;
+    }
   }
 
   async getInvitationDetails(
@@ -315,7 +329,6 @@ export class OrganizationService {
       orderBy: { createdAt: "asc" },
     });
 
-    console.log("members", members);
     return members.map((member) => ({
       id: member.id,
       userId: member.userId,

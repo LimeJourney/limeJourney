@@ -206,10 +206,11 @@ export class OrganizationController {
     }
   }
 
-  @Post("accept-invitation")
+  @Post("invite/accept")
   @Response<ApiResponse<null>>(400, "Bad Request")
   @Response<ApiResponse<null>>(500, "Internal Server Error")
   public async acceptInvitation(
+    @Request() req: AuthenticatedRequest,
     @Body() body: AcceptInvitationDto,
     @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
@@ -222,7 +223,6 @@ export class OrganizationController {
         message: "Invitation accepted successfully",
       };
     } catch (error) {
-      console.log("Error accepting invitation225:", error);
       if (error instanceof Error) {
         return badRequestResponse(400, {
           status: "error",

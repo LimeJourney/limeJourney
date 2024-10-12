@@ -105,7 +105,7 @@ export const OrganizationService = {
   ): Promise<OrganizationMember> {
     return apiCall<OrganizationMember>(
       "post",
-      "/organizations/accept-invitation",
+      "/organizations/invite/accept",
       data
     );
   },

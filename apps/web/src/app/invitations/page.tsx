@@ -27,18 +27,15 @@ const InvitationAcceptancePage = () => {
       }
 
       try {
-        console.log("Checking auth status");
         const authStatus = await authService.isAuthenticated();
         setIsAuthenticated(authStatus);
 
         if (authStatus) {
-          console.log("Fetching invitation details");
           const details =
             await OrganizationService.getInvitationDetails(invitationId);
           setInvitationDetails(details);
         }
       } catch (err) {
-        console.log("Error:", err);
         setError("An error occurred while processing your invitation.");
       } finally {
         setLoading(false);

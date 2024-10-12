@@ -352,8 +352,6 @@ const models: TsoaRoute.Models = {
         "properties": {
             "invitationId": {"dataType":"string","required":true},
             "email": {"dataType":"string","required":true},
-            "name": {"dataType":"string","required":true},
-            "password": {"dataType":"string","required":true},
         },
         "additionalProperties": false,
     },
@@ -1693,13 +1691,14 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        app.post('/api/internal/v1/organizations/accept-invitation',
+        app.post('/api/internal/v1/organizations/invite/accept',
             authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(OrganizationController)),
             ...(fetchMiddlewares<RequestHandler>(OrganizationController.prototype.acceptInvitation)),
 
             async function OrganizationController_acceptInvitation(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    req: {"in":"request","name":"req","required":true,"dataType":"object"},
                     body: {"in":"body","name":"body","required":true,"ref":"AcceptInvitationDto"},
                     badRequestResponse: {"in":"res","name":"400","required":true,"ref":"ApiResponse_null_"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
