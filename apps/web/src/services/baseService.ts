@@ -86,12 +86,8 @@ const noRedirectUrlPatterns = [/\/organizations\/invitations\/[\w-]+$/];
 apiInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    console.log("error87", error.response);
-
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url;
-
-      console.log("requestUrl", requestUrl);
 
       if (requestUrl) {
         const shouldRedirect = !noRedirectUrlPatterns.some((pattern) =>

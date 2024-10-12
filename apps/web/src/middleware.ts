@@ -14,7 +14,6 @@ export function middleware(request: NextRequest) {
   );
 
   if (!token && isProtectedRoute) {
-    console.log("Redirecting to login");
     const loginUrl = new URL("/auth", request.url);
     loginUrl.searchParams.set("from", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
