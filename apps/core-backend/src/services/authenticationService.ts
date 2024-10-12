@@ -32,9 +32,12 @@ export class AuthService {
     const userCurrentOrganizationId = user?.currentOrganizationId;
     if (!user) {
       // User doesn't exist, create a new account
-      const organization = await prisma.organization.create({
-        data: { name: `${data.name || "New"}'s Organization` },
-      });
+      let organization = null;
+      if (!data.invitationId) {
+        organization = await prisma.organization.create({
+          data: { name: `${data.name || "New"}'s Organization` },
+        });
+      }
 
       const hashedPassword = data.password
         ? await bcrypt.hash(data.password, 10)
@@ -45,10 +48,20 @@ export class AuthService {
           email: data.email,
           password: hashedPassword,
           name: data.name || data.email.split("@")[0],
-          currentOrganizationId: organization.id,
+          currentOrganizationId: organization.id || "",
           role: "ADMIN",
         },
       });
+
+      if (!data.invitationId) {
+        const organizationMember = await prisma.organizationMember.create({
+          data: {
+            userId: user.id,
+            organizationId: organization.id,
+            role: "ADMIN",
+          },
+        });
+      }
     } else if (data.password) {
       // User exists, verify password
       const isPasswordValid = await bcrypt.compare(

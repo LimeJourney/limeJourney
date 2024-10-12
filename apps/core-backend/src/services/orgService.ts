@@ -250,12 +250,12 @@ export class OrganizationService {
       });
 
       // If the user didn't have a current organization, set this one as current
-      if (!user.currentOrganizationId) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { currentOrganizationId: invitation.organizationId },
-        });
-      }
+      // if (!user.currentOrganizationId) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { currentOrganizationId: invitation.organizationId },
+      });
+      // }
 
       return member;
     });
@@ -328,6 +328,7 @@ export class OrganizationService {
       orderBy: { createdAt: "asc" },
     });
 
+    console.log("members", members);
     return members.map((member) => ({
       id: member.id,
       userId: member.userId,

@@ -915,6 +915,7 @@ const models: TsoaRoute.Models = {
             "email": {"dataType":"string","required":true},
             "password": {"dataType":"string"},
             "name": {"dataType":"string"},
+            "invitationId": {"dataType":"string"},
         },
         "additionalProperties": false,
     },

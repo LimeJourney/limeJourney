@@ -79,6 +79,7 @@ const OrganizationTeamManagement: React.FC = () => {
   const fetchOrganizationData = async () => {
     try {
       const org = await OrganizationService.getCurrentOrganization();
+      setOrganization(org);
       const [fetchedMembers, fetchedInvitations] = await Promise.all([
         OrganizationService.getOrganizationMembers(org.id),
         OrganizationService.getOrganizationInvitations(org.id),

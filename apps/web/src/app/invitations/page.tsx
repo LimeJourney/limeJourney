@@ -23,7 +23,9 @@ const InvitationAcceptancePage = () => {
       if (invitationId) {
         setLoading(true);
         try {
+          console.log("Checking auth status");
           const authStatus = await authService.isAuthenticated();
+          console.log(authStatus);
           setIsAuthenticated(authStatus);
 
           const details = await OrganizationService.getInvitationDetails(
@@ -31,8 +33,10 @@ const InvitationAcceptancePage = () => {
           );
           setInvitationDetails(details);
         } catch (err) {
+          console.log("Error checking auth status", err);
           setError("Invalid or expired invitation.");
         } finally {
+          console.log("Finished checking auth status");
           setLoading(false);
         }
       }
