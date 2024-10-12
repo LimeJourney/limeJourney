@@ -95,6 +95,7 @@ apiInstance.interceptors.response.use(
         );
 
         if (shouldRedirect) {
+          console.log("Redirecting to /auth");
           localStorage.removeItem("auth_token");
           window.location.href = "/auth";
         }
