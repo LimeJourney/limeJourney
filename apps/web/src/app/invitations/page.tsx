@@ -81,55 +81,53 @@ const InvitationAcceptancePage = () => {
   }
 
   return (
-    <Suspense>
-      <div className="flex items-center justify-center min-h-screen bg-forest-500 p-4">
-        <Card className="bg-forest-600 border-meadow-500 max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-meadow-500">
-              Organization Invitation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isAuthenticated ? (
-              invitationDetails ? (
-                <>
-                  <p className="text-white mb-4">
-                    You've been invited to join{" "}
-                    {invitationDetails.organizationName}.
-                  </p>
-                  <Button
-                    className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full"
-                    onClick={handleAcceptInvitation}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : null}
-                    Accept Invitation
-                  </Button>
-                </>
-              ) : (
-                <p className="text-white">
-                  Unable to fetch invitation details. Please try again.
-                </p>
-              )
-            ) : (
-              <div>
+    <div className="flex items-center justify-center min-h-screen bg-forest-500 p-4">
+      <Card className="bg-forest-600 border-meadow-500 max-w-md w-full">
+        <CardHeader>
+          <CardTitle className="text-meadow-500">
+            Organization Invitation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isAuthenticated ? (
+            invitationDetails ? (
+              <>
                 <p className="text-white mb-4">
-                  Please sign in or create an account to view and accept this
-                  invitation.
+                  You've been invited to join{" "}
+                  {invitationDetails.organizationName}.
                 </p>
-                <Link href={`/auth?invitationId=${invitationId}`} passHref>
-                  <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full">
-                    Sign In / Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </Suspense>
+                <Button
+                  className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full"
+                  onClick={handleAcceptInvitation}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : null}
+                  Accept Invitation
+                </Button>
+              </>
+            ) : (
+              <p className="text-white">
+                Unable to fetch invitation details. Please try again.
+              </p>
+            )
+          ) : (
+            <div>
+              <p className="text-white mb-4">
+                Please sign in or create an account to view and accept this
+                invitation.
+              </p>
+              <Link href={`/auth?invitationId=${invitationId}`} passHref>
+                <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600 w-full">
+                  Sign In / Sign Up
+                </Button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
