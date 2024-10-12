@@ -27,6 +27,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   };
 
   const toast = useToast();
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,7 +38,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         formState.email,
         formState.password
       );
-      router.push("/dashboard");
+      router.push("/dashboard/audience/entities");
     } catch (error) {
       toast.toast({
         variant: "destructive",
@@ -57,6 +58,21 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       console.error("Google login failed", error);
     }
   };
+
+  const handleTryDemo = () => {
+    setFormState({
+      email: "demo@limejourney.com",
+      password: "demo@limejourney.com",
+    });
+
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.dispatchEvent(
+          new Event("submit", { cancelable: true, bubbles: true })
+        );
+      }
+    }, 2000);
+  };
   return (
     <div className={cn("grid gap-8", className)} {...props}>
       <div className="grid gap-6">
@@ -64,6 +80,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           variant="outline"
           type="button"
           disabled={isLoading}
+          onClick={handleTryDemo}
           className="rounded-full px-1 py-1 text-sm w-auto"
         >
           {isLoading ? (
@@ -78,6 +95,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           variant="outline"
           type="button"
           disabled={isLoading}
+          onClick={handleGoogleLogin}
           className="rounded-full px-1 py-1 text-sm w-auto"
         >
           {isLoading ? (
@@ -91,9 +109,9 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         <Button
           variant="outline"
           type="button"
-          disabled={isLoading}
+          disabled={true}
           className="rounded-full px-1 py-1 text-sm w-auto"
-          onClick={handleGoogleLogin}
+          // onClick={handleGoogleLogin}
         >
           {isLoading ? (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
@@ -114,7 +132,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="grid gap-6">
+      <form ref={formRef} onSubmit={onSubmit} className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input
