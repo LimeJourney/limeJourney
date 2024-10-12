@@ -2,6 +2,7 @@ export interface AuthRequest {
   email: string;
   password?: string;
   name?: string;
+  invitationId?: string;
 }
 
 export interface AuthData {

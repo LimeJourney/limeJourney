@@ -80,6 +80,8 @@ const FooterSection = () => {
               src="/LimeJourney-logo.svg"
               alt="LimeJourney"
               className="h-10 w-auto"
+              width={10}
+              height={10}
             />
             <span className="text-2xl font-bold text-meadow-700">
               LimeJourney

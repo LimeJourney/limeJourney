@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const TOKEN_KEY = "auth_token";
-const publicRoutes = ["/auth", "/api/auth"];
+const publicRoutes = ["/auth", "/api/auth", "invitations"];
 const protectedRoutes = ["/dashboard"];
 
 export function middleware(request: NextRequest) {
