@@ -65,6 +65,11 @@ const configSchema = z.object({
       })
       .optional(),
   }),
+  stripe: z.object({
+    secretKey: z.string(),
+    webhookSecret: z.string(),
+    priceId: z.string(),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -130,6 +135,11 @@ const config = {
             apiKey: env("TEMPORAL_CLOUD_API_KEY"),
           }
         : undefined,
+  },
+  stripe: {
+    secretKey: env("STRIP_SECRET_KEY"),
+    webhookSecret: env("STRIPE_WEBHOOK_SECRET"),
+    priceId: env("STRIPE_PRICE_ID"),
   },
 };
 // Parse and validate the configuration
