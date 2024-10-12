@@ -20,9 +20,6 @@ import {
   Response,
   Put,
   Delete,
-  SuccessResponse,
-  TsoaResponse,
-  Res,
 } from "tsoa";
 import { MessagingIntegration } from "../../models/messagingIntegration";
 import { JsonValue } from "../../models/json";
