@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import { AppConfig } from "@lime/config";
 
 const prisma = new PrismaClient();
-const stripe = new Stripe(AppConfig.stripe.secretKey);
+const stripe = new Stripe(AppConfig.stripe.secretKey || "");
 
 export class BillingService {
   async createCheckoutSession(organizationId: string): Promise<string> {
@@ -65,7 +65,7 @@ export class BillingService {
 
   async handleWebhook(
     signature: string,
-    payload: Buffer
+    payload: string
   ): Promise<{ received: boolean }> {
     let event: Stripe.Event;
 

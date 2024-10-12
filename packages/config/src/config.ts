@@ -137,7 +137,7 @@ const config = {
         : undefined,
   },
   stripe: {
-    secretKey: env("STRIP_SECRET_KEY"),
+    secretKey: env("STRIPE_SECRET_KEY"),
     webhookSecret: env("STRIPE_WEBHOOK_SECRET"),
     priceId: env("STRIPE_PRICE_ID"),
   },
