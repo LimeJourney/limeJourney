@@ -265,4 +265,26 @@ export class OrganizationService {
       role: member.role as UserRole,
     };
   }
+
+  async getInvitationDetails(
+    invitationId: string
+  ): Promise<{ organizationName: string; email: string }> {
+    const invitation = await this.prisma.invitation.findUnique({
+      where: { id: invitationId },
+      include: { organization: true },
+    });
+
+    if (
+      !invitation ||
+      invitation.status !== "PENDING" ||
+      invitation.expiresAt < new Date()
+    ) {
+      throw new Error("Invalid or expired invitation");
+    }
+
+    return {
+      organizationName: invitation.organization.name,
+      email: invitation.email,
+    };
+  }
 }

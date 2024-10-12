@@ -1,15 +1,12 @@
+"use client";
 import Link from "next/link";
 import { UserAuthForm } from "@/components/user-auth-form";
-import { useRouter } from "next/router";
-export const metadata = {
-  title: "Authentication",
-  description: "Sign in to your Lime Journey account",
-};
+import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AuthenticationPage() {
-  const router = useRouter();
-  const { invitationId } = router.query;
+  const searchParams = useSearchParams();
+  const invitationId = searchParams.get("invitationId");
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black px-4 py-8">
       {invitationId && (

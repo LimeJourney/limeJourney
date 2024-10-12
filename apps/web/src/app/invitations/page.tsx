@@ -1,10 +1,11 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { OrganizationService } from "@/services/orgService";
+import { OrganizationService } from "@/services/organisationService";
 import { authService } from "@/services/authService";
 import Link from "next/link";
 
@@ -45,6 +46,7 @@ const InvitationAcceptancePage = () => {
     try {
       await OrganizationService.acceptInvitation({
         invitationId: invitationId as string,
+        email: invitationDetails.email,
       });
       router.push("/dashboard/audience/entities");
     } catch (err) {

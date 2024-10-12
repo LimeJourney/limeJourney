@@ -236,4 +236,36 @@ export class OrganizationController {
       });
     }
   }
+
+  @Get("invitations/{invitationId}")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getInvitationDetails(
+    invitationId: string,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<{ organizationName: string; email: string }> | void> {
+    try {
+      const invitationDetails =
+        await this.organizationService.getInvitationDetails(invitationId);
+      return {
+        status: "success",
+        data: invitationDetails,
+        message: "Invitation details retrieved successfully",
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message: error.message,
+        });
+      }
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving invitation details",
+      });
+    }
+  }
 }
