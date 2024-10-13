@@ -16,6 +16,8 @@ export class BillingService {
       throw new Error("Organization not found");
     }
 
+    console.log("STRIPE SECRET KEY", AppConfig.stripe.secretKey);
+
     let stripeCustomerId = organization.stripeCustomerId;
 
     if (!stripeCustomerId) {

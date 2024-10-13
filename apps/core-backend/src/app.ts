@@ -22,6 +22,27 @@ import {
 import { SegmentationService } from "./services/segmentationService";
 import { redisManager } from "./lib/redis";
 import { EventHandler } from "./lib/eventHandler";
+import bodyParser from "body-parser";
+
+interface RawBodyRequest extends Request {
+  rawBody?: string;
+}
+
+const rawBodySaver = (
+  req: RawBodyRequest,
+  res: Response,
+  buf: Buffer,
+  encoding: BufferEncoding
+) => {
+  if (
+    req.url.startsWith("/api/internal/v1/billing/webhook") &&
+    buf &&
+    buf.length
+  ) {
+    req.rawBody = buf.toString(encoding || "utf8");
+  }
+};
+
 export class App {
   private app: Express;
   private server: Server | null = null;
@@ -38,6 +59,12 @@ export class App {
   }
 
   private configureMiddleware(): void {
+    // Use rawBodySaver for JSON and URL-encoded bodies
+    this.app.use(bodyParser.json({ verify: rawBodySaver }));
+    this.app.use(
+      bodyParser.urlencoded({ verify: rawBodySaver, extended: true })
+    );
+
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan("dev"));

@@ -26,7 +26,7 @@ const configSchema = z.object({
     clientSecret: z.string(),
   }),
   appUrl: z.string(),
-  enforceSubscriptions: z.string().default("true"),
+  enforceSubscriptions: z.boolean().default(true),
   clickhouse: z.object({
     host: z.string(),
     port: z.number().int().positive(),
@@ -96,7 +96,8 @@ const config = {
   },
   jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
   appUrl: env("APP_URL", "http://localhost:3000"),
-  enforceSubscriptions: env("ENFORCE_SUBSCRIPTIONS"),
+  enforceSubscriptions:
+    env("ENFORCE_SUBSCRIPTIONS", "true").toLowerCase() !== "false",
   clickhouse: {
     host: env("CLICKHOUSE_HOST", "http://localhost:8123"),
     port: parseInt(env("CLICKHOUSE_PORT", "9000"), 10),

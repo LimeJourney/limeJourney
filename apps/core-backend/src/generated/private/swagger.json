@@ -2537,6 +2537,38 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ApiResponse__enforced-boolean__": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"properties": {
+							"enforced": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"enforced"
+						],
+						"type": "object",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AuthData": {
 				"properties": {
 					"token": {
@@ -6113,22 +6145,45 @@
 				"tags": [
 					"Billing"
 				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"type": "string"
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/billing/subscription-enforcement": {
+			"get": {
+				"operationId": "GetSubscriptionEnforcement",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse__enforced-boolean__"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
 							}
 						}
 					}
-				}
+				},
+				"tags": [
+					"Billing"
+				],
+				"security": [],
+				"parameters": []
 			}
 		},
 		"/auth/authenticate": {

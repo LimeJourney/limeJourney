@@ -16,31 +16,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import LoadingPage from "../../loading";
-
-// Define types
-type SubscriptionStatus =
-  | "ACTIVE"
-  | "INACTIVE"
-  | "PAST_DUE"
-  | "CANCELLED"
-  | "CANCELLING";
-
-interface Subscription {
-  planName: string;
-  status: SubscriptionStatus;
-  quantity: number;
-  nextBillingDate: string;
-  cancelAtPeriodEnd: boolean;
-}
-
-// Dummy data
-const dummySubscription: Subscription = {
-  planName: "Pro Plan",
-  status: "ACTIVE",
-  quantity: 5,
-  nextBillingDate: "2023-12-01",
-  cancelAtPeriodEnd: false,
-};
+import { BillingService } from "@/services/billingService";
+import {
+  OrganizationService,
+  Organization,
+  OrganizationMember,
+  SubscriptionStatus,
+} from "@/services/organisationService";
+import { toast } from "@/components/ui/use-toast";
 
 const StatusIndicator: React.FC<{ status: SubscriptionStatus }> = ({
   status,
@@ -62,31 +45,100 @@ const StatusIndicator: React.FC<{ status: SubscriptionStatus }> = ({
 };
 
 export default function SubscriptionPage() {
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscriptionEnforced, setSubscriptionEnforced] = useState(false);
 
   useEffect(() => {
-    // Simulate API call with setTimeout
-    const timer = setTimeout(() => {
-      setSubscription(dummySubscription);
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    fetchData();
   }, []);
 
-  const handleSubscribe = () => {
-    alert("Redirecting to Stripe Checkout...");
-    // In a real implementation, this would create a Checkout session and redirect
+  const fetchData = async () => {
+    try {
+      const [org, enforced] = await Promise.all([
+        OrganizationService.getCurrentOrganization(),
+        BillingService.getSubscriptionEnforcement(),
+      ]);
+
+      setSubscriptionEnforced(enforced);
+
+      if (org) {
+        setOrganization(org);
+        const orgMembers = await OrganizationService.getOrganizationMembers(
+          org.id
+        );
+        setMembers(orgMembers);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error fetching data",
+        description:
+          "There was a problem retrieving your organization details.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleManageSubscription = () => {
-    alert("Redirecting to Stripe Customer Portal...");
-    // In a real implementation, this would create a Customer Portal session and redirect
+  const handleSubscribe = async () => {
+    try {
+      const checkoutUrl = await BillingService.createCheckoutSession();
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create checkout session. Please try again.",
+      });
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const portalUrl = await BillingService.createPortalSession();
+      window.location.href = portalUrl;
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to open customer portal. Please try again.",
+      });
+    }
   };
 
   if (isLoading) {
     return <LoadingPage />;
+  }
+
+  const subscription = organization?.subscriptionId
+    ? {
+        status: organization.subscriptionStatus,
+        nextBillingDate: organization.subscriptionPeriodEnd,
+        quantity: members.length,
+        planName: organization.planId || "Unknown Plan",
+      }
+    : null;
+
+  if (!subscriptionEnforced) {
+    return (
+      <div className="bg-forest-500 min-h-screen text-meadow-100 flex items-center justify-center">
+        <Card className="bg-forest-700 border-meadow-500 max-w-md">
+          <CardHeader>
+            <h2 className="text-2xl font-semibold text-meadow-100">
+              Subscriptions Not Enforced
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <p className="text-meadow-300">
+              Subscriptions are currently not being enforced. All features are
+              available without a subscription.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -127,14 +179,16 @@ export default function SubscriptionPage() {
                   </div>
                   <div className="flex items-center">
                     <CalendarDays className="mr-2 h-5 w-5 text-meadow-400" />
-                    <span>Renews {subscription.nextBillingDate}</span>
+                    <span>
+                      Renews{" "}
+                      {subscription.nextBillingDate
+                        ? new Date(
+                            subscription.nextBillingDate
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </span>
                   </div>
                 </div>
-                {subscription.cancelAtPeriodEnd && (
-                  <p className="mt-4 text-red-400 font-semibold">
-                    Your subscription will end on {subscription.nextBillingDate}
-                  </p>
-                )}
               </>
             ) : (
               <p className="text-meadow-300">

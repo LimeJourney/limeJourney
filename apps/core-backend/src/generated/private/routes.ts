@@ -910,6 +910,16 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse__enforced-boolean__": {
+        "dataType": "refObject",
+        "properties": {
+            "status": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["success"]},{"dataType":"enum","enums":["error"]}],"required":true},
+            "data": {"dataType":"union","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"enforced":{"dataType":"boolean","required":true}}},{"dataType":"enum","enums":[null]}],"required":true},
+            "message": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuthData": {
         "dataType": "refObject",
         "properties": {
@@ -3038,13 +3048,11 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         app.post('/api/internal/v1/billing/webhook',
-            authenticateMiddleware([{"jwt":[]}]),
             ...(fetchMiddlewares<RequestHandler>(BillingController)),
             ...(fetchMiddlewares<RequestHandler>(BillingController.prototype.handleWebhook)),
 
             async function BillingController_handleWebhook(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    rawBody: {"in":"body","name":"rawBody","required":true,"dataType":"string"},
                     request: {"in":"request","name":"request","required":true,"dataType":"object"},
                     badRequestResponse: {"in":"res","name":"400","required":true,"ref":"ApiResponse_null_"},
                     serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
@@ -3065,6 +3073,36 @@ export function RegisterRoutes(app: Router) {
                 next,
                 validatedArgs,
                 successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/api/internal/v1/billing/subscription-enforcement',
+            ...(fetchMiddlewares<RequestHandler>(BillingController)),
+            ...(fetchMiddlewares<RequestHandler>(BillingController.prototype.getSubscriptionEnforcement)),
+
+            async function BillingController_getSubscriptionEnforcement(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    serverErrorResponse: {"in":"res","name":"500","required":true,"ref":"ApiResponse_null_"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new BillingController();
+
+              await templateService.apiHandler({
+                methodName: 'getSubscriptionEnforcement',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
               });
             } catch (err) {
                 return next(err);
