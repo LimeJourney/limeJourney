@@ -146,6 +146,10 @@ We're working on comprehensive documentation/setup for self-hosting LimeJourney.
    docker-compose up -d
    ```
 
+Or Deploy to Render:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/LimeJourney/limeJourney)
+
 Stay tuned for more detailed self-hosting documentation! If you are considering self-hosting, please reach out to me at tobi@limejourney.com and we can help you get started.
 
 ## 🤝 Contributing
