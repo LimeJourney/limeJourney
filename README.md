@@ -159,3 +159,5 @@ We welcome contributions from the community! Check out our [Contributing Guide](
 Whether you're fixing bugs, improving documentation, or proposing new features, your efforts are appreciated.
 
 ## 📄 License
+
+Distributed under the [AGPLv3 License](https://github.com/LimeJourney/limeJourney/blob/main/LICENSE). See `LICENSE` for more information.

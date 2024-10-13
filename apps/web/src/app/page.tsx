@@ -8,6 +8,8 @@ import FooterSection from "@/components/footer-section";
 import Image from "next/image";
 
 import NavBar from "@/components/nav-bar";
+import { Router } from "next/router";
+import { useRouter } from "next/navigation";
 const HeroBackground = ({ height = "100vh" }) => {
   return (
     <div
@@ -109,6 +111,7 @@ const BorderSpotlightButton = ({ children, onClick }) => {
 };
 
 const Home = () => {
+  const router = useRouter();
   const calendarLink = "https://cal.com/tobi-limejourney/product-demo";
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -134,9 +137,7 @@ const Home = () => {
             </p>
           </motion.div>
 
-          <BorderSpotlightButton
-            onClick={() => window.open(calendarLink, "_blank")}
-          >
+          <BorderSpotlightButton onClick={() => router.push("/auth")}>
             Get Started
           </BorderSpotlightButton>
 

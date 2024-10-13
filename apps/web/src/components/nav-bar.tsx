@@ -10,11 +10,12 @@ import {
 import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -141,7 +142,7 @@ const NavBar = () => {
           <Button
             variant="ghost"
             className="text-forest-500 hover:text-forest-600 hover:bg-meadow-200"
-            onClick={() => window.open(calendarLink, "_blank")}
+            onClick={() => router.push("/auth")}
           >
             Login
           </Button>
