@@ -8,11 +8,17 @@ import {
   Request,
   SuccessResponse,
   Res,
+  Security,
 } from "tsoa";
 import type { TsoaResponse } from "tsoa";
 import { AuthService } from "../../services/authenticationService";
 import { ApiResponse } from "../../models/apiResponse";
-import type { AuthData, AuthRequest } from "../../models/auth";
+import type {
+  AuthData,
+  AuthenticatedRequest,
+  AuthRequest,
+  JWTAuthenticatedUser,
+} from "../../models/auth";
 
 @Route("auth")
 @Tags("Authentication")
@@ -99,5 +105,38 @@ export class AuthController {
         res.redirect("/login?error=Google authentication failed");
       }
     });
+  }
+
+  @Get("/current-user")
+  @Security("jwt")
+  @Response<ApiResponse<null>>(401, "Unauthorized")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getCurrentUser(
+    @Request() request: AuthenticatedRequest,
+    @Res() unauthorizedResponse: TsoaResponse<401, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<JWTAuthenticatedUser> | void> {
+    try {
+      const user = request.user as JWTAuthenticatedUser;
+      if (!user) {
+        return unauthorizedResponse(401, {
+          status: "error",
+          data: null,
+          message: "User not authenticated",
+        });
+      }
+
+      return {
+        status: "success",
+        data: user,
+        message: "Current user retrieved successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving the current user",
+      });
+    }
   }
 }

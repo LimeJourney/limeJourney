@@ -2659,6 +2659,55 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"JWTAuthenticatedUser": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"role": {
+						"type": "string"
+					},
+					"currentOrganizationId": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"role",
+					"currentOrganizationId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_JWTAuthenticatedUser_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/JWTAuthenticatedUser"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ApiKey": {
 				"properties": {
 					"id": {
@@ -6276,6 +6325,57 @@
 					"Authentication"
 				],
 				"security": [],
+				"parameters": []
+			}
+		},
+		"/auth/current-user": {
+			"get": {
+				"operationId": "GetCurrentUser",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_JWTAuthenticatedUser_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Authentication"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
 				"parameters": []
 			}
 		},

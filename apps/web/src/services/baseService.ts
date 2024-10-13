@@ -1,6 +1,7 @@
 // apps/web/src/lib/apiInstance.ts
 
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
+import { tr } from "date-fns/locale";
 import Router from "next/router";
 export const API_CONFIG = {
   BASE_URL:
@@ -16,6 +17,7 @@ export const ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/authenticate",
     GOOGLE: "/auth/google",
+    CURRENT_USER: "/auth/current-user",
   },
 };
 

@@ -110,11 +110,15 @@ export class BillingService {
       session.subscription &&
       typeof session.subscription === "string"
     ) {
+      const oneMonthFromNow = new Date();
+      oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+
       await prisma.organization.update({
         where: { id: session.client_reference_id },
         data: {
           subscriptionId: session.subscription,
           subscriptionStatus: "ACTIVE",
+          subscriptionPeriodEnd: oneMonthFromNow,
         },
       });
     }

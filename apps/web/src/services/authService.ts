@@ -17,6 +17,18 @@ export interface AuthResponse {
   message: string;
 }
 
+export interface CurrentUserResponse {
+  status: string;
+  data: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    currentOrganizationId: string;
+  };
+  message: string;
+}
+
 export const authService = {
   async authenticate(email: string, password: string): Promise<AuthResponse> {
     try {
@@ -28,6 +40,17 @@ export const authService = {
         }
       );
       this.setToken(response.data.data.token);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async getCurrentUser(): Promise<CurrentUserResponse> {
+    try {
+      const response = await apiInstance.get<CurrentUserResponse>(
+        ENDPOINTS.AUTH.CURRENT_USER
+      );
       return response.data;
     } catch (error) {
       throw error;

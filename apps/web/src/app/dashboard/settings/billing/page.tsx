@@ -8,7 +8,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Users, CalendarDays, HelpCircle } from "lucide-react";
+import {
+  CreditCard,
+  Users,
+  CalendarDays,
+  HelpCircle,
+  AlertTriangle,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +30,7 @@ import {
   SubscriptionStatus,
 } from "@/services/organisationService";
 import { toast } from "@/components/ui/use-toast";
+import { authService } from "@/services/authService";
 
 const StatusIndicator: React.FC<{ status: SubscriptionStatus }> = ({
   status,
@@ -49,6 +56,7 @@ export default function SubscriptionPage() {
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [subscriptionEnforced, setSubscriptionEnforced] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -56,12 +64,14 @@ export default function SubscriptionPage() {
 
   const fetchData = async () => {
     try {
-      const [org, enforced] = await Promise.all([
+      const [org, enforced, currentUser] = await Promise.all([
         OrganizationService.getCurrentOrganization(),
         BillingService.getSubscriptionEnforcement(),
+        authService.getCurrentUser(),
       ]);
 
       setSubscriptionEnforced(enforced);
+      setUserRole(currentUser.data.role);
 
       if (org) {
         setOrganization(org);
@@ -112,12 +122,14 @@ export default function SubscriptionPage() {
     return <LoadingPage />;
   }
 
+  console.log("User Role", userRole);
+  const isAdmin = userRole === "ADMIN";
   const subscription = organization?.subscriptionId
     ? {
         status: organization.subscriptionStatus,
         nextBillingDate: organization.subscriptionPeriodEnd,
         quantity: members.length,
-        planName: organization.planId || "Unknown Plan",
+        planName: organization.planId || "Pro",
       }
     : null;
 
@@ -152,6 +164,13 @@ export default function SubscriptionPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {!isAdmin && (
+          <div className="bg-yellow-500 text-forest-700 p-4 rounded-md mb-6">
+            <AlertTriangle className="inline-block mr-2" />
+            You have read-only access. Please contact your organization admin
+            for any changes.
+          </div>
+        )}
         <Card className="bg-forest-700 border-meadow-500">
           <CardHeader>
             <h2 className="text-2xl font-semibold text-meadow-100">
@@ -202,6 +221,7 @@ export default function SubscriptionPage() {
               <Button
                 onClick={handleManageSubscription}
                 className="bg-meadow-500 text-forest-700 hover:bg-meadow-600"
+                disabled={!isAdmin}
               >
                 Manage Subscription
               </Button>
@@ -209,6 +229,7 @@ export default function SubscriptionPage() {
               <Button
                 onClick={handleSubscribe}
                 className="bg-meadow-500 text-forest-700 hover:bg-meadow-600"
+                disabled={!isAdmin}
               >
                 Subscribe Now
               </Button>
@@ -227,6 +248,7 @@ export default function SubscriptionPage() {
               <button
                 onClick={handleManageSubscription}
                 className="w-full p-4 text-left hover:bg-forest-600 transition-colors duration-200 flex items-center group"
+                disabled={!isAdmin}
               >
                 <CreditCard className="mr-3 h-5 w-5 text-meadow-400 group-hover:text-meadow-300" />
                 <span className="text-meadow-100 group-hover:text-meadow-50">
