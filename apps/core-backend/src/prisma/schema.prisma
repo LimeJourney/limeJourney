@@ -45,6 +45,7 @@ model Organization {
   members          OrganizationMember[]
   invitations      Invitation[]
   subscriptionId   String?   @unique
+  stripeCustomerId String?  @unique
   subscriptionStatus SubscriptionStatus @default(INACTIVE)
   planId           String?
   subscriptionPeriodStart DateTime?

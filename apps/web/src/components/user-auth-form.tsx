@@ -101,7 +101,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         <Button
           variant="outline"
           type="button"
-          disabled={isLoading}
+          disabled={true}
           onClick={handleGoogleLogin}
           className="rounded-full px-1 py-1 text-sm w-auto"
         >

@@ -82,6 +82,8 @@ import { entityService } from "@/services/entitiesService";
 import { eventsService } from "@/services/eventsService";
 import ConditionVisualizer from "./components/conditionVisualizer";
 import AIPoweredSegmentCreation from "./components/aiSegmentCreation";
+import { useSubscriptionCheck } from "@/hooks/useSubscriptionCheck";
+import { useSubscription } from "@/app/contexts/SubscriptionContext";
 interface CustomDropdownProps {
   options: { value: string; label: string }[];
   value: string;
@@ -909,27 +911,42 @@ export default function SegmentManagement() {
   const handleCreateOrUpdateSegment = async (
     segmentData: CreateSegmentDTO | UpdateSegmentDTO
   ) => {
-    try {
-      if ("id" in segmentData) {
-        const updatedSegment = await segmentationService.updateSegment(
-          segmentData.id,
-          segmentData
-        );
-        setSegments(
-          segments.map((s) => (s.id === updatedSegment.id ? updatedSegment : s))
-        );
-      } else {
-        const createdSegment = await segmentationService.createSegment(
-          segmentData as CreateSegmentDTO
-        );
-        setSegments([...segments, createdSegment]);
+    const isSubscribed = await checkSubscription();
+    if (isSubscribed) {
+      try {
+        if ("id" in segmentData) {
+          const updatedSegment = await segmentationService.updateSegment(
+            segmentData.id,
+            segmentData
+          );
+          setSegments(
+            segments.map((s) =>
+              s.id === updatedSegment.id ? updatedSegment : s
+            )
+          );
+        } else {
+          const createdSegment = await segmentationService.createSegment(
+            segmentData as CreateSegmentDTO
+          );
+          setSegments([...segments, createdSegment]);
+        }
+        setIsCreateSheetOpen(false);
+        setEditingSegment(null);
+      } catch (error) {
+        console.error("Failed to create/update segment:", error);
       }
-      setIsCreateSheetOpen(false);
-      setEditingSegment(null);
-    } catch (error) {
-      console.error("Failed to create/update segment:", error);
     }
   };
+
+  const handleCreateSegmentClick = async () => {
+    const isSubscribed = await checkSubscription();
+    if (isSubscribed) {
+      setIsCreateSheetOpen(true);
+    }
+  };
+
+  const checkSubscription = useSubscriptionCheck();
+  const { setShowSubscriptionModal } = useSubscription();
 
   return (
     <div className="px-8 py-6 bg-forest-500 min-h-screen">
@@ -960,7 +977,7 @@ export default function SegmentManagement() {
             />
 
             <Button
-              onClick={() => setIsCreateSheetOpen(true)}
+              onClick={handleCreateSegmentClick}
               className="bg-meadow-500 text-forest-500 hover:bg-meadow-500/90"
             >
               <PlusCircle className="mr-2 h-4 w-4" /> Create Segment
@@ -969,7 +986,7 @@ export default function SegmentManagement() {
         </div>
         <AIPoweredSegmentCreation onSegmentCreated={handleCreateSegment} />
         {segments.length === 0 ? (
-          <EmptyState onCreateSegment={() => setIsCreateDialogOpen(true)} />
+          <EmptyState onCreateSegment={handleCreateSegmentClick} />
         ) : (
           <Card className="bg-forest-600 border-meadow-500">
             <Table>

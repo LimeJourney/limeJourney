@@ -56,6 +56,7 @@ import {
   Invitation,
   UserRole,
 } from "@/services/organisationService";
+import { authService } from "@/services/authService";
 
 const OrganizationTeamManagement: React.FC = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -71,6 +72,7 @@ const OrganizationTeamManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrganizationData();
@@ -78,29 +80,18 @@ const OrganizationTeamManagement: React.FC = () => {
 
   const fetchOrganizationData = async () => {
     try {
-      const org = await OrganizationService.getCurrentOrganization();
+      const [org, currentUser] = await Promise.all([
+        OrganizationService.getCurrentOrganization(),
+        authService.getCurrentUser(),
+      ]);
       setOrganization(org);
+      setUserRole(currentUser.data.role);
       const [fetchedMembers, fetchedInvitations] = await Promise.all([
         OrganizationService.getOrganizationMembers(org.id),
         OrganizationService.getOrganizationInvitations(org.id),
       ]);
       setMembers(fetchedMembers);
       setInvitations(fetchedInvitations);
-
-      // const
-      // const orgs = await OrganizationService.;
-      // if (orgs.length > 0) {
-      //   const org = await OrganizationService.getOrganizationDetails(
-      //     orgs[0].id
-      //   );
-      //   setOrganization(org);
-      //   const [fetchedMembers, fetchedInvitations] = await Promise.all([
-      //     OrganizationService.getOrganizationMembers(org.id),
-      //     OrganizationService.getOrganizationInvitations(org.id),
-      //   ]);
-      //   setMembers(fetchedMembers);
-      //   setInvitations(fetchedInvitations);
-      // }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -244,6 +235,8 @@ const OrganizationTeamManagement: React.FC = () => {
     return <div>No organization found.</div>;
   }
 
+  const isAdmin = userRole === "ADMIN";
+
   return (
     <div className="bg-forest-500 min-h-screen text-meadow-100">
       <header className="bg-forest-700 shadow-md">
@@ -252,54 +245,63 @@ const OrganizationTeamManagement: React.FC = () => {
             <h1 className="text-2xl font-semibold text-meadow-100">
               {organization.name} - Team Management
             </h1>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-meadow-500 text-forest-700 hover:bg-meadow-600">
-                  <UserPlus className="mr-2 h-4 w-4" /> Invite Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-forest-600 border-meadow-500">
-                <DialogHeader>
-                  <DialogTitle className="text-meadow-100">
-                    Invite New Team Member
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-meadow-100">
-                      Email Address
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="e.g., newmember@example.com"
-                      value={newMemberEmail}
-                      onChange={(e) => setNewMemberEmail(e.target.value)}
-                      className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    onClick={handleInviteMember}
-                    disabled={isInviting || !newMemberEmail}
-                    className="bg-meadow-500 text-forest-700 hover:bg-meadow-600"
-                  >
-                    {isInviting ? (
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Mail className="mr-2 h-4 w-4" />
-                    )}
-                    Send Invitation
+            {isAdmin && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-meadow-500 text-forest-700 hover:bg-meadow-600">
+                    <UserPlus className="mr-2 h-4 w-4" /> Invite Member
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent className="bg-forest-600 border-meadow-500">
+                  <DialogHeader>
+                    <DialogTitle className="text-meadow-100">
+                      Invite New Team Member
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-meadow-100">
+                        Email Address
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="e.g., newmember@example.com"
+                        value={newMemberEmail}
+                        onChange={(e) => setNewMemberEmail(e.target.value)}
+                        className="bg-forest-500 text-meadow-100 border-meadow-500 focus:ring-meadow-500"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      onClick={handleInviteMember}
+                      disabled={isInviting || !newMemberEmail}
+                      className="bg-meadow-500 text-forest-700 hover:bg-meadow-600"
+                    >
+                      {isInviting ? (
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Mail className="mr-2 h-4 w-4" />
+                      )}
+                      Send Invitation
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {!isAdmin && (
+          <div className="bg-yellow-500 text-forest-700 p-4 rounded-md mb-6">
+            <AlertTriangle className="inline-block mr-2" />
+            You have read-only access. Please contact your organization admin
+            for any changes.
+          </div>
+        )}
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-meadow-300" />
@@ -324,7 +326,9 @@ const OrganizationTeamManagement: React.FC = () => {
                   <TableHead className="text-meadow-100">User ID</TableHead>
                   <TableHead className="text-meadow-100">Role</TableHead>
                   <TableHead className="text-meadow-100">Joined At</TableHead>
-                  <TableHead className="text-meadow-100">Actions</TableHead>
+                  {isAdmin && (
+                    <TableHead className="text-meadow-100">Actions</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -342,32 +346,34 @@ const OrganizationTeamManagement: React.FC = () => {
                     <TableCell className="text-meadow-300">
                       {new Date(member.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingMember(member);
-                            setIsEditingMember(true);
-                          }}
-                          className="text-meadow-300 hover:text-meadow-100 hover:bg-forest-500"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setMemberToDelete(member.userId);
-                            setIsDeleteConfirmOpen(true);
-                          }}
-                          className="text-meadow-300 hover:text-meadow-100 hover:bg-forest-500"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingMember(member);
+                              setIsEditingMember(true);
+                            }}
+                            className="text-meadow-300 hover:text-meadow-100 hover:bg-forest-500"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setMemberToDelete(member.userId);
+                              setIsDeleteConfirmOpen(true);
+                            }}
+                            className="text-meadow-300 hover:text-meadow-100 hover:bg-forest-500"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

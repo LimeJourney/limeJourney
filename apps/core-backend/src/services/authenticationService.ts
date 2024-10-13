@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { AppConfig } from "@lime/config";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import passport from "passport";
-import { AuthData, AuthRequest } from "../models/auth";
+import { AuthData, AuthRequest, JWTAuthenticatedUser } from "../models/auth";
 
 const prisma = new PrismaClient();
 
@@ -138,5 +138,30 @@ export class AuthService {
     } catch (error) {
       done(error);
     }
+  }
+
+  async getCurrentUser(userId: string): Promise<JWTAuthenticatedUser | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.currentOrganizationId) {
+      return null;
+    }
+
+    const organizationMember = await prisma.organizationMember.findUnique({
+      where: {
+        userId_organizationId: {
+          userId: user.id,
+          organizationId: user.currentOrganizationId,
+        },
+      },
+    });
+
+    return {
+      id: user.id,
+      currentOrganizationId: user.currentOrganizationId,
+      role: organizationMember?.role || "MEMBER",
+    };
   }
 }

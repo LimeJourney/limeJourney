@@ -26,7 +26,7 @@ const configSchema = z.object({
     clientSecret: z.string(),
   }),
   appUrl: z.string(),
-  enforceSubscriptions: z.string().default("true"),
+  enforceSubscriptions: z.boolean().default(true),
   clickhouse: z.object({
     host: z.string(),
     port: z.number().int().positive(),
@@ -65,6 +65,11 @@ const configSchema = z.object({
       })
       .optional(),
   }),
+  stripe: z.object({
+    secretKey: z.string(),
+    webhookSecret: z.string(),
+    priceId: z.string(),
+  }),
 });
 
 // Helper function to parse environment variables
@@ -91,7 +96,8 @@ const config = {
   },
   jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
   appUrl: env("APP_URL", "http://localhost:3000"),
-  enforceSubscriptions: env("ENFORCE_SUBSCRIPTIONS"),
+  enforceSubscriptions:
+    env("ENFORCE_SUBSCRIPTIONS", "true").toLowerCase() !== "false",
   clickhouse: {
     host: env("CLICKHOUSE_HOST", "http://localhost:8123"),
     port: parseInt(env("CLICKHOUSE_PORT", "9000"), 10),
@@ -130,6 +136,11 @@ const config = {
             apiKey: env("TEMPORAL_CLOUD_API_KEY"),
           }
         : undefined,
+  },
+  stripe: {
+    secretKey: env("STRIPE_SECRET_KEY"),
+    webhookSecret: env("STRIPE_WEBHOOK_SECRET"),
+    priceId: env("STRIPE_PRICE_ID"),
   },
 };
 // Parse and validate the configuration

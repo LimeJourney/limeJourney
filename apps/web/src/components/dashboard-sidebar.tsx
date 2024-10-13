@@ -88,10 +88,10 @@ const navItems: NavItem[] = [
     href: "/dashboard/journeys",
   },
   {
-    id: "channels",
-    title: "Channels",
+    id: "Profiles",
+    title: "Profiles",
     icon: Inbox,
-    href: "/dashboard/channels",
+    href: "/dashboard/profiles",
   },
   {
     id: "templates",
