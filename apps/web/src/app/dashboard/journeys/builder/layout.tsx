@@ -5,5 +5,5 @@ export default function JourneysLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <JourneyProvider>{children}</JourneyProvider>;
+  return <>{children}</>;
 }
