@@ -117,12 +117,14 @@ export class AuthController {
     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
   ): Promise<ApiResponse<JWTAuthenticatedUser> | void> {
     try {
-      const user = request.user as JWTAuthenticatedUser;
+      const userId = (request.user as JWTAuthenticatedUser).id;
+      const user = await this.authService.getCurrentUser(userId);
+
       if (!user) {
         return unauthorizedResponse(401, {
           status: "error",
           data: null,
-          message: "User not authenticated",
+          message: "User not found",
         });
       }
 
