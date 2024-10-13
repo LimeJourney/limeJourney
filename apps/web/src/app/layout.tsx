@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Inter as FontSans } from "next/font/google";
+import { SubscriptionProvider } from "@/app/contexts/SubscriptionContext";
 
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,7 +19,7 @@ export default function RootLayout({
       <body
         className={cn("min-h-screen font-sans antialiased", fontSans.variable)}
       >
-        {children}
+        <SubscriptionProvider>{children}</SubscriptionProvider>
         <Toaster />
       </body>
     </html>

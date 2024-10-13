@@ -139,4 +139,36 @@ export class AuthService {
       done(error);
     }
   }
+
+  async getCurrentUser(userId: string): Promise<JWTAuthenticatedUser | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        memberships: {
+          where: {
+            organizationId: {
+              equals: prisma.user.fields.currentOrganizationId
+            }
+          },
+          select: {
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const currentMembership = user.;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name || "",
+      currentOrganizationId: user.currentOrganizationId || "",
+      role: currentMembership?.role || UserRole.MEMBER // Use the UserRole enum
+    };
+  }
 }
