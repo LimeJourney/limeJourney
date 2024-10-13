@@ -9,21 +9,10 @@ import {
   Pause,
   BarChart2,
   Eye,
-  Filter,
-  ChevronDown,
-  ArrowRight,
-  Users,
-  Clock,
   CheckCircle,
-  XCircle,
   AlertTriangle,
-  ChevronRight,
-  Settings,
   Zap,
   UserCircle,
-  LineChart,
-  PieChart,
-  BarChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +73,8 @@ import {
   TriggerInfo,
   JourneyWithMetrics,
 } from "@/services/journeyService";
+import { useSubscription } from "@/app/contexts/SubscriptionContext";
+import { useSubscriptionCheck } from "@/hooks/useSubscriptionCheck";
 
 const JourneyManagement = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -107,6 +98,10 @@ const JourneyManagement = () => {
   );
   const router = useRouter();
   const { setNewJourneyDetails } = useJourneyContext();
+
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const checkSubscription = useSubscriptionCheck();
+  const { setShowSubscriptionModal } = useSubscription();
 
   useEffect(() => {
     fetchJourneys();
@@ -173,6 +168,7 @@ const JourneyManagement = () => {
         name: newJourneyName,
         repeatOption: newJourneyRepeatOption,
       });
+      console.log("Creating journey172...");
       router.push(`/dashboard/journeys/builder`);
     } catch (error) {
       console.error("Error creating journey:", error);
@@ -227,7 +223,12 @@ const JourneyManagement = () => {
       (activeTab === "all" || journey.status.toLowerCase() === activeTab)
   );
 
-  console.log("Filtered Journeys", filteredJourneys);
+  const handleCreateJourneyClick = async () => {
+    const isSubscribed = await checkSubscription();
+    if (isSubscribed) {
+      setIsCreateDialogOpen(true);
+    }
+  };
 
   const StatusBadge = ({ status }) => {
     const statusConfig = {
@@ -698,12 +699,21 @@ const JourneyManagement = () => {
               >
                 <BarChart2 className="mr-2 h-4 w-4" /> Analytics
               </Button>
-              <Dialog>
-                <DialogTrigger asChild>
+              <Button
+                onClick={handleCreateJourneyClick}
+                className="bg-meadow-500 text-forest-500 hover:bg-meadow-600"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Create Journey
+              </Button>
+              <Dialog
+                open={isCreateDialogOpen}
+                onOpenChange={setIsCreateDialogOpen}
+              >
+                {/* <DialogTrigger asChild>
                   <Button className="bg-meadow-500 text-forest-500 hover:bg-meadow-600">
                     <Plus className="mr-2 h-4 w-4" /> Create Journey
                   </Button>
-                </DialogTrigger>
+                </DialogTrigger> */}
                 <DialogContent className="sm:max-w-[425px] bg-forest-600 text-white border-meadow-500">
                   <DialogHeader>
                     <DialogTitle className="text-meadow-500">
