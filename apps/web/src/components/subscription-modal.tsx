@@ -50,13 +50,6 @@ const SubscriptionModal = ({ isOpen, onClose }) => {
           <DialogTitle className="text-2xl font-bold text-meadow-300">
             Subscribe to Unlock Premium Features
           </DialogTitle>
-          <Button
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-forest-700 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-meadow-300 focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-forest-600"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </Button>
         </DialogHeader>
         <div className="p-6">
           <div className="mb-6">

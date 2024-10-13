@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ConditionVisualizer from "../components/conditionVisualizer";
 import segmentationService from "@/services/segmentationService";
+import { useSubscriptionCheck } from "@/hooks/useSubscriptionCheck";
 
 interface GeneratedSegment {
   title: string;
@@ -28,22 +29,26 @@ const AIPoweredSegmentCreation: React.FC<{
     useState<GeneratedSegment | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const checkSubscription = useSubscriptionCheck();
   const handleAISegmentCreation = async () => {
-    setIsProcessing(true);
-    setError(null);
-    try {
-      const response =
-        await segmentationService.generateSegmentFromNaturalLanguage(aiInput);
-      setGeneratedSegment(response);
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An error occurred while generating the segment."
-      );
-    } finally {
-      setIsProcessing(false);
+    const isSubscribed = await checkSubscription();
+    if (isSubscribed) {
+      setIsProcessing(true);
+      setError(null);
+      try {
+        const response =
+          await segmentationService.generateSegmentFromNaturalLanguage(aiInput);
+        setGeneratedSegment(response);
+      } catch (err) {
+        console.error(err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while generating the segment."
+        );
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 

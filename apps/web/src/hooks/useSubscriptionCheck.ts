@@ -1,4 +1,5 @@
 import { useSubscription } from "@/app/contexts/SubscriptionContext";
+import { BillingService } from "@/services/billingService";
 import { OrganizationService } from "@/services/organisationService";
 import { useCallback } from "react";
 
@@ -8,7 +9,8 @@ export const useSubscriptionCheck = () => {
   const checkSubscription = useCallback(async () => {
     try {
       const org = await OrganizationService.getCurrentOrganization();
-      if (!org || org.subscriptionStatus !== "ACTIVE") {
+      const enforced = await BillingService.getSubscriptionEnforcement();
+      if (!org || (org.subscriptionStatus !== "ACTIVE" && enforced)) {
         setShowSubscriptionModal(true);
         return false;
       }
