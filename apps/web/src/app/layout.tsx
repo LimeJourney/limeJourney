@@ -2,6 +2,7 @@
 import "./globals.css";
 import { Inter as FontSans } from "next/font/google";
 import { SubscriptionProvider } from "@/app/contexts/SubscriptionContext";
+import { Analytics } from "@vercel/analytics/react";
 
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -25,6 +26,7 @@ export default function RootLayout({
           {children}
           <SubscriptionModalWrapper />
         </SubscriptionProvider>
+        <Analytics />
         <Toaster />
       </body>
     </html>
