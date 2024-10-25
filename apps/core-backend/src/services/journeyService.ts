@@ -2,6 +2,7 @@ import { Prisma, PrismaClient, JourneyStatus } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { OrchestrationService } from "./ochestrationService";
 import { Journey } from "../models/journey";
+import { logger } from "@lime/telemetry/logger";
 
 const prisma = new PrismaClient();
 
@@ -199,6 +200,7 @@ export class JourneyManagementService {
   // }
 
   async updateJourney(journeyData: UpdateJourneyDTO): Promise<Journey> {
+    console.log("journeyData", journeyData);
     const updateData: { name?: string; status?: Journey["status"] } = {};
 
     if (journeyData.name && journeyData.name.trim() !== "") {
@@ -212,21 +214,29 @@ export class JourneyManagementService {
     if (Object.keys(updateData).length === 0) {
       throw new Error("No valid update data provided");
     }
+    try {
+      const updatedJourney = await prisma.journey.update({
+        where: {
+          id: journeyData.id,
+          organizationId: journeyData.organizationId,
+        },
+        data: {
+          ...updateData,
+          status: updateData.status as JourneyStatus,
+        },
+      });
 
-    const updatedJourney = await prisma.journey.update({
-      where: { id: journeyData.id, organizationId: journeyData.organizationId },
-      data: {
-        ...updateData,
-        status: updateData.status as JourneyStatus,
-      },
-    });
+      // Handle trigger registration/unregistration based on status change
+      if (journeyData.status) {
+        await this.handleJourneyStatusChange(updatedJourney);
+      }
 
-    // Handle trigger registration/unregistration based on status change
-    if (journeyData.status) {
-      await this.handleJourneyStatusChange(updatedJourney);
+      return updatedJourney;
+    } catch (error) {
+      console.error("Error updating journey:", error);
+      logger.error("lifecycle", "Error updating journey", error as Error);
+      throw new Error("Failed to update journey");
     }
-
-    return updatedJourney;
   }
 
   private async handleJourneyStatusChange(journey: Journey): Promise<void> {

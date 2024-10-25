@@ -1139,23 +1139,16 @@ export class SegmentationService {
 
     const entities = await result.json();
 
-    const parsedEntities: EntityData[] = entities.map(
-      (entity: { properties: string; id; org_id; created_at; updated_at }) => ({
-        ...entity,
-        properties: JSON.parse(entity.properties as string),
-      })
-    );
-
-    for (const entity of parsedEntities) {
+    for (const entity of entities) {
       await this.eventQueueService.publish({
         type: EventType.TRIGGER_JOURNEY,
         journeyId,
         organizationId,
-        entityId: entity.id,
+        entityId: entity.entity_id,
         timestamp: new Date().toISOString(),
         eventName: "segment_joins",
         eventProperties: { segmentId },
-        entityData: await this.getEntityData(entity.id, organizationId),
+        entityData: await this.getEntityData(entity.entity_id, organizationId),
       });
     }
   }
@@ -1164,19 +1157,34 @@ export class SegmentationService {
     entityId: string,
     organizationId: string
   ): Promise<any> {
-    const query = `
-      SELECT * FROM entities
-      WHERE id = {entityId:String} AND org_id = {organizationId:String}
-      LIMIT 1
-    `;
+    try {
+      console.log("Getting entity data for entityId: ", entityId);
+      console.log("Getting entity data for organizationId: ", organizationId);
+      const query = `
+        SELECT * FROM entities
+        WHERE id = {entityId:String} AND org_id = {organizationId:String}
+        LIMIT 1
+      `;
 
-    const result = await this.clickhouse.query({
-      query,
-      query_params: { entityId, organizationId },
-      format: "JSONEachRow",
-    });
+      const result = await this.clickhouse.query({
+        query,
+        query_params: { entityId, organizationId },
+        format: "JSONEachRow",
+      });
 
-    const entities = await result.json();
-    return entities[0] || null;
+      const entities = await result.json();
+      return entities[0] || null;
+    } catch (error) {
+      console.log("Error getting entity data: ", error);
+      logger.error(
+        "segmentation",
+        `Failed to get entity data for entityId: ${entityId}`,
+        error instanceof Error ? error : new Error(String(error)),
+        { organizationId }
+      );
+      // You might want to throw a custom error here or return null/undefined
+      // depending on how you want to handle this error in the calling code
+      return null;
+    }
   }
 }
