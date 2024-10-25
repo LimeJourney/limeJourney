@@ -1137,7 +1137,7 @@ export class SegmentationService {
       format: "JSONEachRow",
     });
 
-    const entities = await result.json();
+    const entities = (await result.json()) as Array<{ entity_id: string }>;
 
     for (const entity of entities) {
       await this.eventQueueService.publish({
