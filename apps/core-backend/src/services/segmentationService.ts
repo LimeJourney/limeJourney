@@ -17,12 +17,11 @@ import {
   EntityCreatedEvent,
   EntityUpdatedEvent,
   EventOccurredEvent,
+  EventQueueService,
   EventType,
 } from "../lib/queue";
-import Anthropic from "@anthropic-ai/sdk";
-import { EntityService } from "./entitiesService";
-import { AppConfig } from "@lime/config";
-import { EventService } from "./eventsService";
+import { RedisManager } from "lib/redis";
+import { EntityData } from "./entitiesService";
 const prisma = new PrismaClient();
 
 interface SegmentSizeResult {
@@ -36,9 +35,13 @@ interface SegmentMembership {
 
 export class SegmentationService {
   private clickhouse: ClickHouseClient;
+  private redisManager: RedisManager;
+  private eventQueueService: EventQueueService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
+    this.redisManager = RedisManager.getInstance();
+    this.eventQueueService = EventQueueService.getInstance();
   }
 
   async createSegment(
@@ -907,5 +910,151 @@ export class SegmentationService {
       eventName,
       eventProperties
     );
+  }
+
+  async registerSegmentTrigger(
+    journeyId: string,
+    organizationId: string,
+    segmentId: string,
+    action: "joins" | "leaves"
+  ): Promise<void> {
+    const key = `segment:${segmentId}:${action}:journeys:${organizationId}`;
+    await this.redisManager.sAdd(key, journeyId);
+    logger.info(
+      "segmentation",
+      `Registered journey ${journeyId} for segment ${segmentId} ${action} action`
+    );
+
+    // If it's a 'joins' action, trigger the journey for all existing members
+    if (action === "joins") {
+      await this.triggerJourneyForExistingMembers(
+        journeyId,
+        organizationId,
+        segmentId
+      );
+    }
+  }
+
+  async unregisterSegmentTrigger(
+    journeyId: string,
+    organizationId: string,
+    segmentId: string,
+    action: "joins" | "leaves"
+  ): Promise<void> {
+    const key = `segment:${segmentId}:${action}:journeys:${organizationId}`;
+    await this.redisManager.sRem(key, journeyId);
+    logger.info(
+      "segmentation",
+      `Unregistered journey ${journeyId} for segment ${segmentId} ${action} action`
+    );
+  }
+
+  async handleEntityJoinedSegment(
+    organizationId: string,
+    segmentId: string,
+    entityId: string
+  ): Promise<void> {
+    await this.triggerJourneysForSegmentAction(
+      organizationId,
+      segmentId,
+      entityId,
+      "joins"
+    );
+  }
+
+  async handleEntityLeftSegment(
+    organizationId: string,
+    segmentId: string,
+    entityId: string
+  ): Promise<void> {
+    await this.triggerJourneysForSegmentAction(
+      organizationId,
+      segmentId,
+      entityId,
+      "leaves"
+    );
+  }
+
+  private async triggerJourneysForSegmentAction(
+    organizationId: string,
+    segmentId: string,
+    entityId: string,
+    action: "joins" | "leaves"
+  ): Promise<void> {
+    const key = `segment:${segmentId}:${action}:journeys:${organizationId}`;
+    const journeyIds = await this.redisManager.sMembers(key);
+
+    for (const journeyId of journeyIds) {
+      await this.eventQueueService.publish({
+        type: EventType.TRIGGER_JOURNEY,
+        journeyId,
+        organizationId,
+        entityId,
+        timestamp: new Date().toISOString(),
+        eventName: `segment_${action}`,
+        eventProperties: { segmentId },
+        entityData: await this.getEntityData(entityId, organizationId),
+      });
+    }
+  }
+
+  private async triggerJourneyForExistingMembers(
+    journeyId: string,
+    organizationId: string,
+    segmentId: string
+  ): Promise<void> {
+    const query = `
+      SELECT entity_id
+      FROM segment_memberships
+      WHERE segment_id = {segmentId:String} AND org_id = {organizationId:String}
+    `;
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: { segmentId, organizationId },
+      format: "JSONEachRow",
+    });
+
+    const entities = await result.json();
+
+    const parsedEntities: EntityData[] = entities.map(
+      (entity: { properties: string; id; org_id; created_at; updated_at }) => ({
+        ...entity,
+        properties: JSON.parse(entity.properties as string),
+      })
+    );
+
+    for (const entity of parsedEntities) {
+      await this.eventQueueService.publish({
+        type: EventType.TRIGGER_JOURNEY,
+        journeyId,
+        organizationId,
+        entityId: entity.id,
+        timestamp: new Date().toISOString(),
+        eventName: "segment_joins",
+        eventProperties: { segmentId },
+        entityData: await this.getEntityData(entity.id, organizationId),
+      });
+    }
+  }
+
+  private async getEntityData(
+    entityId: string,
+    organizationId: string
+  ): Promise<any> {
+    const query = `
+      SELECT * FROM entities
+      WHERE id = {entityId:String} AND org_id = {organizationId:String}
+      LIMIT 1
+    `;
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: { entityId, organizationId },
+      format: "JSONEachRow",
+    });
+
+    const entities = await result.json();
+    return entities[0] || null;
   }
 }

@@ -16,7 +16,8 @@ type LogCategory =
   | "events"
   | "redis"
   | "temporal"
-  | "worker";
+  | "worker"
+  | "segmentation";
 
 type LogLevel =
   | "error"
