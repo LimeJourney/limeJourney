@@ -131,9 +131,7 @@ const Home = () => {
               At The Right Time
             </h1>
             <p className="text-xl text-bold text-forest-700 max-w-2xl mx-auto drop-shadow-sm">
-              Your customers are waiting to hear from you — LimeJourney helps
-              businesses deliver the perfect message at the perfect moment
-              powered by AI.
+              Your customers are waiting to hear from you — LimeJourney is a customer engagement platform that intelligently delivers notifications, nudging your users at the perfect moment. Built for marketing teams, loved by developers
             </p>
           </motion.div>
 
