@@ -55,6 +55,11 @@ export class EventHandler {
       EventType.TRIGGER_JOURNEY,
       this.handleJourneyTriggered
     );
+
+    this.eventQueueService.registerEventHandler(
+      EventType.SEGMENT_UPDATED,
+      this.handleSegmentUpdated
+    );
   }
 
   /**
@@ -133,6 +138,30 @@ export class EventHandler {
       } catch (error) {
         console.error(`Error starting journey workflow: ${error}`);
         // Handle the error appropriately
+      }
+    }
+  };
+
+  private handleSegmentUpdated = async (event: Event): Promise<void> => {
+    if (event.type === EventType.SEGMENT_UPDATED) {
+      // Evaluate which entities joined or left the segment
+      const { segmentId, organizationId, addedEntities, removedEntities } =
+        event;
+
+      for (const entityId of addedEntities) {
+        await this.segmentationService.handleEntityJoinedSegment(
+          organizationId,
+          segmentId,
+          entityId
+        );
+      }
+
+      for (const entityId of removedEntities) {
+        await this.segmentationService.handleEntityLeftSegment(
+          organizationId,
+          segmentId,
+          entityId
+        );
       }
     }
   };

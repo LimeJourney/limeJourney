@@ -9,7 +9,12 @@ import {
   SegmentAnalytics,
 } from "../models/segmentation";
 import { Prisma, PrismaClient } from "@prisma/client";
-import { DatabaseError, ValidationError, NotFoundError } from "@lime/errors";
+import {
+  DatabaseError,
+  ValidationError,
+  NotFoundError,
+  AppError,
+} from "@lime/errors";
 import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
@@ -17,12 +22,11 @@ import {
   EntityCreatedEvent,
   EntityUpdatedEvent,
   EventOccurredEvent,
+  EventQueueService,
   EventType,
 } from "../lib/queue";
-import Anthropic from "@anthropic-ai/sdk";
-import { EntityService } from "./entitiesService";
-import { AppConfig } from "@lime/config";
-import { EventService } from "./eventsService";
+import { RedisManager } from "../lib/redis";
+import { EntityData } from "./entitiesService";
 const prisma = new PrismaClient();
 
 interface SegmentSizeResult {
@@ -36,9 +40,13 @@ interface SegmentMembership {
 
 export class SegmentationService {
   private clickhouse: ClickHouseClient;
+  private redisManager: RedisManager;
+  private eventQueueService: EventQueueService;
 
   constructor() {
     this.clickhouse = clickhouseManager.getClient();
+    this.redisManager = RedisManager.getInstance();
+    this.eventQueueService = EventQueueService.getInstance();
   }
 
   async createSegment(
@@ -176,6 +184,13 @@ export class SegmentationService {
     data: UpdateSegmentDTO
   ): Promise<Segment | null> {
     try {
+      // Get current members before update
+      const currentMembers = await this.getEntitiesInSegment(
+        segmentId,
+        organizationId
+      );
+      const currentMemberSet = new Set(currentMembers);
+
       const segment = await prisma.segment.update({
         where: {
           id: segmentId,
@@ -199,6 +214,40 @@ export class SegmentationService {
         segmentId,
         typedSegment
       );
+
+      // Get new members after update
+      const newMembers = await this.getEntitiesInSegment(
+        segmentId,
+        organizationId
+      );
+      const newMemberSet = new Set(newMembers);
+
+      // Calculate added and removed entities
+      const addedEntities = newMembers.filter(
+        (id) => !currentMemberSet.has(id)
+      );
+      const removedEntities = currentMembers.filter(
+        (id) => !newMemberSet.has(id)
+      );
+
+      // If there are any changes, publish the event
+      if (addedEntities.length > 0 || removedEntities.length > 0) {
+        await this.eventQueueService.publish({
+          type: EventType.SEGMENT_UPDATED,
+          segmentId,
+          organizationId,
+          addedEntities,
+          removedEntities,
+          timestamp: new Date().toISOString(),
+        });
+
+        logger.info("segmentation", `Published segment update event`, {
+          organizationId,
+          segmentId,
+          addedCount: addedEntities.length,
+          removedCount: removedEntities.length,
+        });
+      }
 
       logger.info("lifecycle", `Updated segment ${segmentId}`, {
         organizationId,
@@ -715,15 +764,26 @@ export class SegmentationService {
     const segments = await this.listSegments(organizationId);
     const matchedSegments: string[] = [];
 
+    // Get current segment memberships before making any changes
+    const currentMemberships = await this.getCurrentSegmentMembers(
+      entityId,
+      organizationId
+    );
+    const currentMembershipSet = new Set(currentMemberships);
+
+    // Track changes for publishing events
+    const changes: Record<string, { added: boolean }> = {};
+
     for (const segment of segments) {
-      if (
-        await this.evaluateSegmentConditions(
-          segment,
-          entityId,
-          eventName,
-          eventProperties
-        )
-      ) {
+      const wasInSegment = currentMembershipSet.has(segment.id);
+      const isInSegment = await this.evaluateSegmentConditions(
+        segment,
+        entityId,
+        eventName,
+        eventProperties
+      );
+
+      if (isInSegment) {
         matchedSegments.push(segment.id);
         await this.updateSegmentMembership(
           segment.id,
@@ -731,6 +791,11 @@ export class SegmentationService {
           true,
           organizationId
         );
+
+        // Track if this is a new addition
+        if (!wasInSegment) {
+          changes[segment.id] = { added: true };
+        }
       } else {
         await this.updateSegmentMembership(
           segment.id,
@@ -738,10 +803,63 @@ export class SegmentationService {
           false,
           organizationId
         );
+
+        // Track if this is a removal
+        if (wasInSegment) {
+          changes[segment.id] = { added: false };
+        }
       }
     }
 
+    // Publish events for all changes
+    await this.publishSegmentChangeEvents(organizationId, entityId, changes);
+
     return matchedSegments;
+  }
+
+  private async getCurrentSegmentMembers(
+    entityId: string,
+    organizationId: string
+  ): Promise<string[]> {
+    const query = `
+      SELECT DISTINCT segment_id
+      FROM segment_memberships
+      WHERE entity_id = {entityId:String}
+      AND org_id = {organizationId:String}
+    `;
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: { entityId, organizationId },
+      format: "JSONEachRow",
+    });
+
+    const data = await result.json();
+    return data.map((row: any) => row.segment_id);
+  }
+
+  private async publishSegmentChangeEvents(
+    organizationId: string,
+    entityId: string,
+    changes: Record<string, { added: boolean }>
+  ): Promise<void> {
+    for (const [segmentId, change] of Object.entries(changes)) {
+      await this.eventQueueService.publish({
+        type: EventType.SEGMENT_UPDATED,
+        segmentId,
+        organizationId,
+        addedEntities: change.added ? [entityId] : [],
+        removedEntities: change.added ? [] : [entityId],
+        timestamp: new Date().toISOString(),
+      });
+
+      logger.info("segmentation", `Published segment membership change`, {
+        organizationId,
+        entityId,
+        segmentId,
+        changeType: change.added ? "added" : "removed",
+      });
+    }
   }
 
   async refreshSegmentMembership(
@@ -900,12 +1018,173 @@ export class SegmentationService {
         eventProperties = event.eventProperties;
         break;
     }
+    try {
+      const matchedSegments = await this.evaluateSegmentMembership(
+        baseEventData.organizationId,
+        baseEventData.entityId,
+        eventName,
+        eventProperties
+      );
+    } catch (error) {
+      logger.error(
+        "segmentation",
+        `Failed to process event for segmentation`,
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+  }
 
-    const matchedSegments = await this.evaluateSegmentMembership(
-      baseEventData.organizationId,
-      baseEventData.entityId,
-      eventName,
-      eventProperties
+  async registerSegmentTrigger(
+    journeyId: string,
+    organizationId: string,
+    segmentId: string,
+    action: "joins" | "leaves"
+  ): Promise<void> {
+    const key = `segment:${segmentId}:${action}:journeys:${organizationId}`;
+    await this.redisManager.sAdd(key, journeyId);
+    logger.info(
+      "segmentation",
+      `Registered journey ${journeyId} for segment ${segmentId} ${action} action`
     );
+
+    // If it's a 'joins' action, trigger the journey for all existing members
+    if (action === "joins") {
+      await this.triggerJourneyForExistingMembers(
+        journeyId,
+        organizationId,
+        segmentId
+      );
+    }
+  }
+
+  async unregisterSegmentTrigger(
+    journeyId: string,
+    organizationId: string,
+    segmentId: string,
+    action: "joins" | "leaves"
+  ): Promise<void> {
+    const key = `segment:${segmentId}:${action}:journeys:${organizationId}`;
+    await this.redisManager.sRem(key, journeyId);
+    logger.info(
+      "segmentation",
+      `Unregistered journey ${journeyId} for segment ${segmentId} ${action} action`
+    );
+  }
+
+  async handleEntityJoinedSegment(
+    organizationId: string,
+    segmentId: string,
+    entityId: string
+  ): Promise<void> {
+    await this.triggerJourneysForSegmentAction(
+      organizationId,
+      segmentId,
+      entityId,
+      "joins"
+    );
+  }
+
+  async handleEntityLeftSegment(
+    organizationId: string,
+    segmentId: string,
+    entityId: string
+  ): Promise<void> {
+    await this.triggerJourneysForSegmentAction(
+      organizationId,
+      segmentId,
+      entityId,
+      "leaves"
+    );
+  }
+
+  private async triggerJourneysForSegmentAction(
+    organizationId: string,
+    segmentId: string,
+    entityId: string,
+    action: "joins" | "leaves"
+  ): Promise<void> {
+    const key = `segment:${segmentId}:${action}:journeys:${organizationId}`;
+    const journeyIds = await this.redisManager.sMembers(key);
+
+    for (const journeyId of journeyIds) {
+      await this.eventQueueService.publish({
+        type: EventType.TRIGGER_JOURNEY,
+        journeyId,
+        organizationId,
+        entityId,
+        timestamp: new Date().toISOString(),
+        eventName: `segment_${action}`,
+        eventProperties: { segmentId },
+        entityData: await this.getEntityData(entityId, organizationId),
+      });
+    }
+  }
+
+  private async triggerJourneyForExistingMembers(
+    journeyId: string,
+    organizationId: string,
+    segmentId: string
+  ): Promise<void> {
+    const query = `
+      SELECT entity_id
+      FROM segment_memberships
+      WHERE segment_id = {segmentId:String} AND org_id = {organizationId:String}
+    `;
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: { segmentId, organizationId },
+      format: "JSONEachRow",
+    });
+
+    const entities = await result.json();
+
+    for (const entity of entities) {
+      await this.eventQueueService.publish({
+        type: EventType.TRIGGER_JOURNEY,
+        journeyId,
+        organizationId,
+        entityId: entity.entity_id,
+        timestamp: new Date().toISOString(),
+        eventName: "segment_joins",
+        eventProperties: { segmentId },
+        entityData: await this.getEntityData(entity.entity_id, organizationId),
+      });
+    }
+  }
+
+  private async getEntityData(
+    entityId: string,
+    organizationId: string
+  ): Promise<any> {
+    try {
+      console.log("Getting entity data for entityId: ", entityId);
+      console.log("Getting entity data for organizationId: ", organizationId);
+      const query = `
+        SELECT * FROM entities
+        WHERE id = {entityId:String} AND org_id = {organizationId:String}
+        LIMIT 1
+      `;
+
+      const result = await this.clickhouse.query({
+        query,
+        query_params: { entityId, organizationId },
+        format: "JSONEachRow",
+      });
+
+      const entities = await result.json();
+      return entities[0] || null;
+    } catch (error) {
+      console.log("Error getting entity data: ", error);
+      logger.error(
+        "segmentation",
+        `Failed to get entity data for entityId: ${entityId}`,
+        error instanceof Error ? error : new Error(String(error)),
+        { organizationId }
+      );
+      // You might want to throw a custom error here or return null/undefined
+      // depending on how you want to handle this error in the calling code
+      return null;
+    }
   }
 }

@@ -142,6 +142,7 @@ export class MessagingProfileService {
           ...data,
           requiredFields: data.requiredFields,
           credentials: encryptedCredentials,
+          status: "active",
         },
         include: { integration: true },
       });

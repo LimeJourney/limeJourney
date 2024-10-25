@@ -258,7 +258,7 @@ const FeatureShowcase = () => {
                   height="40"
                   rx="2"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <line
                   x1="12"
@@ -266,7 +266,7 @@ const FeatureShowcase = () => {
                   x2="33"
                   y2="15"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <line
                   x1="12"
@@ -274,7 +274,7 @@ const FeatureShowcase = () => {
                   x2="33"
                   y2="25"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <line
                   x1="12"
@@ -282,20 +282,20 @@ const FeatureShowcase = () => {
                   x2="25"
                   y2="35"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <path
                   d="M35 30L40 35L45 30"
                   stroke="#22C55E"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
                 <path
                   d="M40 35V45"
                   stroke="#22C55E"
-                  stroke-width="2"
-                  stroke-linecap="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 />
               </svg>
             }
@@ -326,17 +326,17 @@ const FeatureShowcase = () => {
                 <path
                   d="M25 2L2 14.5L25 27L48 14.5L25 2Z"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <path
                   d="M2 35.5L25 48L48 35.5"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <path
                   d="M2 25L25 37.5L48 25"
                   stroke="#22C55E"
-                  stroke-width="2"
+                  strokeWidth="2"
                 />
                 <circle cx="25" cy="25" r="5" fill="#22C55E" />
               </svg>

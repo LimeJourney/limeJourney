@@ -58,9 +58,13 @@ export class OrchestrationService {
             trigger
           );
           break;
-        // case TriggerType.SEGMENT:
-        //   await this.registerSegmentTrigger(journey.id, trigger);
-        //   break;
+        case TriggerType.SEGMENT:
+          await this.registerSegmentTrigger(
+            journey.id,
+            journey.organizationId,
+            trigger
+          );
+          break;
         // case TriggerType.TIME:
         //   await this.registerTimeTrigger(journey.id, trigger);
         //   break;
@@ -81,9 +85,13 @@ export class OrchestrationService {
             trigger
           );
           break;
-        // case TriggerType.SEGMENT:
-        //   await this.unregisterSegmentTrigger(journey.id, trigger);
-        //   break;
+        case TriggerType.SEGMENT:
+          await this.unregisterSegmentTrigger(
+            journey.id,
+            journey.organizationId,
+            trigger
+          );
+          break;
         // case TriggerType.TIME:
         //   await this.unregisterTimeTrigger(journey.id, trigger);
         //   break;
@@ -94,19 +102,15 @@ export class OrchestrationService {
   }
 
   private extractTriggers(journey: Journey): Trigger[] {
-    console.log("journey", journey.definition);
-
     // Check if journey.definition is already an object
     const definition =
       typeof journey.definition === "string"
         ? JSON.parse(journey.definition)
         : journey.definition;
 
-    console.log("definition", definition);
     const triggers: Trigger[] = [];
 
     for (const node of definition.nodes) {
-      console.log("node", node);
       if (node.type === "triggerNode") {
         switch (node.data.triggerType) {
           case "segment":
@@ -160,27 +164,31 @@ export class OrchestrationService {
     );
   }
 
-  //   private async registerSegmentTrigger(
-  //     journeyId: string,
-  //     trigger: SegmentTrigger
-  //   ): Promise<void> {
-  //     await this.segmentationService.registerJourneyForSegment(
-  //       journeyId,
-  //       trigger.segmentId,
-  //       trigger.action
-  //     );
-  //   }
+  private async registerSegmentTrigger(
+    journeyId: string,
+    organizationId: string,
+    trigger: SegmentTrigger
+  ): Promise<void> {
+    await this.segmentationService.registerSegmentTrigger(
+      journeyId,
+      organizationId,
+      trigger.segmentId,
+      trigger.action
+    );
+  }
 
-  // private async unregisterSegmentTrigger(
-  //   journeyId: string,
-  //   trigger: SegmentTrigger
-  // ): Promise<void> {
-  //   await this.segmentationService.unregisterJourneyForSegment(
-  //     journeyId,
-  //     trigger.segmentId,
-  //     trigger.action
-  //   );
-  // }
+  private async unregisterSegmentTrigger(
+    journeyId: string,
+    organizationId: string,
+    trigger: SegmentTrigger
+  ): Promise<void> {
+    await this.segmentationService.unregisterSegmentTrigger(
+      journeyId,
+      organizationId,
+      trigger.segmentId,
+      trigger.action
+    );
+  }
 
   private async unregisterTimeTrigger(
     journeyId: string,
@@ -190,6 +198,4 @@ export class OrchestrationService {
     // This might involve removing scheduled jobs or tasks
     console.log(`Unregistering time trigger for journey ${journeyId}`);
   }
-
-  // ... existing code ...
 }
