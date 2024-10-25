@@ -9,7 +9,12 @@ import {
   SegmentAnalytics,
 } from "../models/segmentation";
 import { Prisma, PrismaClient } from "@prisma/client";
-import { DatabaseError, ValidationError, NotFoundError } from "@lime/errors";
+import {
+  DatabaseError,
+  ValidationError,
+  NotFoundError,
+  AppError,
+} from "@lime/errors";
 import { clickhouseManager } from "../lib/clickhouse";
 import { ClickHouseClient } from "@clickhouse/client";
 import { logger } from "@lime/telemetry/logger";
@@ -20,7 +25,7 @@ import {
   EventQueueService,
   EventType,
 } from "../lib/queue";
-import { RedisManager } from "lib/redis";
+import { RedisManager } from "../lib/redis";
 import { EntityData } from "./entitiesService";
 const prisma = new PrismaClient();
 
@@ -179,6 +184,13 @@ export class SegmentationService {
     data: UpdateSegmentDTO
   ): Promise<Segment | null> {
     try {
+      // Get current members before update
+      const currentMembers = await this.getEntitiesInSegment(
+        segmentId,
+        organizationId
+      );
+      const currentMemberSet = new Set(currentMembers);
+
       const segment = await prisma.segment.update({
         where: {
           id: segmentId,
@@ -202,6 +214,40 @@ export class SegmentationService {
         segmentId,
         typedSegment
       );
+
+      // Get new members after update
+      const newMembers = await this.getEntitiesInSegment(
+        segmentId,
+        organizationId
+      );
+      const newMemberSet = new Set(newMembers);
+
+      // Calculate added and removed entities
+      const addedEntities = newMembers.filter(
+        (id) => !currentMemberSet.has(id)
+      );
+      const removedEntities = currentMembers.filter(
+        (id) => !newMemberSet.has(id)
+      );
+
+      // If there are any changes, publish the event
+      if (addedEntities.length > 0 || removedEntities.length > 0) {
+        await this.eventQueueService.publish({
+          type: EventType.SEGMENT_UPDATED,
+          segmentId,
+          organizationId,
+          addedEntities,
+          removedEntities,
+          timestamp: new Date().toISOString(),
+        });
+
+        logger.info("segmentation", `Published segment update event`, {
+          organizationId,
+          segmentId,
+          addedCount: addedEntities.length,
+          removedCount: removedEntities.length,
+        });
+      }
 
       logger.info("lifecycle", `Updated segment ${segmentId}`, {
         organizationId,
@@ -718,15 +764,26 @@ export class SegmentationService {
     const segments = await this.listSegments(organizationId);
     const matchedSegments: string[] = [];
 
+    // Get current segment memberships before making any changes
+    const currentMemberships = await this.getCurrentSegmentMembers(
+      entityId,
+      organizationId
+    );
+    const currentMembershipSet = new Set(currentMemberships);
+
+    // Track changes for publishing events
+    const changes: Record<string, { added: boolean }> = {};
+
     for (const segment of segments) {
-      if (
-        await this.evaluateSegmentConditions(
-          segment,
-          entityId,
-          eventName,
-          eventProperties
-        )
-      ) {
+      const wasInSegment = currentMembershipSet.has(segment.id);
+      const isInSegment = await this.evaluateSegmentConditions(
+        segment,
+        entityId,
+        eventName,
+        eventProperties
+      );
+
+      if (isInSegment) {
         matchedSegments.push(segment.id);
         await this.updateSegmentMembership(
           segment.id,
@@ -734,6 +791,11 @@ export class SegmentationService {
           true,
           organizationId
         );
+
+        // Track if this is a new addition
+        if (!wasInSegment) {
+          changes[segment.id] = { added: true };
+        }
       } else {
         await this.updateSegmentMembership(
           segment.id,
@@ -741,10 +803,63 @@ export class SegmentationService {
           false,
           organizationId
         );
+
+        // Track if this is a removal
+        if (wasInSegment) {
+          changes[segment.id] = { added: false };
+        }
       }
     }
 
+    // Publish events for all changes
+    await this.publishSegmentChangeEvents(organizationId, entityId, changes);
+
     return matchedSegments;
+  }
+
+  private async getCurrentSegmentMembers(
+    entityId: string,
+    organizationId: string
+  ): Promise<string[]> {
+    const query = `
+      SELECT DISTINCT segment_id
+      FROM segment_memberships
+      WHERE entity_id = {entityId:String}
+      AND org_id = {organizationId:String}
+    `;
+
+    const result = await this.clickhouse.query({
+      query,
+      query_params: { entityId, organizationId },
+      format: "JSONEachRow",
+    });
+
+    const data = await result.json();
+    return data.map((row: any) => row.segment_id);
+  }
+
+  private async publishSegmentChangeEvents(
+    organizationId: string,
+    entityId: string,
+    changes: Record<string, { added: boolean }>
+  ): Promise<void> {
+    for (const [segmentId, change] of Object.entries(changes)) {
+      await this.eventQueueService.publish({
+        type: EventType.SEGMENT_UPDATED,
+        segmentId,
+        organizationId,
+        addedEntities: change.added ? [entityId] : [],
+        removedEntities: change.added ? [] : [entityId],
+        timestamp: new Date().toISOString(),
+      });
+
+      logger.info("segmentation", `Published segment membership change`, {
+        organizationId,
+        entityId,
+        segmentId,
+        changeType: change.added ? "added" : "removed",
+      });
+    }
   }
 
   async refreshSegmentMembership(
@@ -903,13 +1018,20 @@ export class SegmentationService {
         eventProperties = event.eventProperties;
         break;
     }
-
-    const matchedSegments = await this.evaluateSegmentMembership(
-      baseEventData.organizationId,
-      baseEventData.entityId,
-      eventName,
-      eventProperties
-    );
+    try {
+      const matchedSegments = await this.evaluateSegmentMembership(
+        baseEventData.organizationId,
+        baseEventData.entityId,
+        eventName,
+        eventProperties
+      );
+    } catch (error) {
+      logger.error(
+        "segmentation",
+        `Failed to process event for segmentation`,
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
   }
 
   async registerSegmentTrigger(

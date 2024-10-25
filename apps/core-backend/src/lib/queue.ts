@@ -30,11 +30,11 @@ export interface EntityUpdatedEvent extends BaseEvent {
   changes: Record<string, any>;
 }
 
-export interface SegmentUpdatedEvent extends BaseEvent {
-  type: EventType.SEGMENT_UPDATED;
-  segmentId: string;
-  changes: Record<string, any>;
-}
+// export interface SegmentUpdatedEvent extends BaseEvent {
+//   type: EventType.SEGMENT_UPDATED;
+//   segmentId: string;
+//   changes: Record<string, any>;
+// }
 
 export interface EventOccurredEvent extends BaseEvent {
   type: EventType.EVENT_OCCURRED;
@@ -53,12 +53,20 @@ export interface TriggerJourneyEvent extends BaseEvent {
   entityData: EntityData;
 }
 
+export interface SegmentUpdatedEvent extends BaseEvent {
+  type: EventType.SEGMENT_UPDATED;
+  segmentId: string;
+  addedEntities: string[];
+  removedEntities: string[];
+}
+
 export type Event =
   | EntityCreatedEvent
   | EntityUpdatedEvent
   | SegmentUpdatedEvent
   | EventOccurredEvent
-  | TriggerJourneyEvent;
+  | TriggerJourneyEvent
+  | SegmentUpdatedEvent;
 
 interface IQueue {
   publish(topic: string, message: any): Promise<void>;
