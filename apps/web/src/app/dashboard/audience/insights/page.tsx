@@ -31,6 +31,7 @@ import {
   RecentQuery,
   OrganizationInsights,
 } from "@/services/insightService";
+import AIResponse from "@/components/ai-response";
 
 interface EventData {
   name: string;
@@ -206,17 +207,18 @@ const AIInsightsPage: React.FC = () => {
               </Button>
             </div>
             {insightResponse && (
-              <Alert className="bg-meadow-500 text-forest-900 border-none">
-                <AlertTitle className="text-lg font-semibold mb-2">
-                  AI Response
-                </AlertTitle>
-                <AlertDescription>
-                  <p className="text-forest-800">{insightResponse.insight}</p>
-                  <p className="text-sm mt-2">
-                    Confidence: {(insightResponse.confidence * 100).toFixed(2)}%
-                  </p>
-                </AlertDescription>
-              </Alert>
+              <AIResponse
+                insight={insightResponse.insight}
+                confidence={insightResponse.confidence}
+                onCopy={() => {
+                  navigator.clipboard.writeText(insightResponse.insight);
+                  // You could add a toast notification here
+                }}
+                onFeedback={(isPositive) => {
+                  // Handle feedback submission to your backend
+                  console.log("Feedback:", isPositive);
+                }}
+              />
             )}
           </CardContent>
         </Card>
