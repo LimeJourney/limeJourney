@@ -71,6 +71,7 @@ export type Event =
 interface IQueue {
   publish(topic: string, message: any): Promise<void>;
   subscribe(topic: string, callback: (message: any) => void): Promise<void>;
+  connect?(): Promise<void>;
 }
 
 class SimpleInMemoryEventQueue extends EventEmitter implements IQueue {
@@ -85,6 +86,10 @@ class SimpleInMemoryEventQueue extends EventEmitter implements IQueue {
   ): Promise<void> {
     this.on(topic, callback);
     logger.info("events", `Subscribed to topic: ${topic}`, { topic });
+  }
+
+  async connect(): Promise<void> {
+    logger.info("events", "Simple in-memory event queue connected");
   }
 }
 
@@ -215,20 +220,20 @@ class EventQueueService {
   }
 
   async initialize(): Promise<void> {
-    if (this.queue instanceof KafkaEventQueue) {
-      try {
-        await this.queue.connect();
-        logger.info("events", "EventQueueService initialized and connected");
-        await this.subscribeToEvents();
-      } catch (error) {
-        logger.error(
-          "events",
-          "Failed to initialize EventQueueService",
-          error as Error
-        );
-        throw error;
-      }
+    // if (this.queue instanceof KafkaEventQueue) {
+    try {
+      await this.queue.connect();
+      logger.info("events", "EventQueueService initialized and connected");
+      await this.subscribeToEvents();
+    } catch (error) {
+      logger.error(
+        "events",
+        "Failed to initialize EventQueueService",
+        error as Error
+      );
+      throw error;
     }
+    // }
   }
 
   async shutdown(): Promise<void> {

@@ -300,4 +300,38 @@ export class MessagingProfileService {
       );
     }
   }
+
+  async getProfileWithCredentials(
+    id: string,
+    organizationId: string
+  ): Promise<MessagingProfile | null> {
+    try {
+      const profile = await prisma.messagingProfile.findFirst({
+        where: { id, organizationId },
+        include: { integration: true },
+      });
+
+      if (!profile) return null;
+
+      const confidentialFields = JSON.parse(
+        profile.integration.confidentialFields as string
+      ) as string[];
+
+      const decryptedCredentials = this.decryptCredentials(
+        profile.credentials as Prisma.JsonObject,
+        confidentialFields
+      );
+
+      return {
+        ...profile,
+        credentials: decryptedCredentials,
+      };
+    } catch (error) {
+      throw new AppError(
+        "Failed to fetch messaging profile with credentials",
+        500,
+        "PROFILE_FETCH_ERROR"
+      );
+    }
+  }
 }
