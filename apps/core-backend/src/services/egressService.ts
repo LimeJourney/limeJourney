@@ -11,6 +11,7 @@ import { TemplateService } from "./templateService";
 import { EntityData } from "./entitiesService";
 import { Resend } from "resend";
 import fetch, { Headers, Response, Request } from "node-fetch";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 interface EmailData {
   label: "email";
@@ -120,9 +121,9 @@ export class EgressService {
       case "RESEND":
         await this.sendWithResend(profile, emailOptions);
         break;
-      // case "AWS_SES":
-      //   await this.sendWithAWSSES(profile, emailOptions);
-      //   break;
+      case "AWS_SES":
+        await this.sendWithAWSSES(profile, emailOptions);
+        break;
       // Add more cases for other email service providers
       default:
         throw new AppError(
@@ -206,9 +207,107 @@ export class EgressService {
     profile: MessagingProfile,
     emailOptions: { to: string; subject: string; html: string }
   ): Promise<void> {
-    // Implement AWS SES-specific sending logic
-    // You would typically use AWS SDK here
-    console.log("Sending with AWS SES", { profile, emailOptions });
+    try {
+      // Extract AWS credentials from the profile
+      const credentials = profile.credentials as Record<string, any>;
+      if (
+        !credentials.accessKeyId ||
+        !credentials.secretAccessKey ||
+        !credentials.region
+      ) {
+        throw new AppError(
+          "Missing required AWS credentials",
+          400,
+          "MISSING_AWS_CREDENTIALS"
+        );
+      }
+
+      // Get the sender email from required fields
+      const requiredFields = profile.requiredFields as Record<string, any>;
+      if (!requiredFields.fromEmail) {
+        throw new AppError(
+          "Sender email not found in profile required fields",
+          400,
+          "MISSING_FROM_EMAIL"
+        );
+      }
+
+      // Initialize SES client
+      const sesClient = new SESClient({
+        region: credentials.region,
+        credentials: {
+          accessKeyId: credentials.accessKeyId,
+          secretAccessKey: credentials.secretAccessKey,
+        },
+      });
+
+      // Construct the email parameters
+      const params = {
+        Source: requiredFields.fromEmail,
+        Destination: {
+          ToAddresses: [emailOptions.to],
+        },
+        Message: {
+          Subject: {
+            Data: emailOptions.subject,
+            Charset: "UTF-8",
+          },
+          Body: {
+            Html: {
+              Data: emailOptions.html,
+              Charset: "UTF-8",
+            },
+          },
+        },
+        ReplyToAddresses: requiredFields.replyToEmail
+          ? [requiredFields.replyToEmail]
+          : [requiredFields.fromEmail],
+      };
+
+      // Send the email
+      const command = new SendEmailCommand(params);
+      const response = await sesClient.send(command);
+
+      if (response.$metadata.httpStatusCode !== 200) {
+        throw new AppError(
+          "Failed to send email through AWS SES",
+          500,
+          "SES_SEND_ERROR"
+        );
+      }
+
+      logger.info(
+        "email",
+        `Email sent successfully via AWS SES. MessageId: ${response.MessageId}`
+      );
+    } catch (error: any) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      // Handle AWS-specific errors
+      if (error.name === "MessageRejected") {
+        throw new AppError(
+          `Email rejected by AWS SES: ${error.message}`,
+          400,
+          "SES_MESSAGE_REJECTED"
+        );
+      }
+
+      if (error.name === "ThrottlingException") {
+        throw new AppError(
+          "AWS SES rate limit exceeded",
+          429,
+          "SES_RATE_LIMIT_EXCEEDED"
+        );
+      }
+
+      throw new AppError(
+        `Failed to send email via AWS SES: ${error.message}`,
+        500,
+        "SES_ERROR"
+      );
+    }
   }
 
   private findEmailInProperties(
