@@ -68,13 +68,6 @@ export async function updateJourneyAnalytics(
         type: "JOURNEY_STARTED",
       },
     });
-
-    console.log(
-      "existingUserEvent",
-      existingUserEvent,
-      !existingUserEvent,
-      data.entityId
-    );
     const isNewUser = !existingUserEvent;
     // Now update the analytics
     await tx.journeyAnalytics.upsert({
@@ -114,7 +107,6 @@ export async function recordJourneyEvent(eventData: {
   status: string;
   error?: string;
 }): Promise<void> {
-  console.log("recordJourneyEvent", eventData);
   await prisma.journeyEvent.create({
     data: {
       journeyId: eventData.journeyId,
@@ -123,7 +115,7 @@ export async function recordJourneyEvent(eventData: {
       type: eventData.type as EventType,
       status: eventData.status as EventStatus,
       error: eventData.error,
-      data: {}, // Add relevant data here if needed
+      data: {},
     },
   });
 }

@@ -212,10 +212,8 @@ const AIInsightsPage: React.FC = () => {
                 confidence={insightResponse.confidence}
                 onCopy={() => {
                   navigator.clipboard.writeText(insightResponse.insight);
-                  // You could add a toast notification here
                 }}
                 onFeedback={(isPositive) => {
-                  // Handle feedback submission to your backend
                   console.log("Feedback:", isPositive);
                 }}
               />
