@@ -111,7 +111,7 @@ export async function expressAuthentication(
   }
 
   if (securityName === "apiKey") {
-    const apiKey = request.headers["x-api-key"]?.toString().split(" ")[1];
+    const apiKey = request.headers["x-api-key"] as string;
 
     if (!apiKey) {
       throw new AuthError("No API key provided", 401, "NO_API_KEY_PROVIDED");
@@ -140,13 +140,13 @@ export async function expressAuthentication(
         data: { lastUsedAt: new Date() },
       });
 
-      if (foundApiKey.organization.subscriptionStatus !== "ACTIVE") {
-        throw new AuthError(
-          "Organization subscription is not active",
-          403,
-          "INACTIVE_SUBSCRIPTION"
-        );
-      }
+      // if (foundApiKey.organization.subscriptionStatus !== "ACTIVE") {
+      //   throw new AuthError(
+      //     "Organization subscription is not active",
+      //     403,
+      //     "INACTIVE_SUBSCRIPTION"
+      //   );
+      // }
 
       const authenticatedUser: APIKeyAuthenticatedUser = {
         apiKeyId: foundApiKey.id,

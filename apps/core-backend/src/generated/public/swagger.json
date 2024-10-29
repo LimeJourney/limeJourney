@@ -6,7 +6,371 @@
 		"parameters": {},
 		"requestBodies": {},
 		"responses": {},
-		"schemas": {},
+		"schemas": {
+			"Record_string.any_": {
+				"properties": {},
+				"additionalProperties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"EventData": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"entity_id": {
+						"type": "string"
+					},
+					"entity_external_id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"timestamp": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					}
+				},
+				"required": [
+					"org_id",
+					"entity_id",
+					"entity_external_id",
+					"name",
+					"properties",
+					"timestamp"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EventData_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EventData"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_null_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"anyOf": [],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RecordEventRequest": {
+				"properties": {
+					"entity_external_id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					}
+				},
+				"required": [
+					"entity_external_id",
+					"name",
+					"properties"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EventData-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/EventData"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_string-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"EntityData": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"external_id": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"updated_at": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"org_id",
+					"properties",
+					"created_at",
+					"updated_at"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityData_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EntityData"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateOrUpdateEntityRequest": {
+				"properties": {
+					"external_id": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					}
+				},
+				"required": [
+					"properties"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"EntityWithSegments": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"org_id": {
+						"type": "string"
+					},
+					"external_id": {
+						"type": "string"
+					},
+					"properties": {
+						"$ref": "#/components/schemas/Record_string.any_"
+					},
+					"created_at": {
+						"type": "string"
+					},
+					"updated_at": {
+						"type": "string"
+					},
+					"segments": {
+						"items": {
+							"properties": {
+								"createdAt": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"description": {
+									"type": "string"
+								},
+								"name": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"createdAt",
+								"description",
+								"name",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"org_id",
+					"properties",
+					"created_at",
+					"updated_at",
+					"segments"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityWithSegments_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/EntityWithSegments"
+							}
+						],
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_EntityWithSegments-Array_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"success",
+							"error"
+						]
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/EntityWithSegments"
+						},
+						"type": "array",
+						"nullable": true
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
 		"securitySchemes": {}
 	},
 	"info": {
@@ -15,28 +379,399 @@
 		"contact": {}
 	},
 	"paths": {
-		"/users/{userId}": {
+		"/events": {
+			"post": {
+				"operationId": "RecordEvent",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RecordEventRequest"
+							}
+						}
+					}
+				}
+			},
 			"get": {
-				"operationId": "GetUser",
+				"operationId": "GetEvents",
 				"responses": {
 					"200": {
 						"description": "Ok",
 						"content": {
 							"application/json": {
-								"schema": {}
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
 							}
 						}
 					}
 				},
-				"security": [],
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
 				"parameters": [
 					{
-						"in": "path",
-						"name": "userId",
-						"required": true,
+						"in": "query",
+						"name": "entityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
 						"schema": {
 							"format": "double",
 							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "offset",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/events/names": {
+			"get": {
+				"operationId": "GetUniqueEventNames",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_string-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Events"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/entities": {
+			"post": {
+				"operationId": "CreateOrUpdateEntity",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityData_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateOrUpdateEntityRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "ListEntities",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityWithSegments-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/entities/{entityId}": {
+			"get": {
+				"operationId": "GetEntity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EntityWithSegments_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "entityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/entities/{entityId}/events": {
+			"get": {
+				"operationId": "GetEntityEvents",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"anyOf": [
+										{
+											"$ref": "#/components/schemas/ApiResponse_EventData-Array_"
+										},
+										{}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Entities"
+				],
+				"security": [
+					{
+						"apiKey": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "entityId",
+						"required": true,
+						"schema": {
+							"type": "string"
 						}
 					}
 				]
