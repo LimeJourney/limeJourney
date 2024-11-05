@@ -112,26 +112,28 @@ const BorderSpotlightButton = ({ children, onClick }) => {
 
 const Home = () => {
   const router = useRouter();
-  const calendarLink = "https://cal.com/tobi-limejourney/product-demo";
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       <NavBar />
       <section className="relative min-h-screen flex flex-col">
         <HeroBackground height="100%" />
-        <div className="flex-grow relative z-10 container mx-auto px-4 flex flex-col justify-center items-center text-center pt-32">
+        <div className="relative z-10 container mx-auto px-4 flex flex-col justify-center items-center text-center min-h-screen">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center space-y-8  mb-12 mt-40"
+            className="text-center space-y-4 md:space-y-8 mb-8 md:mb-12 mt-20 md:mt-60 w-full"
           >
-            <h1 className="text-7xl font-bold text-forest-800 leading-tight drop-shadow-sm">
-              Say The Right Thing,
-              <br />
-              At The Right Time
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-forest-800 leading-tight drop-shadow-sm px-2">
+              <span className="block">Say The Right Thing,</span>
+              <span className="block">At The Right Time</span>
             </h1>
-            <p className="text-xl text-bold text-forest-700 max-w-2xl mx-auto drop-shadow-sm">
-              Your customers are waiting to hear from you — LimeJourney is a customer engagement platform that intelligently delivers notifications, nudging your users at the perfect moment. Built for marketing teams, loved by developers
+
+            <p className="text-lg md:text-xl text-bold text-forest-700 max-w-xl md:max-w-2xl mx-auto drop-shadow-sm px-4">
+              Your customers are waiting to hear from you — LimeJourney is a
+              customer engagement platform that intelligently delivers
+              notifications, nudging your users at the perfect moment. Built for
+              marketing teams, loved by developers
             </p>
           </motion.div>
 
@@ -139,7 +141,7 @@ const Home = () => {
             Get Started
           </BorderSpotlightButton>
 
-          <div className="mt-auto">
+          <div className="mt-12 md:mt-auto w-full">
             <CompanyDisplay />
           </div>
         </div>

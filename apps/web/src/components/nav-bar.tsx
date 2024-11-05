@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
 
 const NavBar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -142,15 +143,21 @@ const NavBar = () => {
           <Button
             variant="ghost"
             className="text-forest-500 hover:text-forest-600 hover:bg-meadow-200"
-            onClick={() => router.push("/auth")}
+            onClick={() =>
+              window.open(
+                "https://github.com/LimeJourney/limeJourney/",
+                "_blank"
+              )
+            }
           >
-            Login
+            <GitHubLogoIcon className="mr-2" />
+            Star Us
           </Button>
           <Button
-            onClick={() => window.open(calendarLink, "_blank")}
+            onClick={() => router.push("/auth")}
             className="bg-forest-500 hover:bg-meadow-500 hover:text-forest-500 text-white transition-colors duration-300"
           >
-            Book a demo
+            Jump In
           </Button>
         </div>
 
