@@ -4,7 +4,14 @@
   "controllerPathGlobs": ["src/controllers/public/**/*.ts"],
   "spec": {
     "outputDirectory": "src/generated/public",
-    "specVersion": 3
+    "specVersion": 3,
+    "securityDefinitions": {
+      "apiKey": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    }
   },
   "routes": {
     "routesDir": "src/generated/public",
