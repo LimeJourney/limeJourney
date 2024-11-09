@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url("https://fonts.cdnfonts.com/css/euclid-circular-a");
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -29,6 +31,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --font-euclid: "Euclid Circular A", sans-serif;
   }
 
   .dark {
