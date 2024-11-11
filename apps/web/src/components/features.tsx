@@ -61,7 +61,7 @@ const Features = () => {
   const [active, setActive] = useState(0)
   return (
     <div className="bg-[#080808] pt-[47px] md:pt-20">
-      <p className="font-euclid text-[14px] leading-[80%] -tracking-[0.28px] py-2 px-[14px] mx-auto w-fit bg-[#C6FF00] rounded-[50px]whitespace-pre">
+      <p className="font-euclid text-[14px] leading-[80%] -tracking-[0.28px] py-2 px-[14px] mx-auto w-fit bg-[#C6FF00] rounded-[50px] whitespace-pre">
         Our Features
       </p>
       <h2 className="w-[346px] md:w-[640px] pt-5 md:pt-20 md:pt-4 mx-auto font-medium text-[#E3E3E3] text-center text-[20px] md:text-[24px] leading-[100%] -tracking-[0.96px]">
