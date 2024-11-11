@@ -5,7 +5,6 @@ import { ScrollTrigger } from "gsap/all"
 
 const Bento = () => {
   useEffect(() => {
-    if (!window) return
     gsap.registerPlugin(ScrollTrigger)
     const mm = gsap.matchMedia()
     mm.add("(max-width:768px)", () => {
