@@ -283,4 +283,28 @@
     left: 0;
     clip-path: unset;
   }
+
+  .stat {
+    transform: unset !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-inline: auto;
+    z-index: 0 !important;
+  }
+
+  .stat:hover {
+    z-index: 2 !important;
+    transform: scale(1.025) !important;
+  }
+
+  .stat:nth-of-type(1) {
+    top: 0 !important;
+  }
+  .stat:nth-of-type(2) {
+    top: 93px !important;
+  }
+  .stat:nth-of-type(3) {
+    top: 186px !important;
+  }
 }

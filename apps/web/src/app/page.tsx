@@ -5,6 +5,7 @@ import "./landing-page.css"
 import { Scrollbar } from "@/components/scrollbar"
 import Bento from "@/components/bento"
 import Features from "@/components/features"
+import Stats from "@/components/stats"
 
 export default function LandingPage() {
   return (
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <Hero />
       <Bento />
       <Features />
+      <Stats />
     </main>
   )
 }
