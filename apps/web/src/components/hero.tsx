@@ -1,6 +1,10 @@
 "use client"
 import Link from "next/link"
-import { GumletPlayer } from "@gumlet/react-embed-player"
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
+const GumletPlayer = dynamic(() => import("@gumlet/react-embed-player").then((module) => module.MyClientComponent) as any, {
+  ssr: false,
+}) as any
 
 const Hero = () => {
   return (
@@ -32,21 +36,7 @@ const Hero = () => {
           <ChevronLeft />
         </Link>
       </div>
-      <div className="w-full md:w-[1280px] mt-[26px] md:mt-[50px] mx-auto">
-        <GumletPlayer
-          videoID="672ddd1cfbe814b2520d1a15"
-          title="Gumlet Player Example"
-          preload="true"
-          start_high_res="true"
-          schemaOrgVideoObject={{
-            "@context": "https://schema.org",
-            "@type": "VideoObject",
-            name: "LimeJourney",
-            description: "",
-            embedUrl: "https://play.gumlet.io/embed/672ddd1cfbe814b2520d1a15e",
-          }}
-        />
-      </div>
+      <div className="w-full md:w-[1280px] mt-[26px] md:mt-[50px] mx-auto">{/* <Player /> */}</div>
       <div className="flex flex-wrap gap-4 items-center max-md:justify-center max-md:w-[300px] mb-[72px] md:mb-[190px] mx-auto mt-10 md:mt-20">
         <span className="block max-md:w-full text-center text-[14px] md:text-[16px]">Trusted by</span>
         <img src="/Framer.png" alt="" className="w-[110px] h-[39px]" />
@@ -70,3 +60,28 @@ const ChevronLeft = () => (
     />
   </svg>
 )
+
+const Player = () => {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted || mounted) return <></>
+  return (
+    <GumletPlayer
+      videoID="672ddd1cfbe814b2520d1a15"
+      title="Gumlet Player Example"
+      preload="true"
+      start_high_res="true"
+      schemaOrgVideoObject={{
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        name: "LimeJourney",
+        description: "",
+        embedUrl: "https://play.gumlet.io/embed/672ddd1cfbe814b2520d1a15e",
+      }}
+    />
+  )
+}
