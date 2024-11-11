@@ -3,6 +3,7 @@ import Hero from "@/components/hero"
 import Nav from "@/components/nav"
 import "./landing-page.css"
 import { Scrollbar } from "@/components/scrollbar"
+import Bento from "@/components/bento"
 
 export default function LandingPage() {
   return (
@@ -11,6 +12,7 @@ export default function LandingPage() {
       <Scrollbar />
       <Nav />
       <Hero />
+      <Bento />
     </main>
   )
 }

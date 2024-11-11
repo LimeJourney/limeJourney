@@ -5,7 +5,7 @@ import { GumletPlayer } from "@gumlet/react-embed-player"
 
 const Hero = () => {
   return (
-    <div className="relative pt-[121px] md:pt-[144px] mx-auto md:max-w-[1240px] md:min-w-[768px] grid place-content-center">
+    <div className="relative pt-[121px] md:pt-[144px] mx-auto md:max-w-[1240px] md:min-w-[768px] grid place-content-center max-md:bg-[#FFFFFF]">
       <img
         src="/hero-bg.webp"
         alt=""
@@ -48,7 +48,7 @@ const Hero = () => {
           }}
         />
       </div>
-      <div className="flex flex-wrap gap-4 items-center max-md:justify-center max-md:w-[300px] max-md:mb-[72px] mx-auto mt-10 md:mt-20">
+      <div className="flex flex-wrap gap-4 items-center max-md:justify-center max-md:w-[300px] mb-[72px] md:mb-[190px] mx-auto mt-10 md:mt-20">
         <span className="block max-md:w-full text-center text-[14px] md:text-[16px]">Trusted by</span>
         <img src="/Framer.png" alt="" className="w-[110px] h-[39px]" />
         <img src="/Slice.png" alt="" className="w-[110px] h-[39px]" />
