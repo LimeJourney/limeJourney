@@ -19,14 +19,14 @@ const Bento = () => {
           },
         })
         .to(".bento:nth-of-type(1)", { scale: 0.975 }, 0)
-        .to(".bento:nth-of-type(2)", { y: "-290px" }, 0)
+        .to(".bento:nth-of-type(2), .bento:nth-of-type(3), .bento:nth-of-type(4), .bento:nth-of-type(5)", { y: "-290px" }, 0)
         .to(".bento:nth-of-type(1)", { scale: 0.95 }, 0.5)
         .to(".bento:nth-of-type(2)", { scale: 0.975 }, 0.5)
-        .to(".bento:nth-of-type(3)", { y: "-580px" }, 0.5)
+        .to(".bento:nth-of-type(3), .bento:nth-of-type(4), .bento:nth-of-type(5)", { y: "-580px" }, 0.5)
         .to(".bento:nth-of-type(1)", { scale: 0.925 }, 1)
         .to(".bento:nth-of-type(2)", { scale: 0.95 }, 1)
         .to(".bento:nth-of-type(3)", { scale: 0.975 }, 1)
-        .to(".bento:nth-of-type(4)", { y: "-860px" }, 1)
+        .to(".bento:nth-of-type(4), .bento:nth-of-type(5)", { y: "-860px" }, 1)
         .to(".bento:nth-of-type(1)", { scale: 0.9 }, 1.5)
         .to(".bento:nth-of-type(2)", { scale: 0.925 }, 1.5)
         .to(".bento:nth-of-type(3)", { scale: 0.95 }, 1.5)
@@ -34,9 +34,10 @@ const Bento = () => {
         .to(".bento:nth-of-type(5)", { y: "-1140px" }, 1.5)
     })
   }, [])
+
   return (
     <div className="bentos max-md:h-[704px]">
-      <h2 className="w-[314px] max-md:pt-20 md:w-[490px] mx-auto font-medium text-[#363636] text-center text-[20px] md:text-[24px] leading-[100%] -tracking-[0.96px]">
+      <h2 className="w-[314px] md:w-[490px] max-md:pt-20 mx-auto font-medium text-[#363636] text-center text-[20px] md:text-[24px] leading-[100%] -tracking-[0.96px]">
         Think of us as your marketing team's <span className="text-[#ADADAD]">secret</span> weapon — quietly observing, perfectly
         timing, and making you look like a mind reader.
       </h2>

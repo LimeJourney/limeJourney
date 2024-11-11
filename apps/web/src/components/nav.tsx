@@ -16,7 +16,7 @@ const Nav = () => {
   return (
     <div
       className={cn(
-        "nav fixed z-[30] top-3 md:top-9 left-3 right-3 p-3 mx-auto flex items-center justify-between md:max-w-[1240px] md:min-w-[768px]",
+        "nav fixed z-[30] top-3 md:top-9 left-3 right-3 py-3 pl-3 pr-2 mx-auto flex items-center justify-between md:max-w-[1240px] md:min-w-[768px]",
         isScrolled ? "md:top-0 md:bg-[#FCFCFCFC]" : "md:top-9 bg-[#FCFCFC00]"
       )}
     >
@@ -55,7 +55,7 @@ const Nav = () => {
       </nav>
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className={cn("relative grid md:hidden gap-[6px]", isMobileMenuOpen ? "hamburger" : "")}
+        className={cn("relative bg-[#fff2] p-2 grid md:hidden gap-[6px] backdrop-blur", isMobileMenuOpen ? "hamburger" : "")}
       >
         <span className="block rounded-[4px] h-1 w-8 bg-[#000]"></span>
         <span className="block rounded-[4px] h-1 w-8 bg-[#000]"></span>
