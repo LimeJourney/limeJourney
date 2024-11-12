@@ -1,39 +1,57 @@
 "use client"
 import { cn } from "@/lib/utils"
 import gsap from "gsap"
+import { ScrollTrigger } from "gsap/all"
 import { useEffect, useState } from "react"
 
 const Stats = () => {
   useEffect(() => {
-    gsap
-      .timeline()
-      .to(
-        ".stat",
-        {
-          x: "random(-550, 150, 50)",
-          y: "random(-100, 200, 25)",
-          duration: 10,
-          ease: "none",
-          repeat: -1,
-          repeatRefresh: true,
-        },
-        0
-      )
-      .to(
-        ".stat .svg",
-        {
-          x: "random(-40, 50, 15)",
-          y: "random(0, 150, 25)",
-          duration: 10,
-          ease: "none",
-          repeat: -1,
-          repeatRefresh: true,
-        },
-        0
-      )
-  }, [])
+    gsap.registerPlugin(ScrollTrigger)
+    const mm = gsap.matchMedia()
 
-  const [index, setIndex] = useState([0, 0, 0])
+    gsap.timeline().to(".stat .svg", {
+      x: "random(-40, 50, 15)",
+      y: "random(0, 150, 25)",
+      duration: 10,
+      ease: "none",
+      repeat: -1,
+      repeatRefresh: true,
+    })
+
+    mm.add("(min-width:769px)", () => {
+      gsap
+        .timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: ".stats",
+            scrub: true,
+            pin: true,
+            start: "-50px 0%",
+            end: innerHeight * 7,
+          },
+        })
+        .from(".stats-heading", { y: "200px", duration: 1 }, 0)
+        .to(".stat:nth-of-type(2)", { y: "-800px" }, 0.5)
+        .to(".stat:nth-of-type(3)", { y: "-800px" }, 0)
+    })
+    mm.add("(max-width:768px)", () => {
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: ".stats",
+            scrub: true,
+            pin: true,
+            start: "100px 0%",
+            end: innerHeight * 7,
+          },
+        })
+        .to(".stat:nth-of-type(1)", { scale: 0.975 }, 0)
+        .to(".stat:nth-of-type(2), .stat:nth-of-type(3)", { y: "-400px" }, 0)
+        .to(".stat:nth-of-type(1)", { scale: 0.95 }, 0.5)
+        .to(".stat:nth-of-type(2)", { scale: 0.975 }, 0.5)
+        .to(".stat:nth-of-type(3)", { y: "-800px" }, 0.5)
+    })
+  }, [])
 
   const cursors = ["#000", "#000", "#C6FF00"]
   const stats = [
@@ -70,9 +88,9 @@ const Stats = () => {
   ]
 
   return (
-    <div className="bg-[#080808] pt-[120px] md:pt-[47px] md:pt-[146px] flex">
+    <div className="bg-[#080808] pt-[120px] md:pt-[47px] md:pt-[146px] flex stats max-md:-mb-[1px]">
       <div className="block md:flex w-full-mobile md:w-[1240px] h-[875px] mx-auto relative">
-        <div>
+        <div className="stats-heading">
           <p className="font-euclid text-[14px] leading-[80%] -tracking-[0.28px] py-2 px-[14px] max-md:mx-auto w-fit bg-[#C6FF00] rounded-[50px] whitespace-pre">
             Our Numbers
           </p>
@@ -84,17 +102,11 @@ const Stats = () => {
           <ul className="mt-[54px] md:mt-[44px] flex flex-col max-md:gap-2 flex-wrap w-full-mobile max-md:relative">
             {stats.map((stat) => (
               <li
-                style={{ ...stat.style, zIndex: index[stat.id] }}
+                style={stat.style}
                 key={stat.id}
                 className={cn(
                   "absolute w-full md:w-[395px] h-[420px] md:h-[437px] pt-[38px] px-[21.5px] px-[31px] md:px-[23px] cursor-pointer rounded-[16px] stat"
                 )}
-                onMouseEnter={() => {
-                  const temp = index.slice()
-                  temp[stat.id] = Math.max(...index) + 1
-                  setIndex(temp)
-                  console.log(temp)
-                }}
               >
                 <h3 className="font-medium text-[145px] md:text-[151.2px] leading-[110px] -tracking-[6.048px] flex w-[316px] md:w-[382px] justify-between">
                   <span>{stat.heading}</span>

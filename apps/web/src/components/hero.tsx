@@ -36,8 +36,11 @@ const Hero = () => {
           <ChevronLeft />
         </Link>
       </div>
-      <div className="w-full md:w-[1280px] mt-[26px] md:mt-[50px] mx-auto">
-        <GumletPlayer />
+      <div className="relative w-[330px] mx-auto md:w-[1132px] mt-[26px] md:mt-[50px]">
+        <img src="/loom-frame.webp" alt="" className="absolute" />
+        <div className="w-full md:w-[1116px] mt-[14px] md:mt-[50px] mx-auto h-[195px] md:h-[720px] bg-[#F2F2F2] rounded-[20px] overflow-hidden video">
+          <GumletPlayer />
+        </div>
       </div>
       <div className="flex flex-wrap gap-4 items-center max-md:justify-center max-md:w-[300px] mb-[72px] md:mb-[190px] mx-auto mt-10 md:mt-20">
         <span className="block max-md:w-full text-center text-[14px] md:text-[16px]">Trusted by</span>

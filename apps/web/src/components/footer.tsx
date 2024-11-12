@@ -4,7 +4,7 @@ import { Button } from "./moving-border"
 
 const Footer = () => {
   return (
-    <div className="bg-[#080808] flex -max-md:mt-[1px]">
+    <div className="bg-[#080808] flex">
       <div className="block w-full-mobile md:w-[1240px] mx-auto relative">
         <div className="hidden md:flex max-md:flex-col relative justify-between gap-4 md:mt-2 mx-auto w-[1054px] mx-auto">
           <Link
@@ -43,8 +43,8 @@ const Footer = () => {
               gradientUnits="userSpaceOnUse"
               gradientTransform="translate(859 68.5) scale(17 0.668939)"
             >
-              <stop stop-color="#BFF100" />
-              <stop offset="1" stop-color="#313131" />
+              <stop stopColor="#BFF100" />
+              <stop offset="1" stopColor="#313131" />
             </radialGradient>
           </defs>
         </svg>
