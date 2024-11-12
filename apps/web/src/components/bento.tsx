@@ -7,6 +7,17 @@ const Bento = () => {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
     const mm = gsap.matchMedia()
+    mm.add("(min-width:769px)", () => {
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: ".bentos",
+            start: "40% 60%",
+          },
+        })
+        .to(".bento h3", { bottom: "85px", stagger: 0.2 }, 0)
+        .to(".bento p", { bottom: "34px", clipPath: "inset(0% 0% 0% 0%)", stagger: 0.2 }, 0.2)
+    })
     mm.add("(max-width:768px)", () => {
       gsap
         .timeline({

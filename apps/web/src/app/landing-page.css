@@ -219,12 +219,12 @@
   position: absolute;
   bottom: 52px;
   left: 28px;
-  transition: bottom 0.5s 0.2s ease;
+  /* transition: bottom 0.5s 0.2s ease; */
 }
-.bento:hover h3 {
+/* .bento:hover h3 {
   bottom: 85px;
   transition: bottom 0.5s ease;
-}
+} */
 
 .bento p {
   color: #2d2d2d;
@@ -235,18 +235,18 @@
   position: absolute;
   bottom: 0px;
   left: 28px;
-  transition:
+  /* transition:
     bottom 0.5s ease,
-    clip-path 0.5s ease;
+    clip-path 0.5s ease; */
   clip-path: inset(0% 0% 100% 0%);
 }
-.bento:hover p {
+/* .bento:hover p {
   bottom: 34px;
   transition:
     bottom 0.5s 0.2s ease,
     clip-path 0.5s 0.2s ease;
   clip-path: inset(0% 0% 0% 0%);
-}
+} */
 
 .fade {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0) 7.48%, #fff 43.93%);
