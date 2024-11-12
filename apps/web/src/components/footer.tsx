@@ -48,6 +48,21 @@ const Footer = () => {
             </radialGradient>
           </defs>
         </svg>
+        <svg
+          width="163"
+          height="284"
+          viewBox="0 0 163 284"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="absolute top-[251px] left-0 right-0 mx-auto pointer-events-none md:hidden"
+        >
+          <rect x="0.5" y="98.5" width="162" height="59" rx="11.5" stroke="#313131" />
+          <rect x="0.5" y="165.5" width="162" height="59" rx="11.5" stroke="#313131" />
+          <path d="M81 0L81 23" stroke="#313131" />
+          <path d="M81 56L81 98" stroke="#313131" />
+          <path d="M81 225V284" stroke="#313131" />
+        </svg>
+
         <h3 className="w-[238px] mx-auto mt-0 md:mt-[3px] mb-[50px] md:mb-[94px] text-[20px] md:text-[24px] leading-[1] text-[#FFF] text-center -tracking-[0.96px]">
           Ready to Nudge Your Business Forward?
         </h3>
@@ -59,7 +74,7 @@ const Footer = () => {
             because we're limejourney, get it?*
           </span>
         </Button>
-        <p className="font-euclid mt-[29px] mb-[49px] text-center text-[14px] text-[#fff] -tracking-[0.28px] md:hidden">
+        <p className="font-euclid mt-[29px] mb-[56px] text-center text-[14px] text-[#fff] -tracking-[0.28px] md:hidden">
           *this joke was written by an intern.
         </p>
         <div className="flex md:hidden max-md:flex-col relative items-center justify-center gap-4 w-full-mobile md:mt-2 mx-auto w-[1054px] mx-auto">
@@ -70,26 +85,29 @@ const Footer = () => {
           >
             Book a Demo
           </Link>
-          <Link href="/auth" className="cta scale-on-hover secondary whitespace-pre flex items-center w-36 mt-[23px]">
+          <Link
+            href="/auth"
+            className="cta scale-on-hover secondary whitespace-pre flex items-center w-36 mt-[6.2px] md:mt-[23px]"
+          >
             <ChevronLeft />
             <span>Try it now</span>
             <ChevronLeft />
           </Link>
         </div>
-        <form className="mt-[56px] mx-auto p-1.5 flex items-center w-full-mobile md:w-[496px] rounded-[14px] border border-[#313131]">
+        <form className="mt-[56px] relative bg-[#080808] mx-auto p-1.5 flex items-center w-full-mobile md:w-[496px] rounded-[14px] border border-[#313131]">
           <Mail />
           <input
             type="text"
             placeholder="coolgenius@yourmail.com"
             className="px-3 border-none bg-transparent outline-none font-euclid text-[#fff] placeholder-[#454545] w-full"
           />
-          <button className="cta submit scale-on-hover secondary whitespace-pre flex items-center w-[147px]">
+          <button className="cta submit scale-on-hover secondary whitespace-pre flex items-center w-[147px] max-md:!absolute max-md:top-[64px] left-0 right-0 mx-auto">
             <ChevronLeft />
             <span>Join Waitlist</span>
             <ChevronLeft />
           </button>
         </form>
-        <p className="font-euclid mt-[98px] md:mt-32 mb-[42px] md:mb-[49px] text-[14px] text-[#fff] -tracking-[0.28px] flex justify-center md:justify-between">
+        <p className="font-euclid mt-[159px] md:mt-32 mb-[42px] md:mb-[49px] text-[14px] text-[#fff] -tracking-[0.28px] flex justify-center md:justify-between">
           <span>© 2024 LimeJourney Corporation. All rights reserved.</span>
           <span className="max-md:hidden">*this joke was written by an intern.</span>
         </p>
