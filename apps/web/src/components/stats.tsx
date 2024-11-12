@@ -30,7 +30,6 @@ const Stats = () => {
             end: innerHeight * 7,
           },
         })
-        .from(".stats-heading", { y: "200px", duration: 1 }, 0)
         .to(".stat:nth-of-type(2)", { y: "-800px" }, 0.5)
         .to(".stat:nth-of-type(3)", { y: "-800px" }, 0)
     })
@@ -90,7 +89,7 @@ const Stats = () => {
   return (
     <div className="bg-[#080808] pt-[120px] md:pt-[47px] md:pt-[146px] flex stats max-md:-mb-[1px]">
       <div className="block md:flex w-full-mobile md:w-[1240px] h-[875px] mx-auto relative">
-        <div className="stats-heading">
+        <div>
           <p className="font-euclid text-[14px] leading-[80%] -tracking-[0.28px] py-2 px-[14px] max-md:mx-auto w-fit bg-[#C6FF00] rounded-[50px] whitespace-pre">
             Our Numbers
           </p>
