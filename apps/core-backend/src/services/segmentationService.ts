@@ -123,6 +123,13 @@ export class SegmentationService {
     entityIds: string[],
     organizationId: string
   ): Promise<{ [entityId: string]: Segment[] }> {
+    if (entityIds.length === 0) {
+      logger.info("lifecycle", "No entities requested for segment lookup", {
+        organizationId,
+      });
+      return {};
+    }
+
     // Fetch all segments for the organization
     const allSegments = await this.listSegments(organizationId);
 
