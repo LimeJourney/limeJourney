@@ -27,7 +27,7 @@
     "@lime/config": "*",
     "@lime/errors": "*",
     "@lime/telemetry": "*",
-    "@prisma/client": "^5.17.0",
+    "@prisma/client": "5.17.0",
     "@temporalio/activity": "^1.11.1",
     "@temporalio/client": "^1.11.1",
     "@temporalio/worker": "^1.11.1",
