@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json && tsc",
+    "build": "npm run prisma:generate && npm run migrate:deploy && tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json && tsc",
     "dev": "concurrently \"tsoa spec-and-routes --watch --configuration tsoa.public.json\" \"tsoa spec-and-routes --watch --configuration tsoa.private.json\" \"ts-node-dev --respawn --transpile-only src/index.ts\"",
     "start": "node dist/index.js",
     "start:worker:dev": "ts-node src/worker/index.ts",
@@ -12,7 +12,7 @@
     "migrate:dev": "DATABASE_URL=\"$DATABASE_URL\" npx prisma migrate dev --schema=./src/prisma/schema.prisma",
     "migrate:deploy": "prisma migrate deploy --schema=./src/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./src/prisma/schema.prisma",
-    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema=./src/prisma/schema.prisma",
     "clickhouse:dev": "ts-node src/cli/clickhouse.ts",
     "clickhouse": "node dist/cli/clickhouse.js",
     "route:generate": "tsoa spec-and-routes --configuration tsoa.public.json && tsoa spec-and-routes --configuration tsoa.private.json",
@@ -74,7 +74,8 @@
     "jest-mock-extended": "^4.0.0-beta1",
     "ts-jest": "^29.2.5",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "prisma": "^5.17.0"
   },
   "jest": {
     "preset": "ts-jest",
