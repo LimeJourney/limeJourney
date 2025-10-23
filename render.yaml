@@ -37,15 +37,20 @@ services:
     repo: https://github.com/LimeJourney/limeJourney
     plan: starter
     envVars:
-      # - key: TEMPORAL_CLOUD_API_KEY
-      #   sync: false
-      # - key: TEMPORAL_CLOUD_NAMESPACE
-      #   sync: false
-      # - key: TEMPORAL_CLOUD_SERVER_URL
-      #   sync: false
+      - key: TEMPORAL_CLOUD_API_KEY
+        sync: false
+      - key: TEMPORAL_CLOUD_NAMESPACE
+        sync: false
+      - key: TEMPORAL_CLOUD_SERVER_URL
+        sync: false
       - key: DATABASE_URL
         fromDatabase:
           name: limedb
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: Redis-Prod
           property: connectionString
       - fromGroup: LimeJourneyProd
     region: oregon
