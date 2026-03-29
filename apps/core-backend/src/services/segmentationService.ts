@@ -137,20 +137,18 @@ export class SegmentationService {
       return {};
     }
 
-    // Format entityIds for ClickHouse
-    const formattedEntityIds = entityIds.map((id) => `'${id}'`).join(",");
     // Fetch all segment memberships for the given entity IDs in a single query
     const query = `
       SELECT entity_id, segment_id
       FROM segment_memberships
-      WHERE entity_id IN (${formattedEntityIds})
+      WHERE entity_id IN {entityIds:Array(String)}
       AND org_id = {organizationId:String}
     `;
 
     try {
       const result = await this.clickhouse.query({
         query,
-        query_params: { organizationId },
+        query_params: { entityIds, organizationId },
         format: "JSONEachRow",
       });
 
@@ -480,11 +478,19 @@ export class SegmentationService {
     }
   }
 
+  private static readonly UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   private async getCommonCharacteristics(
     segment: Segment
   ): Promise<{ [key: string]: any }[]> {
+    // Validate segment.id is a valid UUID to prevent SQL injection in table name
+    if (!SegmentationService.UUID_REGEX.test(segment.id)) {
+      throw new ValidationError("Invalid segment ID format");
+    }
+
     const query = `
-      SELECT 
+      SELECT
         JSONExtractString(e.properties, 'key') as key,
         JSONExtractString(e.properties, 'value') as value,
         COUNT(*) as count
