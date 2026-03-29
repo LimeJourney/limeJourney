@@ -137,20 +137,19 @@ export class SegmentationService {
       return {};
     }
 
-    // Format entityIds for ClickHouse
-    const formattedEntityIds = entityIds.map((id) => `'${id}'`).join(",");
-    // Fetch all segment memberships for the given entity IDs in a single query
+    // Use ClickHouse Array(String) parameter binding instead of string
+    // interpolation to prevent SQL injection via entity IDs
     const query = `
       SELECT entity_id, segment_id
       FROM segment_memberships
-      WHERE entity_id IN (${formattedEntityIds})
+      WHERE entity_id IN {entityIds:Array(String)}
       AND org_id = {organizationId:String}
     `;
 
     try {
       const result = await this.clickhouse.query({
         query,
-        query_params: { organizationId },
+        query_params: { entityIds, organizationId },
         format: "JSONEachRow",
       });
 
@@ -484,7 +483,7 @@ export class SegmentationService {
     segment: Segment
   ): Promise<{ [key: string]: any }[]> {
     const query = `
-      SELECT 
+      SELECT
         JSONExtractString(e.properties, 'key') as key,
         JSONExtractString(e.properties, 'value') as value,
         COUNT(*) as count
