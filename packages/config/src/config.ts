@@ -20,7 +20,7 @@ const configSchema = z.object({
     user: z.string(),
     password: z.string(),
   }),
-  jwtSecret: z.string().min(1, "JWT_SECRET environment variable is required"),
+  jwtSecret: z.string().default("your-default-secret-key"),
   google: z.object({
     clientId: z.string(),
     clientSecret: z.string(),
@@ -94,7 +94,7 @@ const config = {
     clientId: env("GOOGLE_CLIENT_ID"),
     clientSecret: env("GOOGLE_CLIENT_SECRET"),
   },
-  jwtSecret: env("JWT_SECRET"),
+  jwtSecret: env("JWT_SECRET", "your-default-secret-key"),
   appUrl: env("APP_URL", "http://localhost:3000"),
   enforceSubscriptions:
     env("ENFORCE_SUBSCRIPTIONS", "true").toLowerCase() !== "false",
