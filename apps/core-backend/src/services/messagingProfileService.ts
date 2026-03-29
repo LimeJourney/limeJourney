@@ -13,12 +13,13 @@ export class MessagingProfileService {
   private encryptionKey: Buffer;
 
   constructor() {
-    this.encryptionKey = Buffer.from(
-      // TODO: move to env
-      process.env.ENCRYPTION_KEY ||
-        "5ebe2294ecd0e0f08eab7690d2a6ee69f9e5da618d6fea9f7c3d04c0cb180fc1",
-      "hex"
-    );
+    const key = process.env.ENCRYPTION_KEY;
+    if (!key) {
+      throw new Error(
+        "ENCRYPTION_KEY environment variable is required but not set"
+      );
+    }
+    this.encryptionKey = Buffer.from(key, "hex");
   }
 
   private encryptValue(value: string): string {
