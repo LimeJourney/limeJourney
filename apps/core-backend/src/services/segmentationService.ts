@@ -137,7 +137,8 @@ export class SegmentationService {
       return {};
     }
 
-    // Fetch all segment memberships for the given entity IDs in a single query
+    // Use ClickHouse Array(String) parameter binding instead of string
+    // interpolation to prevent SQL injection via entity IDs
     const query = `
       SELECT entity_id, segment_id
       FROM segment_memberships
@@ -478,17 +479,9 @@ export class SegmentationService {
     }
   }
 
-  private static readonly UUID_REGEX =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
   private async getCommonCharacteristics(
     segment: Segment
   ): Promise<{ [key: string]: any }[]> {
-    // Validate segment.id is a valid UUID to prevent SQL injection in table name
-    if (!SegmentationService.UUID_REGEX.test(segment.id)) {
-      throw new ValidationError("Invalid segment ID format");
-    }
-
     const query = `
       SELECT
         JSONExtractString(e.properties, 'key') as key,
