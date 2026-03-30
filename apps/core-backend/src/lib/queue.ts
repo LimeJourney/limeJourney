@@ -1,8 +1,27 @@
 import { Kafka, Producer, Consumer, KafkaMessage, logLevel } from "kafkajs";
-import { EventEmitter } from "events";
+
 import { AppConfig } from "@lime/config";
 import { logger } from "@lime/telemetry/logger";
 import { EntityData } from "../services/entitiesService";
+
+export interface RetryConfig {
+  maxRetries: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+}
+
+export interface DeadLetterEvent {
+  event: Event;
+  error: string;
+  failedAt: string;
+  attempts: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelayMs: 500,
+  maxDelayMs: 10000,
+};
 
 export enum EventType {
   ENTITY_CREATED = "ENTITY_CREATED",
@@ -74,17 +93,25 @@ interface IQueue {
   connect?(): Promise<void>;
 }
 
-class SimpleInMemoryEventQueue extends EventEmitter implements IQueue {
+class SimpleInMemoryEventQueue implements IQueue {
+  private handlers: Map<string, ((message: any) => void | Promise<void>)[]> =
+    new Map();
+
   async publish(topic: string, message: any): Promise<void> {
-    this.emit(topic, message);
+    const callbacks = this.handlers.get(topic) || [];
+    for (const callback of callbacks) {
+      await callback(message);
+    }
     logger.info("events", `Published message to topic: ${topic}`, { topic });
   }
 
   async subscribe(
     topic: string,
-    callback: (message: any) => void
+    callback: (message: any) => void | Promise<void>
   ): Promise<void> {
-    this.on(topic, callback);
+    const existing = this.handlers.get(topic) || [];
+    existing.push(callback);
+    this.handlers.set(topic, existing);
     logger.info("events", `Subscribed to topic: ${topic}`, { topic });
   }
 
@@ -200,8 +227,13 @@ class EventQueueService {
   private queue: IQueue;
   private eventHandlers: Map<EventType, (event: Event) => Promise<void>> =
     new Map();
+  private deadLetterQueue: DeadLetterEvent[] = [];
+  private retryConfig: RetryConfig;
+  private failedEventCount: number = 0;
+  private retriedEventCount: number = 0;
 
-  private constructor() {
+  private constructor(retryConfig?: RetryConfig) {
+    this.retryConfig = retryConfig ?? DEFAULT_RETRY_CONFIG;
     if (AppConfig.eventQueue.type === "kafka") {
       this.queue = new KafkaEventQueue();
       logger.info("events", "Initialized Kafka event queue");
@@ -211,16 +243,20 @@ class EventQueueService {
     }
   }
 
-  public static getInstance(): EventQueueService {
+  public static getInstance(retryConfig?: RetryConfig): EventQueueService {
     if (!EventQueueService.instance) {
-      EventQueueService.instance = new EventQueueService();
+      EventQueueService.instance = new EventQueueService(retryConfig);
       logger.info("events", "Created EventQueueService instance");
     }
     return EventQueueService.instance;
   }
 
+  /** Reset singleton — intended for tests only */
+  public static resetInstance(): void {
+    EventQueueService.instance = null;
+  }
+
   async initialize(): Promise<void> {
-    // if (this.queue instanceof KafkaEventQueue) {
     try {
       await this.queue.connect();
       logger.info("events", "EventQueueService initialized and connected");
@@ -233,7 +269,6 @@ class EventQueueService {
       );
       throw error;
     }
-    // }
   }
 
   async shutdown(): Promise<void> {
@@ -282,22 +317,139 @@ class EventQueueService {
   private async handleEvent(event: Event): Promise<void> {
     const handler = this.eventHandlers.get(event.type);
     if (handler) {
-      try {
-        await handler(event);
-      } catch (error) {
-        logger.error(
-          "events",
-          `Error processing event of type: ${event.type}`,
-          error as Error,
-          { eventType: event.type }
-        );
-      }
+      await this.executeWithRetry(event, handler);
     } else {
       logger.warn(
         "events",
         `No handler registered for event type: ${event.type}`,
         { eventType: event.type }
       );
+    }
+  }
+
+  private async executeWithRetry(
+    event: Event,
+    handler: (event: Event) => Promise<void>
+  ): Promise<void> {
+    const { maxRetries, baseDelayMs, maxDelayMs } = this.retryConfig;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        await handler(event);
+        return;
+      } catch (error) {
+        const isLastAttempt = attempt === maxRetries;
+
+        if (isLastAttempt) {
+          this.sendToDeadLetterQueue(event, error as Error, maxRetries + 1);
+          return;
+        }
+
+        this.retriedEventCount++;
+        const delay = Math.min(baseDelayMs * Math.pow(2, attempt), maxDelayMs);
+        logger.warn(
+          "events",
+          `Event handler failed for ${event.type}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`,
+          {
+            eventType: event.type,
+            attempt: attempt + 1,
+            maxRetries,
+            delay,
+          }
+        );
+        await this.sleep(delay);
+      }
+    }
+  }
+
+  private sendToDeadLetterQueue(
+    event: Event,
+    error: Error,
+    attempts: number
+  ): void {
+    const deadLetterEvent: DeadLetterEvent = {
+      event,
+      error: error.message,
+      failedAt: new Date().toISOString(),
+      attempts,
+    };
+
+    this.deadLetterQueue.push(deadLetterEvent);
+    this.failedEventCount++;
+
+    logger.error(
+      "events",
+      `Event moved to dead-letter queue after ${attempts} attempts: ${event.type}`,
+      error,
+      {
+        eventType: event.type,
+        attempts,
+        deadLetterQueueSize: this.deadLetterQueue.length,
+      }
+    );
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  getDeadLetterQueue(): DeadLetterEvent[] {
+    return [...this.deadLetterQueue];
+  }
+
+  getFailedEventCount(): number {
+    return this.failedEventCount;
+  }
+
+  getRetriedEventCount(): number {
+    return this.retriedEventCount;
+  }
+
+  getEventMetrics(): {
+    failedEvents: number;
+    retriedEvents: number;
+    deadLetterQueueSize: number;
+  } {
+    return {
+      failedEvents: this.failedEventCount,
+      retriedEvents: this.retriedEventCount,
+      deadLetterQueueSize: this.deadLetterQueue.length,
+    };
+  }
+
+  async replayDeadLetterEvent(index: number): Promise<boolean> {
+    if (index < 0 || index >= this.deadLetterQueue.length) {
+      return false;
+    }
+
+    const deadLetterEvent = this.deadLetterQueue[index];
+    const handler = this.eventHandlers.get(deadLetterEvent.event.type);
+
+    if (!handler) {
+      logger.warn(
+        "events",
+        `No handler for dead-letter event type: ${deadLetterEvent.event.type}`
+      );
+      return false;
+    }
+
+    try {
+      await handler(deadLetterEvent.event);
+      this.deadLetterQueue.splice(index, 1);
+      logger.info(
+        "events",
+        `Successfully replayed dead-letter event: ${deadLetterEvent.event.type}`,
+        { eventType: deadLetterEvent.event.type }
+      );
+      return true;
+    } catch (error) {
+      logger.error(
+        "events",
+        `Failed to replay dead-letter event: ${deadLetterEvent.event.type}`,
+        error as Error,
+        { eventType: deadLetterEvent.event.type }
+      );
+      return false;
     }
   }
 
