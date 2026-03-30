@@ -19,6 +19,7 @@ import type {
   JWTAuthenticatedUser,
 } from "../../models/auth";
 import { ApiResponse } from "../../models/apiResponse";
+import { EventQueueService, DeadLetterEvent } from "../../lib/queue";
 import type { EventData, RecordEventRequest } from "../../models/events";
 
 @Route("events")
@@ -166,36 +167,90 @@ export class EventController {
     }
   }
 
-  //   @Get("entity/:entityId")
-  //   @Response<ApiResponse<EventData[]>>(200, "Retrieved events for entity")
-  //   @Response<ApiResponse<null>>(500, "Internal Server Error")
-  //   public async getEventsByEntityId(
-  //     @Request() request: AuthenticatedRequest,
-  //     @Path() entityId: string,
-  //     @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>,
-  //     @Query() limit?: number,
-  //     @Query() offset?: number
-  //   ): Promise<ApiResponse<EventData[]> | void> {
-  //     try {
-  //       const user = request.user as JWTAuthenticatedUser;
-  //       const organizationId = user.currentOrganizationId as string;
-  //       const events = await this.eventService.getEventsByEntityId(
-  //         organizationId,
-  //         entityId,
-  //         limit,
-  //         offset
-  //       );
-  //       return {
-  //         status: "success",
-  //         data: events,
-  //         message: "Events for entity retrieved successfully",
-  //       };
-  //     } catch (error) {
-  //       return serverErrorResponse(500, {
-  //         status: "error",
-  //         data: null,
-  //         message: "An error occurred while retrieving events for the entity",
-  //       });
-  //     }
-  //   }
+  @Get("queue/metrics")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getEventQueueMetrics(
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<
+    | ApiResponse<{
+        failedEvents: number;
+        retriedEvents: number;
+        deadLetterQueueSize: number;
+      }>
+    | void
+  > {
+    try {
+      const queueService = EventQueueService.getInstance();
+      const metrics = queueService.getEventMetrics();
+      return {
+        status: "success",
+        data: metrics,
+        message: "Event queue metrics retrieved successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving event queue metrics",
+      });
+    }
+  }
+
+  @Get("queue/dead-letter")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async getDeadLetterQueue(
+    @Request() request: AuthenticatedRequest,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<DeadLetterEvent[]> | void> {
+    try {
+      const queueService = EventQueueService.getInstance();
+      const deadLetterEvents = queueService.getDeadLetterQueue();
+      return {
+        status: "success",
+        data: deadLetterEvents,
+        message: "Dead-letter queue retrieved successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while retrieving the dead-letter queue",
+      });
+    }
+  }
+
+  @Post("queue/dead-letter/{index}/replay")
+  @Response<ApiResponse<null>>(400, "Bad Request")
+  @Response<ApiResponse<null>>(500, "Internal Server Error")
+  public async replayDeadLetterEvent(
+    @Path() index: number,
+    @Request() request: AuthenticatedRequest,
+    @Res() badRequestResponse: TsoaResponse<400, ApiResponse<null>>,
+    @Res() serverErrorResponse: TsoaResponse<500, ApiResponse<null>>
+  ): Promise<ApiResponse<{ replayed: boolean }> | void> {
+    try {
+      const queueService = EventQueueService.getInstance();
+      const success = await queueService.replayDeadLetterEvent(index);
+      if (!success) {
+        return badRequestResponse(400, {
+          status: "error",
+          data: null,
+          message:
+            "Failed to replay event. Index may be invalid or the handler failed.",
+        });
+      }
+      return {
+        status: "success",
+        data: { replayed: true },
+        message: "Dead-letter event replayed successfully",
+      };
+    } catch (error) {
+      return serverErrorResponse(500, {
+        status: "error",
+        data: null,
+        message: "An error occurred while replaying the dead-letter event",
+      });
+    }
+  }
 }
