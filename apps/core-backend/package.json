@@ -97,6 +97,12 @@
       "node_modules",
       "src"
     ],
+    "moduleNameMapper": {
+      "^@lime/config$": "<rootDir>/../../packages/config/src/config.ts",
+      "^@lime/telemetry/logger$": "<rootDir>/../../packages/telemetry/src/logger.ts",
+      "^@lime/telemetry/(.*)$": "<rootDir>/../../packages/telemetry/src/$1.ts",
+      "^@lime/errors$": "<rootDir>/../../packages/errors/src/index.ts"
+    },
     "setupFiles": [
       "<rootDir>/src/__tests__/setupTests.ts"
     ]
