@@ -1165,6 +1165,10 @@ export class SegmentationService {
     organizationId: string
   ): Promise<any> {
     try {
+      logger.debug("segmentation", `Getting entity data`, {
+        entityId,
+        organizationId,
+      });
       const query = `
         SELECT * FROM entities
         WHERE id = {entityId:String} AND org_id = {organizationId:String}
