@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="mark.svg" />
+		<title>LimeJourney</title>
+		<meta
+			name="description"
+			content="Every era rations something. Ours rationed the ability to build. LimeJourney is a wager on what comes after."
+		/>
+		<meta property="og:title" content="LimeJourney" />
+		<meta
+			property="og:description"
+			content="Every era rations something. Ours rationed the ability to build. LimeJourney is a wager on what comes after."
+		/>
+		<meta property="og:type" content="website" />
+
+		<link href="https://fonts.googleapis.com" rel="preconnect" />
+		<link href="https://fonts.gstatic.com" rel="preconnect" crossorigin="anonymous" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap"
+			rel="stylesheet"
+		/>
+
+		<style>
+			*,
+			*:before,
+			*:after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+			:root {
+				--bg: #f5efe3;
+				--ink: #1c1410;
+				--rule: rgba(28, 20, 16, 0.18);
+				--accent: #5a7a33;
+				--font: Vollkorn, Georgia, "Times New Roman", serif;
+				--gap: clamp(20px, 4vh, 40px);
+			}
+			html,
+			body {
+				min-height: 100%;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
+				font-family: var(--font);
+				color: var(--ink);
+				background: var(--bg);
+				font-size: 16px;
+				line-height: 1.6;
+			}
+			body {
+				display: flex;
+				align-items: safe center;
+				justify-content: center;
+				min-height: 100dvh;
+			}
+			.container {
+				width: 100%;
+				max-width: 581px;
+				margin: 0 auto;
+				padding: clamp(16px, 2.5vh, 48px) 30px;
+				text-align: left;
+			}
+			h2 {
+				font-family: var(--font);
+				font-size: clamp(21px, 2.4vw, 25px);
+				font-weight: 700;
+				line-height: 1.25;
+				margin-bottom: 12px;
+			}
+			p {
+				margin: 0 0 clamp(8px, 1.2vh, 12px) 0;
+				text-wrap: pretty;
+			}
+			strong {
+				font-weight: 700;
+			}
+			hr {
+				border: 0;
+				border-top: 1px solid var(--rule);
+				margin: calc(var(--gap) - 11px) 0 calc(var(--gap) - 5px);
+			}
+			a {
+				color: var(--ink);
+				text-decoration: underline;
+				text-underline-offset: 2px;
+			}
+			a:hover {
+				color: var(--accent);
+			}
+			.mark {
+				display: block;
+				width: 36px;
+				height: 36px;
+				margin: 0 0 calc((var(--gap) - 2px) * 0.75) 0;
+			}
+			.links {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 9px;
+				margin-bottom: 6px;
+			}
+			.sep {
+				color: #1c141061;
+				user-select: none;
+			}
+			.email {
+				margin: 0;
+			}
+			@media (max-width: 600px) {
+				.container {
+					padding-left: 20px;
+					padding-right: 20px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<article>
+				<img class="mark" src="mark.svg" alt="LimeJourney" width="36" height="36" />
+				<h2>LimeJourney</h2>
+
+				<p>Every era rations something. Ours rationed the ability to build.</p>
+
+				<p>
+					For half a century, software was expensive the way cathedrals were
+					expensive: measured in years, headcount, and the patience of people
+					willing to wait. In that time, the world made peace with mediocre
+					tools, and ambition learned to queue.
+				</p>
+
+				<p>
+					Whole categories of ideas were never attempted, not particularly
+					because they were wrong, but because they were priced out.
+				</p>
+
+				<p>That constraint is dissolving in front of our eyes.</p>
+
+				<p>
+					Intelligence is becoming infrastructure, as unremarkable and as
+					consequential as the internet. When cognition itself can be
+					provisioned, the cost of software collapses into the cost of judgment:
+					knowing what deserves to exist, and having the nerve to build it.
+				</p>
+
+				<p>
+					We believe the next decade belongs to small groups with
+					disproportionate conviction. Not the largest teams. The densest ones.
+				</p>
+
+				<p>
+					LimeJourney is a wager on that future. We build our own instruments for
+					sales, for customer engagement, for support. And we build beside
+					companies unwilling to wait for the old timelines.
+				</p>
+
+				<p>
+					Weeks where there were quarters. Individuals where there were
+					departments.
+				</p>
+
+				<p>Adapt or become the wreckage.</p>
+
+				<hr />
+
+				<p class="links">
+					<a href="https://sustn.app">sustn.app</a>
+					<span class="sep" aria-hidden="true">·</span>
+					<a href="https://certvian.com">certvian.com</a>
+					<span class="sep" aria-hidden="true">·</span>
+					<a href="https://limejourney.app">limejourney.app</a>
+				</p>
+				<p class="email">tobi@limejourney.com</p>
+			</article>
+		</div>
+	</body>
+</html>
