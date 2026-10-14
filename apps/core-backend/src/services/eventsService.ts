@@ -289,8 +289,6 @@ export class EventService {
         `event:${eventName}:journeys:${event.organizationId}`
       );
 
-      console.log("Journey IDs284:", journeyIds);
-
       for (const journeyId of journeyIds) {
         this.eventQueueService.publish({
           type: EventType.TRIGGER_JOURNEY,

@@ -1165,8 +1165,10 @@ export class SegmentationService {
     organizationId: string
   ): Promise<any> {
     try {
-      console.log("Getting entity data for entityId: ", entityId);
-      console.log("Getting entity data for organizationId: ", organizationId);
+      logger.debug("segmentation", `Getting entity data`, {
+        entityId,
+        organizationId,
+      });
       const query = `
         SELECT * FROM entities
         WHERE id = {entityId:String} AND org_id = {organizationId:String}
@@ -1182,7 +1184,6 @@ export class SegmentationService {
       const entities = await result.json();
       return entities[0] || null;
     } catch (error) {
-      console.log("Error getting entity data: ", error);
       logger.error(
         "segmentation",
         `Failed to get entity data for entityId: ${entityId}`,
