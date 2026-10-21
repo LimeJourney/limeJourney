@@ -18,6 +18,8 @@ services:
     buildCommand: "npm install; echo $NODE_VERSION; echo $DATABASE_URL; npx turbo run migrate:dev --filter=core-backend; npx turbo run build --filter=core-backend..."
     startCommand: node apps/core-backend/dist/cli/clickhouse.js -- setup; node apps/core-backend/dist/index.js
     envVars:
+      - key: ENCRYPTION_KEY
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: DATABASE_URL

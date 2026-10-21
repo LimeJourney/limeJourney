@@ -91,7 +91,6 @@ export class AuthService {
   }
 
   private generateToken(userId: string): string {
-    console.log("AppConfig.jwtSecret", AppConfig.jwtSecret);
     return jwt.sign({ userId }, AppConfig.jwtSecret, { expiresIn: "1d" });
   }
 
