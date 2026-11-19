@@ -3,6 +3,7 @@ import {
   Client,
   WorkflowHandle,
   WorkflowIdReusePolicy,
+  WorkflowExecutionAlreadyStartedError,
 } from "@temporalio/client";
 import { v4 as uuidv4 } from "uuid";
 import { AppConfig } from "@lime/config";
@@ -91,7 +92,7 @@ export class TemporalService {
         workflowRunTimeout: options.workflowRunTimeout,
         workflowIdReusePolicy:
           options.workflowIdReusePolicy ||
-          WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE,
+          WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY,
       });
       logger.info("temporal", `Started workflow ${workflowName}`, {
         workflowId,
@@ -114,6 +115,8 @@ export class TemporalService {
     return this.startWorkflow("JourneyWorkflow", params, {
       taskQueue: AppConfig.temporal.taskQueue,
       workflowId: `journey-${params.journeyId}-${params.entityId}`,
+      workflowIdReusePolicy:
+        WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY,
     });
   }
 
@@ -123,31 +126,24 @@ export class TemporalService {
     const workflowId = `journey-${params.journeyId}-${params.entityId}`;
 
     try {
-      // Try to fetch an existing workflow
-      const existingWorkflow = await this.client.workflow.getHandle(workflowId);
-      const status = await existingWorkflow.describe();
-
-      if (status.status.name === "RUNNING") {
-        logger.info("temporal", `Workflow ${workflowId} is already running`, {
-          workflowId,
-        });
-        return existingWorkflow;
-      }
-
-      // If workflow is completed or failed, start a new one
-      return this.startWorkflow("JourneyWorkflow", params, {
+      // Attempt to start with ALLOW_DUPLICATE_FAILED_ONLY policy.
+      // Temporal will atomically reject the start if a workflow with this ID
+      // is already running or completed successfully, preventing race conditions.
+      const handle = await this.startWorkflow("JourneyWorkflow", params, {
         taskQueue: AppConfig.temporal.taskQueue,
         workflowId: workflowId,
         workflowRunTimeout: "24 hours",
+        workflowIdReusePolicy:
+          WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE_FAILED_ONLY,
       });
+      return handle;
     } catch (error) {
-      // If workflow doesn't exist, start a new one
-      if (error instanceof Error && error.name === "WorkflowNotFoundError") {
-        return this.startWorkflow("JourneyWorkflow", params, {
-          taskQueue: AppConfig.temporal.taskQueue,
-          workflowId: workflowId,
-          workflowRunTimeout: "24 hours",
+      if (error instanceof WorkflowExecutionAlreadyStartedError) {
+        // Workflow is already running — return a handle to the existing one
+        logger.info("temporal", `Workflow ${workflowId} is already running`, {
+          workflowId,
         });
+        return this.client.workflow.getHandle(workflowId);
       }
       logger.error(
         "temporal",
