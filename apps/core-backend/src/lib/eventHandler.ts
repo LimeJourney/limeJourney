@@ -7,6 +7,7 @@ import {
 } from "./queue";
 import { EventService } from "../services/eventsService";
 import { TemporalService } from "./temporal";
+import { logger } from "@lime/telemetry/logger";
 
 /**
  * EventHandler class manages the processing of various event types in the system.
@@ -112,33 +113,30 @@ export class EventHandler {
    */
   private handleJourneyTriggered = async (event: Event): Promise<void> => {
     if (event.type === EventType.TRIGGER_JOURNEY) {
-      //   await this.eventService.triggerJourney(event);
-      console.log(
-        "\x1b[1m%s\x1b[0m",
-        `Journey Triggered: ${JSON.stringify(event, null, 2)}`
+      logger.info(
+        "events",
+        `Journey Triggered: journeyId=${event.journeyId}, entityId=${event.entityId}`,
+        { journeyId: event.journeyId, entityId: event.entityId }
       );
 
-      try {
-        const temporalService = await TemporalService.getInstance();
+      const temporalService = await TemporalService.getInstance();
 
-        await temporalService.startOrContinueJourneyWorkflow({
-          journeyId: event.journeyId,
-          entityId: event.entityId,
-          organizationId: event.organizationId,
-          triggerEvent: {
-            eventName: event.eventName,
-            eventProperties: event.eventProperties,
-          },
-          entityData: event.entityData,
-        });
+      await temporalService.startOrContinueJourneyWorkflow({
+        journeyId: event.journeyId,
+        entityId: event.entityId,
+        organizationId: event.organizationId,
+        triggerEvent: {
+          eventName: event.eventName,
+          eventProperties: event.eventProperties,
+        },
+        entityData: event.entityData,
+      });
 
-        console.log(
-          `Started journey workflow for journey ${event.journeyId} and entity ${event.entityId}`
-        );
-      } catch (error) {
-        console.error(`Error starting journey workflow: ${error}`);
-        // Handle the error appropriately
-      }
+      logger.info(
+        "events",
+        `Started journey workflow for journey ${event.journeyId} and entity ${event.entityId}`,
+        { journeyId: event.journeyId, entityId: event.entityId }
+      );
     }
   };
 
